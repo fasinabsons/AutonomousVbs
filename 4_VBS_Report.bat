@@ -1,34 +1,34 @@
 @echo off
 setlocal EnableDelayedExpansion
-:: BAT 4: VBS Report Generation - SCHEDULED 5:15 PM
+:: BAT 4: VBS Report Generation - SCHEDULED 4:00 PM
 :: Phase 1 → Phase 4 ONLY
-:: Scheduled at 5:15 PM to avoid interference with upload process
+:: Scheduled at 4:00 PM after upload completion
 
 echo ========================================
-echo BAT 4: VBS Report Generation (5:15 PM)
+echo BAT 4: VBS Report Generation (4:00 PM)
 echo ========================================
 echo Current Time: %TIME%
 echo Current Date: %DATE%
 echo.
 
-:: Enhanced time validation for 5:15 PM execution (5:15-5:20 PM window)
+:: Enhanced time validation for 4:00 PM execution (4:00-4:05 PM window)
 for /f %%i in ('powershell -Command "Get-Date -Format 'HHmm'"') do set "CURRENT_TIME=%%i"
 
-echo 🕒 Current time: !CURRENT_TIME! (24-hour format)
-echo 🎯 Expected execution window: 17:15-17:20 (5:15-5:20 PM)
+echo 🕓 Current time: !CURRENT_TIME! (24-hour format)
+echo 🎯 Expected execution window: 16:00-16:05 (4:00-4:05 PM)
 
-if !CURRENT_TIME! LSS 1715 (
-    echo ⏰ Too early - Report generation window is 5:15-5:20 PM
+if !CURRENT_TIME! LSS 1600 (
+    echo ⏰ Too early - Report generation window is 4:00-4:05 PM
     echo [%TIME%] Report attempted outside time window >> %LOG_FILE%
-    echo ℹ️ This prevents interference with upload process
+    echo ℹ️ Waiting for upload process to complete
     pause
     exit /b 0
 )
 
-if !CURRENT_TIME! GTR 1720 (
-    echo ⏰ Execution window passed - Report generation should be at 5:15-5:20 PM
+if !CURRENT_TIME! GTR 1605 (
+    echo ⏰ Execution window passed - Report generation should be at 4:00-4:05 PM
     echo [%TIME%] Report attempted outside time window >> %LOG_FILE%
-    echo ⚠️ Manual execution allowed but may interfere with other processes
+    echo ⚠️ Manual execution allowed
     echo.
     echo Continue anyway? (Press any key or Ctrl+C to cancel)
     pause

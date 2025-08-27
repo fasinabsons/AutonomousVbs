@@ -50,23 +50,27 @@ echo 🕘 Current time: !CURRENT_TIME! (24-hour format)
 :: Morning Download Window (9:30-9:35 AM)
 if !CURRENT_TIME! geq 0930 if !CURRENT_TIME! leq 0935 (
     echo 🌅 MORNING DOWNLOAD WINDOW (9:30-9:35 AM)
+    set DOWNLOAD_SESSION=MORNING
     goto :csv_download
 )
 
 :: Afternoon Download Window (12:30-12:35 PM) 
 if !CURRENT_TIME! geq 1230 if !CURRENT_TIME! leq 1235 (
     echo 🌆 AFTERNOON DOWNLOAD WINDOW (12:30-12:35 PM)
+    set DOWNLOAD_SESSION=AFTERNOON
     goto :csv_download
 )
 
 :: Excel Merge Window (12:35-12:40 PM)
 if !CURRENT_TIME! geq 1235 if !CURRENT_TIME! leq 1240 (
     echo 📊 EXCEL MERGE WINDOW (12:35-12:40 PM)
+    set DOWNLOAD_SESSION=EXCEL_ONLY
     goto :excel_merge
 )
 
 :: Default: Allow manual execution
 echo 🔧 MANUAL EXECUTION - Running both CSV download and Excel merge
+set DOWNLOAD_SESSION=MANUAL
 goto :csv_download
 
 :csv_download
@@ -155,42 +159,62 @@ if !CSV_ATTEMPT! LSS 15 (
 )
 
 :check_excel_time
-:: Check if we should run Excel merge now
+:: Enhanced Excel merge logic with mandatory verification
+echo.
+echo 📊 Checking Excel merge requirements...
+
+:: For afternoon sessions, Excel merge is MANDATORY
+if "%DOWNLOAD_SESSION%"=="AFTERNOON" (
+    echo 🎯 AFTERNOON SESSION - Excel merge is MANDATORY
+    goto :excel_merge
+)
+
+:: For manual/other sessions, check timing
 set CURRENT_HOUR=%TIME:~0,2%
 set CURRENT_MIN=%TIME:~3,2%
 if "%CURRENT_HOUR:~0,1%"==" " set CURRENT_HOUR=0%CURRENT_HOUR:~1,1%
 
-:: Skip Excel if it's before 12:35 PM
+:: Skip Excel if it's before 12:35 PM (for morning sessions)
 if %CURRENT_HOUR% LSS 12 (
-    echo ⏰ Before 12:35 PM - Excel merge will run at scheduled time
+    echo ⏰ Before 12:35 PM - Excel merge deferred for morning session
     echo [%TIME%] Excel merge deferred until 12:35 PM >> %LOG_FILE%
-    goto :send_notification
+    goto :verify_files_only
 )
 
 if %CURRENT_HOUR% EQU 12 if %CURRENT_MIN% LSS 35 (
-    echo ⏰ Before 12:35 PM - Excel merge will run at scheduled time  
+    echo ⏰ Before 12:35 PM - Excel merge deferred for morning session
     echo [%TIME%] Excel merge deferred until 12:35 PM >> %LOG_FILE%
-    goto :send_notification
+    goto :verify_files_only
 )
 
 :excel_merge
 echo.
-echo 📊 Excel Merge Process...
+echo 📊 Excel Merge Process with Mandatory Verification...
 echo [%TIME%] Starting Excel merge >> %LOG_FILE%
+
+set EXCEL_ATTEMPT=0
+set MAX_EXCEL_ATTEMPTS=5
+
+:retry_excel_merge
+set /a EXCEL_ATTEMPT=%EXCEL_ATTEMPT%+1
+echo.
+echo 🔄 Excel Merge Attempt %EXCEL_ATTEMPT%/%MAX_EXCEL_ATTEMPTS%
+echo [%TIME%] Excel merge attempt %EXCEL_ATTEMPT% >> %LOG_FILE%
 
 python excel\excel_generator.py
 set EXCEL_EXIT=%errorlevel%
 
 if !EXCEL_EXIT! equ 0 (
-    echo ✅ Excel merge successful!
+    echo ✅ Excel merge process completed
     echo [%TIME%] Excel merge completed >> %LOG_FILE%
     
-    :: Validate Excel file has sufficient data
-    echo 🔍 Validating Excel file data...
+    :: MANDATORY Excel file verification - MUST pass to continue
+    echo 🔍 MANDATORY: Verifying Excel file exists and has data...
     python -c "
 import pandas as pd
 from pathlib import Path
 from datetime import datetime
+import sys
 
 try:
     today = datetime.now().strftime('%%d%%b').lower()
@@ -199,42 +223,90 @@ try:
     if excel_path.exists():
         df = pd.read_excel(excel_path)
         row_count = len(df)
-        print(f'Excel file has {row_count} rows')
+        file_size = excel_path.stat().st_size
         
-        if row_count >= 6000:
-            print('✅ Excel validation passed (>=6000 rows)')
-            exit(0)
+        print(f'Excel file exists: {excel_path.name}')
+        print(f'File size: {file_size:,} bytes')
+        print(f'Row count: {row_count:,} rows')
+        
+        if row_count >= 1000 and file_size >= 50000:
+            print('✅ EXCEL VERIFICATION PASSED')
+            print(f'✅ File has {row_count} rows and {file_size} bytes')
+            sys.exit(0)
         else:
-            print(f'⚠️ Excel has only {row_count} rows (expected >=6000)')
-            exit(0)  # Don't fail, just warn
+            print(f'❌ EXCEL VERIFICATION FAILED')
+            print(f'❌ Insufficient data: {row_count} rows, {file_size} bytes')
+            sys.exit(1)
     else:
-        print('❌ Excel file not found')
-        exit(1)
+        print(f'❌ EXCEL FILE NOT FOUND: {excel_path}')
+        sys.exit(1)
 except Exception as e:
-    print(f'❌ Excel validation failed: {e}')
-    exit(1)
+    print(f'❌ EXCEL VERIFICATION ERROR: {e}')
+    sys.exit(1)
 "
+    set EXCEL_VERIFY=%errorlevel%
+    
+    if !EXCEL_VERIFY! equ 0 (
+        echo ✅ EXCEL VERIFICATION PASSED - File is ready!
+        echo [%TIME%] Excel file verified successfully >> %LOG_FILE%
+        goto :excel_success
+    ) else (
+        echo ❌ EXCEL VERIFICATION FAILED - File missing or insufficient data
+        echo [%TIME%] Excel verification failed on attempt %EXCEL_ATTEMPT% >> %LOG_FILE%
+    )
     
 ) else (
-    echo ❌ Excel merge failed!
+    echo ❌ Excel merge process failed!
     echo [%TIME%] ERROR: Excel merge failed with code %EXCEL_EXIT% >> %LOG_FILE%
-    
-    :: Retry once
-    echo 🔄 Retrying Excel merge...
+)
+
+:: Retry logic for failed Excel merge or verification
+if %EXCEL_ATTEMPT% LSS %MAX_EXCEL_ATTEMPTS% (
+    echo 🔄 Retrying Excel merge in 30 seconds...
+    echo [%TIME%] Retrying Excel merge (attempt %EXCEL_ATTEMPT%) >> %LOG_FILE%
     timeout /t 30 /nobreak >nul
+    goto :retry_excel_merge
+) else (
+    echo ❌ All Excel merge attempts failed!
+    echo [%TIME%] ERROR: All Excel merge attempts failed >> %LOG_FILE%
     
-    python excel\excel_generator.py
-    set EXCEL_RETRY=%errorlevel%
-    
-    if !EXCEL_RETRY! equ 0 (
-        echo ✅ Excel merge successful on retry
-        echo [%TIME%] Excel merge successful on retry >> %LOG_FILE%
-    ) else (
-        echo ❌ Excel merge retry also failed
-        echo [%TIME%] ERROR: Excel merge retry failed >> %LOG_FILE%
+    :: Critical failure - cannot proceed without Excel file for afternoon session
+    if "%DOWNLOAD_SESSION%"=="AFTERNOON" (
+        echo ❌ CRITICAL: Afternoon session requires Excel file
+        echo [%TIME%] CRITICAL: Cannot proceed without Excel file >> %LOG_FILE%
         pause
         exit /b 1
+    ) else (
+        echo ⚠️ WARNING: Excel merge failed but continuing for morning session
+        echo [%TIME%] WARNING: Excel merge failed, continuing >> %LOG_FILE%
+        goto :verify_files_only
     )
+)
+
+:excel_success
+echo ✅ Excel merge completed and verified successfully!
+goto :send_notification
+
+:verify_files_only
+echo.
+echo 🔍 File verification for morning session (no Excel merge)...
+echo [%TIME%] Morning session file verification >> %LOG_FILE%
+
+:: Count CSV files
+for /f %%i in ('powershell -Command "Get-ChildItem 'EHC_Data\%TODAY_FOLDER%' -Filter '*.csv' | Measure-Object | Select-Object -ExpandProperty Count"') do set FINAL_CSV_COUNT=%%i
+if "%FINAL_CSV_COUNT%"=="" set FINAL_CSV_COUNT=0
+
+echo 📊 Morning session complete: %FINAL_CSV_COUNT% CSV files downloaded
+echo [%TIME%] Morning session: %FINAL_CSV_COUNT% CSV files >> %LOG_FILE%
+
+if %FINAL_CSV_COUNT% GEQ %MIN_ACCEPTABLE% (
+    echo ✅ Sufficient CSV files for morning session
+    goto :send_notification
+) else (
+    echo ❌ Insufficient CSV files for morning session
+    echo [%TIME%] ERROR: Insufficient CSV files in morning session >> %LOG_FILE%
+    pause
+    exit /b 1
 )
 
 :send_notification

@@ -1,11 +1,11 @@
 @echo off
 setlocal EnableDelayedExpansion
-:: BAT 3: VBS Upload (1:00 PM)
+:: BAT 3: VBS Upload (1:00-1:05 PM)
 :: Phase 1 → Phase 2 → Phase 3 → Close VBS
 :: Handles 3-hour upload process and VBS closure
 
 echo ========================================
-echo BAT 3: VBS Upload Process
+echo BAT 3: VBS Upload Process (1:00 PM)
 echo ========================================
 echo Current Time: %TIME%
 echo Current Date: %DATE%
@@ -19,6 +19,31 @@ cd /d "%PROJECT_ROOT%"
 :: Create log file
 set LOG_FILE=EHC_Logs\vbs_upload_%date:~-4,4%%date:~-10,2%%date:~-7,2%.log
 echo [%TIME%] Starting VBS Upload Workflow >> %LOG_FILE%
+
+:: Enhanced time validation for 1:00 PM execution (1:00-1:05 PM window)
+for /f %%i in ('powershell -Command "Get-Date -Format 'HHmm'"') do set "CURRENT_TIME=%%i"
+
+echo 🕐 Current time: !CURRENT_TIME! (24-hour format)
+echo 🎯 Expected execution window: 13:00-13:05 (1:00-1:05 PM)
+
+if !CURRENT_TIME! LSS 1300 (
+    echo ⏰ Too early - VBS upload window is 1:00-1:05 PM
+    echo [%TIME%] Upload attempted outside time window >> %LOG_FILE%
+    pause
+    exit /b 0
+)
+
+if !CURRENT_TIME! GTR 1305 (
+    echo ⏰ Execution window passed - VBS upload should be at 1:00-1:05 PM
+    echo [%TIME%] Upload attempted outside time window >> %LOG_FILE%
+    echo ⚠️ Manual execution allowed but check for scheduling conflicts
+    echo.
+    echo Continue anyway? (Press any key or Ctrl+C to cancel)
+    pause
+)
+
+echo ✅ Time validation passed - executing VBS upload process
+echo.
 
 :: Check for Excel file dependency
 echo 🔍 Checking for Excel file dependency...
