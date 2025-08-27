@@ -9,14 +9,12 @@ echo ============================================================
 echo.
 echo 🎯 This will install a complete 365-day automation schedule:
 echo.
+echo   📧 8:00 AM  - Morning email with PDF report to GM
 echo   📥 9:30 AM  - Download CSV files (Morning)
 echo   📊 12:30 PM - Download CSV + Excel merge (Afternoon)
 echo   ⬆️ 1:00 PM  - VBS Upload (3-hour process)
-echo   🔧 1:58 PM  - Pre-restart preparation
-echo   🔄 2:00 PM  - PC Restart (for VBS reliability)
-echo   🚀 2:02 PM  - Post-restart automation resume
 echo   📋 4:00 PM  - VBS Report generation
-echo   📧 8:00 PM  - Email with PDF report
+echo   🚀 Startup  - Recovery check for missed schedules
 echo.
 echo 🔐 All tasks will run regardless of:
 echo   ✅ PC locked or unlocked state
@@ -70,10 +68,11 @@ if %errorlevel% equ 0 (
     echo    Moving the folder will break the scheduled tasks!
     echo.
     echo 🔄 The system will now automatically:
-    echo   • Download data twice daily
-    echo   • Upload data at 1:00 PM (with restart at 2:00 PM)
+    echo   • Send emails at 8:00 AM with yesterday's PDF
+    echo   • Download data twice daily (9:30 AM, 12:30 PM)
+    echo   • Upload data at 1:00 PM (3-hour process)
     echo   • Generate reports at 4:00 PM
-    echo   • Send emails at 8:00 PM
+    echo   • Recover from missed schedules on startup
     echo   • Run 365 days without intervention
     echo.
 ) else (

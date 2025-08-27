@@ -1,11 +1,11 @@
 @echo off
 setlocal EnableDelayedExpansion
-:: BAT 1: Evening Email (8:00-8:05 PM) 
+:: BAT 1: Morning Email (8:00-8:05 AM) 
 :: Sends yesterday's PDF report to General Manager
 :: Auto-generates PDF if missing from yesterday
 
 echo ========================================
-echo BAT 1: Evening Email Delivery (8:00 PM)
+echo BAT 1: Morning Email Delivery (8:00 AM)
 echo ========================================
 echo Current Time: %TIME%
 echo Current Date: %DATE%
@@ -17,24 +17,24 @@ set PROJECT_ROOT=%PROJECT_ROOT:~0,-1%
 cd /d "%PROJECT_ROOT%"
 
 :: Create log file
-set LOG_FILE=EHC_Logs\email_evening_%date:~-4,4%%date:~-10,2%%date:~-7,2%.log
-echo [%TIME%] Starting Evening Email Workflow >> %LOG_FILE%
+set LOG_FILE=EHC_Logs\email_morning_%date:~-4,4%%date:~-10,2%%date:~-7,2%.log
+echo [%TIME%] Starting Morning Email Workflow >> %LOG_FILE%
 
-:: Enhanced time validation with 5-minute window (8:00-8:05 PM)
+:: Enhanced time validation with 5-minute window (8:00-8:05 AM)
 for /f %%i in ('powershell -Command "Get-Date -Format 'HHmm'"') do set "CURRENT_TIME=%%i"
 
 echo 🕘 Current time: !CURRENT_TIME! (24-hour format)
-echo 🎯 Expected execution window: 20:00-20:05 (8:00-8:05 PM)
+echo 🎯 Expected execution window: 08:00-08:05 (8:00-8:05 AM)
 
-if !CURRENT_TIME! LSS 2000 (
-    echo ⏰ Too early - Evening email window is 8:00-8:05 PM
+if !CURRENT_TIME! LSS 0800 (
+    echo ⏰ Too early - Morning email window is 8:00-8:05 AM
     echo [%TIME%] Email attempted outside time window >> %LOG_FILE%
     pause
     exit /b 0
 )
 
-if !CURRENT_TIME! GTR 2005 (
-    echo ⏰ Too late - Evening email window is 8:00-8:05 PM
+if !CURRENT_TIME! GTR 0805 (
+    echo ⏰ Too late - Morning email window is 8:00-8:05 AM
     echo [%TIME%] Email attempted outside time window >> %LOG_FILE%
     echo ⚠️ Manual execution allowed
     echo.
@@ -42,7 +42,7 @@ if !CURRENT_TIME! GTR 2005 (
     pause
 )
 
-echo ✅ Time validation passed - within evening email window
+echo ✅ Time validation passed - within morning email window
 
 :: Check if today is a weekday (Monday-Friday only)
 echo.
@@ -129,15 +129,15 @@ if not exist %PDF_PATH% (
 
 :: Send email using Outlook automation
 echo.
-echo 📧 Sending evening email to General Manager...
+echo 📧 Sending morning email to General Manager...
 echo [%TIME%] Sending GM email >> %LOG_FILE%
 
 python "%PROJECT_ROOT%\email\outlook_simple.py"
 set EMAIL_EXIT=%errorlevel%
 
 if !EMAIL_EXIT! equ 0 (
-    echo ✅ Evening email sent successfully!
-    echo [%TIME%] Evening email sent successfully >> %LOG_FILE%
+    echo ✅ Morning email sent successfully!
+    echo [%TIME%] Morning email sent successfully >> %LOG_FILE%
     
     :: Verify email was actually sent
     echo 🔍 Verifying email delivery...
@@ -146,8 +146,8 @@ if !EMAIL_EXIT! equ 0 (
     echo ✅ Email delivery verified
     
 ) else (
-    echo ❌ Evening email failed!
-    echo [%TIME%] ERROR: Evening email failed with code %EMAIL_EXIT% >> %LOG_FILE%
+    echo ❌ Morning email failed!
+    echo [%TIME%] ERROR: Morning email failed with code %EMAIL_EXIT% >> %LOG_FILE%
     
     :: Retry once after 2 minutes
     echo 🔄 Retrying in 2 minutes...
@@ -157,23 +157,23 @@ if !EMAIL_EXIT! equ 0 (
     set EMAIL_RETRY=%errorlevel%
     
     if !EMAIL_RETRY! equ 0 (
-        echo ✅ Evening email sent on retry
-        echo [%TIME%] Evening email sent on retry >> %LOG_FILE%
+        echo ✅ Morning email sent on retry
+        echo [%TIME%] Morning email sent on retry >> %LOG_FILE%
         
         echo 🔍 Verifying retry email delivery...
         timeout /t 5 /nobreak >nul
         echo ✅ Retry email delivery verified
     ) else (
-        echo ❌ Evening email retry also failed
-        echo [%TIME%] ERROR: Evening email retry failed >> %LOG_FILE%
+        echo ❌ Morning email retry also failed
+        echo [%TIME%] ERROR: Morning email retry failed >> %LOG_FILE%
         pause
         exit /b 1
     )
 )
 
 echo.
-echo 🎉 Evening Email Completed Successfully!
-echo [%TIME%] Evening email workflow completed >> %LOG_FILE%
+echo 🎉 Morning Email Completed Successfully!
+echo [%TIME%] Morning email workflow completed >> %LOG_FILE%
 echo.
 echo ✅ PDF report sent to General Manager
 echo ✅ Daily communication cycle complete

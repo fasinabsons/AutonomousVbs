@@ -74,24 +74,15 @@ function Install-MoonFlowerSchedule {
             WakeToRun = $true
         },
         @{
-            Name = "MoonFlower_PC_Restart_Prep"
-            Description = "Prepare for 2:00 PM restart - save state and graceful shutdown"
-            Time = "13:58"
-            Script = "scripts\handle_2pm_restart.ps1 -PreRestart"
+            Name = "MoonFlower_Startup_Recovery"
+            Description = "Check for missed schedules on startup and recover"
+            Time = $null
+            Script = "scripts\startup_recovery.ps1 -CheckAndRun"
             RunLevel = "Highest"
             StartWhenAvailable = $true
             WakeToRun = $true
             PowerShellTask = $true
-        },
-        @{
-            Name = "MoonFlower_PC_Restart"
-            Description = "Restart PC at 2:00 PM for VBS reliability"
-            Time = "14:00"
-            Script = "Restart-Computer"
-            RunLevel = "Highest"
-            StartWhenAvailable = $true
-            WakeToRun = $true
-            RestartTask = $true
+            StartupTrigger = $true
         },
         @{
             Name = "MoonFlower_VBS_Report"
@@ -103,9 +94,9 @@ function Install-MoonFlowerSchedule {
             WakeToRun = $true
         },
         @{
-            Name = "MoonFlower_Email_Evening"
-            Description = "Send evening email with PDF report at 8:00 PM daily"
-            Time = "20:00"
+            Name = "MoonFlower_Email_Morning"
+            Description = "Send morning email with PDF report at 8:00 AM daily"
+            Time = "08:00"
             Script = "1_Email_Morning.bat"
             RunLevel = "Highest"
             StartWhenAvailable = $true
@@ -139,8 +130,12 @@ function Install-MoonFlowerSchedule {
                 $Action = New-ScheduledTaskAction -Execute $ScriptPath -WorkingDirectory $ProjectRoot
             }
             
-            # Create trigger for daily execution
-            $Trigger = New-ScheduledTaskTrigger -Daily -At $Task.Time
+            # Create trigger for daily execution or startup
+            if ($Task.StartupTrigger) {
+                $Trigger = New-ScheduledTaskTrigger -AtStartup
+            } else {
+                $Trigger = New-ScheduledTaskTrigger -Daily -At $Task.Time
+            }
             
             # Enhanced settings for locked/unlocked states and power management
             $Settings = New-ScheduledTaskSettingsSet `
@@ -189,14 +184,12 @@ function Install-MoonFlowerSchedule {
     }
     
     Write-Log "🎯 365-Day Schedule Installation Summary:"
+    Write-Log "   📧 8:00 AM  - Morning email with PDF report"
     Write-Log "   📥 9:30 AM  - Download CSV files (Morning)"
     Write-Log "   📊 12:30 PM - Download CSV + Excel merge (Afternoon)" 
     Write-Log "   ⬆️ 1:00 PM  - VBS Upload (3-hour process)"
-    Write-Log "   🔧 1:58 PM  - Pre-restart preparation (save state)"
-    Write-Log "   🔄 2:00 PM  - PC Restart (for VBS reliability)"
-    Write-Log "   🚀 2:02 PM  - Post-restart automation resume"
     Write-Log "   📋 4:00 PM  - VBS Report generation"
-    Write-Log "   📧 8:00 PM  - Email with PDF report"
+    Write-Log "   🚀 Startup  - Recovery check for missed schedules"
     Write-Log ""
     Write-Log "🔐 All tasks configured to run:"
     Write-Log "   ✅ When PC is locked or unlocked"
@@ -220,10 +213,9 @@ function Uninstall-MoonFlowerSchedule {
         "MoonFlower_Download_Morning",
         "MoonFlower_Download_Afternoon", 
         "MoonFlower_VBS_Upload",
-        "MoonFlower_PC_Restart_Prep",
-        "MoonFlower_PC_Restart",
+        "MoonFlower_Startup_Recovery",
         "MoonFlower_VBS_Report",
-        "MoonFlower_Email_Evening"
+        "MoonFlower_Email_Morning"
     )
     
     foreach ($TaskName in $TaskNames) {
@@ -246,10 +238,9 @@ function Show-ScheduleStatus {
         "MoonFlower_Download_Morning",
         "MoonFlower_Download_Afternoon",
         "MoonFlower_VBS_Upload", 
-        "MoonFlower_PC_Restart_Prep",
-        "MoonFlower_PC_Restart",
+        "MoonFlower_Startup_Recovery",
         "MoonFlower_VBS_Report",
-        "MoonFlower_Email_Evening"
+        "MoonFlower_Email_Morning"
     )
     
     foreach ($TaskName in $TaskNames) {

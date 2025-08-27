@@ -8,14 +8,12 @@ This system runs **365 days without interruption**, handling all aspects of Moon
 
 | Time | Task | Description |
 |------|------|-------------|
+| **8:00 AM** | 📧 Email Delivery | Send yesterday's PDF report to General Manager |
 | **9:30 AM** | 📥 Morning Download | Download CSV files from WiFi system |
 | **12:30 PM** | 📊 Afternoon Download + Excel | Download more CSV files and merge into Excel |
 | **1:00 PM** | ⬆️ VBS Upload | Start 3-hour upload process to VBS system |
-| **1:58 PM** | 🔧 Pre-Restart Prep | Save automation state before restart |
-| **2:00 PM** | 🔄 PC Restart | Restart PC for VBS reliability |
-| **2:02 PM** | 🚀 Post-Restart Resume | Resume automation after restart |
 | **4:00 PM** | 📋 Report Generation | Generate PDF reports in VBS |
-| **8:00 PM** | 📧 Email Delivery | Send PDF report to General Manager |
+| **On Startup** | 🚀 Recovery Check | Check for missed schedules and recover |
 
 ## 🔐 Advanced Features
 
@@ -29,10 +27,10 @@ This system runs **365 days without interruption**, handling all aspects of Moon
 - ✅ **Wakes PC from sleep** if needed
 - ✅ **Prevents sleep** during critical operations
 
-### PC Restart Continuity
-- 🔧 **Smart state saving** before 2:00 PM restart
-- 🚀 **Automatic resumption** of interrupted uploads
-- 📊 **Process tracking** across restarts
+### User Shutdown/Startup Handling
+- 🔧 **Startup recovery system** detects missed schedules
+- 🚀 **Automatic catch-up** when PC starts after downtime
+- 📊 **Smart file detection** to determine what needs to run
 
 ## 🚀 Installation
 
@@ -63,14 +61,14 @@ UNINSTALL_365DAY_SCHEDULE.bat
 ## 📁 File Structure
 
 ### Core BAT Files
-- `1_Email_Morning.bat` → **8:00 PM Email** (renamed for evening use)
+- `1_Email_Morning.bat` → **8:00 AM Email** (morning GM email)
 - `2_Download_Files.bat` → **9:30 AM & 12:30 PM Downloads**
 - `3_VBS_Upload.bat` → **1:00 PM Upload**
 - `4_VBS_Report.bat` → **4:00 PM Reports**
 
 ### PowerShell Infrastructure
 - `Setup_365Day_Complete_Schedule.ps1` → Main scheduler installer
-- `scripts\handle_2pm_restart.ps1` → Restart continuity handler
+- `scripts\startup_recovery.ps1` → Startup recovery handler
 
 ### VBS Automation Scripts
 - `vbs\vbs_phase1_login.py` → VBS login automation
@@ -86,7 +84,7 @@ UNINSTALL_365DAY_SCHEDULE.bat
 
 ## 🔧 Key Improvements Made
 
-### 1. Email System (8:00 PM)
+### 1. Email System (8:00 AM)
 - ✅ **Auto-generates missing PDFs** before sending
 - ✅ **Email delivery verification**
 - ✅ **Handles yesterday's data** correctly
@@ -104,11 +102,11 @@ UNINSTALL_365DAY_SCHEDULE.bat
 - ✅ **Time window validation** (1:00-1:05 PM)
 - ✅ **Excel dependency checking**
 
-### 4. PC Restart (2:00 PM)
-- ✅ **State preservation** before restart
-- ✅ **Graceful VBS closure** with process tracking
-- ✅ **Automatic resumption** after restart
-- ✅ **Upload continuity** across restarts
+### 4. Startup Recovery (On PC Start)
+- ✅ **Missed schedule detection** when user starts PC
+- ✅ **Smart file analysis** to determine what needs running
+- ✅ **Automatic catch-up** for missed downloads/uploads
+- ✅ **365-day continuity** regardless of user shutdown patterns
 
 ### 5. Report Generation (4:00 PM)
 - ✅ **Time window validation** (4:00-4:05 PM)

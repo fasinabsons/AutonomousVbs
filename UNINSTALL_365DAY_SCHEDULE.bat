@@ -9,12 +9,12 @@ echo.
 
 echo ⚠️ WARNING: This will remove ALL scheduled automation tasks:
 echo.
+echo   📧 Morning email (8:00 AM)
 echo   📥 Morning downloads (9:30 AM)
 echo   📊 Afternoon downloads + Excel merge (12:30 PM)
 echo   ⬆️ VBS uploads (1:00 PM)
-echo   🔄 PC restarts (2:00 PM)
 echo   📋 Report generation (4:00 PM)
-echo   📧 Email delivery (8:00 PM)
+echo   🚀 Startup recovery checks
 echo.
 
 set /p CONFIRM="Are you sure you want to uninstall? (y/N): "
