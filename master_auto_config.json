@@ -1,0 +1,18 @@
+{
+  "email_settings": {
+    "gm_email": "ramon.logan@absons.ae",
+    "notification_email": "faseenm@gmail.com"
+  },
+  "locations": {
+    "vbs_software_path": "",
+    "chrome_download_path": "",
+    "data_directory": ""
+  },
+  "timing": {
+    "email_time": "08:30",
+    "csv_slot1": "09:30",
+    "csv_slot2": "12:30",
+    "vbs_upload": "12:40",
+    "vbs_report": "17:01"
+  }
+}

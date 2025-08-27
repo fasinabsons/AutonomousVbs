@@ -1,0 +1,17 @@
+{
+  "service_name": "MoonFlowerWiFiAutomation",
+  "service_display_name": "MoonFlower WiFi Automation Service",
+  "install_date": "2025-07-17T16:08:55.577115",
+  "script_directory": "C:\\Users\\Lenovo\\Documents\\MoonFlower",
+  "python_executable": "C:\\Users\\Lenovo\\AppData\\Local\\Microsoft\\WindowsApps\\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\\python.exe",
+  "auto_restart_enabled": true,
+  "restart_threshold_days": 3,
+  "health_check_interval_minutes": 5,
+  "log_rotation_size_mb": 50,
+  "startup_mechanisms": [
+    "windows_service",
+    "task_scheduler",
+    "registry",
+    "startup_folder"
+  ]
+}

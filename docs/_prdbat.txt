@@ -1,0 +1,2043 @@
+# Product Requirements Document (PRD): Automated Task Scheduler & Runner
+
+## Executive Summary
+Create a robust, self-healing automation system that runs 365 days a year, automatically starts on PC restart, and manages a complex workflow of Python scripts for web scraping, file processing, VBS software automation, and email reporting.
+
+## Core Architecture Design
+
+### Primary Runner Choice: PowerShell Script
+**Rationale**: PowerShell is superior for this use case because:
+- Native Windows integration with Task Scheduler
+- Better error handling and logging capabilities
+- Can embed configuration and manage Python environments
+- Superior process management and monitoring
+- Built-in scheduling and retry mechanisms
+- Can handle service-like behavior without actual Windows Service complexity
+
+### System Components Structure
+
+#### 1. Master PowerShell Controller (`AutomationMaster.ps1`)
+- Single entry point that orchestrates everything
+- Runs as scheduled task on system startup
+- Contains embedded configuration for all timings and paths
+- Implements comprehensive error handling and recovery
+- Manages state persistence between runs and reboots
+- Handles dependency checking and Python environment validation
+
+#### 2. Configuration Management
+- All file paths, timings, email addresses embedded in PowerShell script
+- JSON configuration section within script for easy modification
+- Backup configuration file created automatically
+- Version control for configuration changes
+- Environment detection (different PCs, different Python installations)
+
+#### 3. Dependency and Environment Management
+- Python installation verification
+- Required package installation (pip freeze equivalent check)
+- Path validation for all Python scripts
+- Folder structure verification and creation
+- Log directory management
+- Temporary file cleanup routines
+
+#### 4. State Management System
+- Persistent state file tracking daily progress
+- Recovery mechanism for interrupted workflows
+- Lock files to prevent multiple instances
+- Progress checkpoints for each major operation
+- Failure state tracking and automatic retry logic
+- Date-based state reset mechanism
+
+#### 5. Scheduling and Timing Engine
+- Built-in scheduler using PowerShell's timing capabilities
+- Multiple schedule profiles (weekday/weekend/holiday handling)
+- Dynamic timing adjustment based on previous run durations
+- Slot management (9:00 AM, 12:30 PM slots with flexibility)
+- Automatic time zone handling
+- Daylight saving time compatibility
+
+#### 6. Process Management and Monitoring
+- Python script execution with timeout handling
+- Process monitoring and automatic restart
+- Memory and CPU usage tracking
+- Browser automation health checks
+- VBS software state monitoring
+- Automatic cleanup of orphaned processes
+
+#### 7. Error Handling and Recovery
+- Comprehensive try-catch blocks for each operation
+- Automatic retry logic with exponential backoff
+- Alternative execution paths for common failures
+- Network connectivity checks before web scraping
+- File system health checks
+- Email delivery failure handling with queuing
+
+#### 8. Logging and Monitoring System
+- Multi-level logging (Debug, Info, Warning, Error, Critical)
+- Separate log files for different components
+- Log rotation and archival
+- Performance metrics collection
+- Error pattern detection
+- Automated log analysis for common issues
+
+#### 9. File System Management
+- Dynamic folder creation based on date patterns
+- File existence validation before operations
+- Automatic cleanup of old files
+- Backup mechanism for critical files
+- CSV file validation and corruption detection
+- Excel file integrity checks
+
+#### 10. Network and External Dependencies
+- Internet connectivity validation
+- Website availability checks before scraping
+- VBS software availability verification
+- Outlook connection health monitoring
+- Email server connectivity testing
+- Automatic proxy detection and configuration
+
+## Detailed Implementation Logic
+
+### Startup and Initialization Phase
+1. **System Boot Detection**: Script detects if running after system restart
+2. **Environment Validation**: Verify Python installation, required packages, file paths
+3. **State Recovery**: Check previous execution state, determine where to resume
+4. **Folder Structure**: Create date-based folders if missing
+5. **Lock File Management**: Ensure single instance execution
+6. **Configuration Loading**: Load and validate all embedded configurations
+7. **Dependency Checks**: Verify all Python scripts exist and are executable
+
+### Daily Execution Workflow
+1. **Morning Slot (9:00 AM)**:
+   - Execute csv_downloader_resilient.py
+   - Validate 4 CSV files downloaded
+   - Store files in date-based EHC_Data subfolder
+   - Log completion status and file details
+
+2. **Midday Slot (12:30 PM)**:
+   - Execute csv_downloader_resilient.py again
+   - Validate additional 4 CSV files downloaded
+   - Immediately trigger excel_generator.py
+   - Validate merged Excel file creation
+   - Prepare for VBS automation phase
+
+3. **VBS Automation Phase (12:40 PM)**:
+   - Execute vbs_phase1_login.py
+   - Monitor login success through screen capture or audio detection
+   - Execute vbs_phase2_navigation_fixed.py
+   - Execute vbs_phase3_upload_complete.py
+   - Monitor upload progress with timeout handling (3 hours max)
+
+4. **Afternoon Processing (4:00 PM)**:
+   - Force close VBS software if still running
+   - Re-execute vbs_phase1_login.py for fresh session
+   - Execute vbs_phase4_report_fixed.py
+   - Validate PDF report generation
+   - Store PDF in date-based EHC_Data_Pdf subfolder
+
+5. **Next Day Email Delivery**:
+   - Check if weekday (skip weekends, send Monday reports on Tuesday)
+   - Execute outlook_automation.py with previous day's PDF
+   - Validate email delivery success
+   - Archive sent reports
+
+### Error Recovery Mechanisms
+1. **Missing Files Recovery**:
+   - Implement file_checker.py functionality within PowerShell
+   - Automatic retry of failed download operations
+   - Alternative data source fallback mechanisms
+   - Manual intervention notifications for critical failures
+
+2. **Process Failure Recovery**:
+   - Automatic restart of crashed Python processes
+   - Browser automation recovery (close/restart browsers)
+   - VBS software recovery (force close and restart)
+   - Network failure recovery with connection retries
+
+3. **Timing Failure Recovery**:
+   - Slot overlap prevention and management
+   - Late execution handling with adjusted schedules
+   - Weekend and holiday schedule management
+   - Time zone and daylight saving adjustments
+
+4. **Data Integrity Recovery**:
+   - CSV file validation and redownload if corrupted
+   - Excel merge verification with automatic retry
+   - PDF generation validation with alternative methods
+   - Email attachment verification before sending
+
+### Configuration and Customization Features
+1. **Timing Customization**:
+   - Easy modification of slot timings through embedded JSON
+   - Additional slot creation capability
+   - Dynamic schedule adjustment based on processing times
+   - Holiday and weekend schedule overrides
+
+2. **Email Configuration**:
+   - Simple email address modification in configuration section
+   - Multiple recipient support for different report types
+   - Email template customization
+   - Signature and formatting management
+
+3. **Path and Environment Configuration**:
+   - Automatic path detection and adjustment for different PCs
+   - Python installation path discovery
+   - Custom folder location support
+   - Network drive and cloud storage integration options
+
+4. **Retry and Timeout Configuration**:
+   - Customizable retry counts for each operation
+   - Timeout adjustments for long-running processes
+   - Error threshold configuration
+   - Recovery strategy selection
+
+### Installation and Deployment Strategy
+1. **Single File Deployment**:
+   - PowerShell script with embedded Python file paths
+   - Configuration wizard for initial setup
+   - Automatic Task Scheduler entry creation
+   - Desktop shortcut creation for manual control
+
+2. **Cross-PC Compatibility**:
+   - Automatic Python installation detection
+   - Required package installation automation
+   - Windows version compatibility checks
+   - User permission and UAC handling
+
+3. **Maintenance and Updates**:
+   - Built-in update mechanism for script modifications
+   - Configuration backup and restore functionality
+   - Log analysis and health reporting
+   - Performance optimization recommendations
+
+### Monitoring and Alerting System
+1. **Real-time Status Monitoring**:
+   - Dashboard-style log output during execution
+   - Progress indicators for long-running operations
+   - Real-time error reporting
+   - System resource usage monitoring
+
+2. **Automated Alerting**:
+   - Email notifications for critical failures
+   - Daily execution summary reports
+   - Weekly performance and reliability reports
+   - Automatic escalation for repeated failures
+
+3. **Health Checks and Diagnostics**:
+   - Daily system health validation
+   - Performance benchmarking and trending
+   - Predictive failure detection
+   - Automatic optimization suggestions
+
+### Security and Reliability Features
+1. **Data Protection**:
+   - Automatic backup of critical files
+   - Encryption of sensitive configuration data
+   - Audit logging for all operations
+   - Access control for configuration modifications
+
+2. **System Reliability**:
+   - Graceful shutdown handling
+   - Resource cleanup on exit
+   - Memory leak prevention
+   - Process isolation and sandboxing
+
+3. **Disaster Recovery**:
+   - Configuration and state backup mechanisms
+   - Automatic recovery from corrupted states
+   - Emergency manual override capabilities
+   - Rollback functionality for failed updates
+
+This comprehensive system design ensures 365-day reliability, automatic recovery from failures, and seamless operation across different PC environments while maintaining the exact workflow requirements specified. The PowerShell-based approach provides the perfect balance of functionality, reliability, and Windows integration needed for this critical automation system.
+//Additional instructions bat ideas
+@echo off
+setlocal EnableDelayedExpansion
+
+REM ============================================================================
+REM AutomationMaster.bat - 365 Day Continuous Automation System
+REM ============================================================================
+REM This script manages the complete workflow:
+REM - Web scraping CSV downloads (9:00 AM, 12:30 PM)
+REM - Excel file merging
+REM - VBS software automation
+REM - PDF report generation
+REM - Email delivery (next business day)
+REM - Error handling and recovery
+REM - Automatic startup after PC restart
+REM ============================================================================
+
+REM Configuration Section - MODIFY THESE VALUES AS NEEDED
+REM ============================================================================
+set "BASE_PATH=C:\Users\Lenovo\Documents\Automate2\Automata2"
+set "PYTHON_EXE=python"
+set "GM_EMAIL=ramon.logan@absons.ae"
+set "SENDER_EMAIL=mohamed.fasin@absons.ae"
+
+REM Timing Configuration (24-hour format: HHMM)
+set "SLOT1_TIME=0900"
+set "SLOT2_TIME=1230"
+set "VBS_LOGIN_TIME=1240"
+set "VBS_CLOSE_TIME=1600"
+set "REPORT_TIME=1610"
+
+REM File Paths
+set "CSV_DOWNLOADER=%BASE_PATH%\wifi\csv_downloader_resilient.py"
+set "EXCEL_GENERATOR=%BASE_PATH%\excel\excel_generator.py"
+set "VBS_LOGIN=%BASE_PATH%\vbs\vbs_phase1_login.py"
+set "VBS_NAVIGATE=%BASE_PATH%\vbs\vbs_phase2_navigation_fixed.py"
+set "VBS_UPLOAD=%BASE_PATH%\vbs\vbs_phase3_upload_complete.py"
+set "VBS_REPORT=%BASE_PATH%\vbs\vbs_phase4_report_fixed.py"
+set "EMAIL_OUTLOOK=%BASE_PATH%\email\outlook_automation.py"
+set "EMAIL_DELIVERY=%BASE_PATH%\email\email_delivery.py"
+set "DAILY_FOLDER=%BASE_PATH%\daily_folder_creator.py"
+set "AUDIO_DETECTOR=%BASE_PATH%\vbs\vbs_audio_detector.py"
+
+REM Folder Paths
+set "EHC_DATA=%BASE_PATH%\EHC_Data"
+set "EHC_MERGE=%BASE_PATH%\EHC_Data_Merge"
+set "EHC_PDF=%BASE_PATH%\EHC_Data_Pdf"
+set "EHC_LOGS=%BASE_PATH%\EHC_Logs"
+
+REM State and Lock Files
+set "STATE_FILE=%BASE_PATH%\automation_state.txt"
+set "LOCK_FILE=%BASE_PATH%\automation.lock"
+set "LOG_FILE=%EHC_LOGS%\automation_master.log"
+
+REM ============================================================================
+REM Main Entry Point
+REM ============================================================================
+:MAIN
+call :LOG "AutomationMaster starting at %date% %time%"
+call :CHECK_SINGLE_INSTANCE
+call :SETUP_ENVIRONMENT
+call :CREATE_STARTUP_TASK
+call :MAIN_LOOP
+exit /b
+
+REM ============================================================================
+REM Main Execution Loop
+REM ============================================================================
+:MAIN_LOOP
+call :LOG "Entering main execution loop"
+
+:LOOP_START
+call :CHECK_AND_CREATE_DAILY_FOLDERS
+call :LOAD_STATE
+call :GET_CURRENT_TIME_MINUTES
+
+REM Check what needs to be executed based on time and state
+call :CHECK_SLOT1_EXECUTION
+call :CHECK_SLOT2_EXECUTION
+call :CHECK_VBS_EXECUTION
+call :CHECK_EMAIL_EXECUTION
+call :CHECK_ERROR_RECOVERY
+
+REM Wait 60 seconds before next check
+timeout /t 60 /nobreak >nul 2>&1
+goto LOOP_START
+
+REM ============================================================================
+REM Time-based Execution Checks
+REM ============================================================================
+:CHECK_SLOT1_EXECUTION
+if !CURRENT_TIME_MIN! geq 540 if !CURRENT_TIME_MIN! leq 570 (
+    if not "!SLOT1_DONE!"=="1" (
+        call :LOG "Executing Slot 1 - Morning CSV Download"
+        call :EXECUTE_PYTHON_SCRIPT "%CSV_DOWNLOADER%" "SLOT1"
+        if !ERRORLEVEL! equ 0 (
+            call :SAVE_STATE "SLOT1_DONE=1"
+            call :LOG "Slot 1 completed successfully"
+        ) else (
+            call :LOG "ERROR: Slot 1 failed, will retry"
+            call :SEND_ERROR_EMAIL "Slot 1 CSV Download Failed"
+        )
+    )
+)
+exit /b
+
+:CHECK_SLOT2_EXECUTION
+if !CURRENT_TIME_MIN! geq 750 if !CURRENT_TIME_MIN! leq 780 (
+    if not "!SLOT2_DONE!"=="1" (
+        call :LOG "Executing Slot 2 - Afternoon CSV Download"
+        call :EXECUTE_PYTHON_SCRIPT "%CSV_DOWNLOADER%" "SLOT2"
+        if !ERRORLEVEL! equ 0 (
+            call :LOG "Starting Excel merge after Slot 2"
+            call :EXECUTE_PYTHON_SCRIPT "%EXCEL_GENERATOR%" "MERGE"
+            if !ERRORLEVEL! equ 0 (
+                call :SAVE_STATE "SLOT2_DONE=1"
+                call :SAVE_STATE "MERGE_DONE=1"
+                call :LOG "Slot 2 and merge completed successfully"
+            )
+        ) else (
+            call :LOG "ERROR: Slot 2 failed"
+            call :SEND_ERROR_EMAIL "Slot 2 CSV Download Failed"
+        )
+    )
+)
+exit /b
+
+:CHECK_VBS_EXECUTION
+REM VBS Login at 12:40 PM (760 minutes)
+if !CURRENT_TIME_MIN! geq 760 if !CURRENT_TIME_MIN! leq 780 (
+    if "!MERGE_DONE!"=="1" if not "!VBS_LOGIN_DONE!"=="1" (
+        call :LOG "Executing VBS Phase 1 - Login"
+        call :EXECUTE_PYTHON_SCRIPT "%VBS_LOGIN%" "VBS_LOGIN"
+        if !ERRORLEVEL! equ 0 (
+            call :SAVE_STATE "VBS_LOGIN_DONE=1"
+            timeout /t 30 /nobreak >nul
+            
+            call :LOG "Executing VBS Phase 2 - Navigation"
+            call :EXECUTE_PYTHON_SCRIPT "%VBS_NAVIGATE%" "VBS_NAVIGATE"
+            if !ERRORLEVEL! equ 0 (
+                call :LOG "Executing VBS Phase 3 - Upload"
+                call :EXECUTE_PYTHON_SCRIPT "%VBS_UPLOAD%" "VBS_UPLOAD"
+                if !ERRORLEVEL! equ 0 (
+                    call :SAVE_STATE "VBS_UPLOAD_DONE=1"
+                    call :LOG "VBS upload initiated successfully"
+                )
+            )
+        )
+    )
+)
+
+REM VBS Close and Report at 4:00 PM (960 minutes)
+if !CURRENT_TIME_MIN! geq 960 if !CURRENT_TIME_MIN! leq 980 (
+    if "!VBS_UPLOAD_DONE!"=="1" if not "!REPORT_DONE!"=="1" (
+        call :LOG "Closing VBS software and generating report"
+        call :CLOSE_VBS_SOFTWARE
+        timeout /t 60 /nobreak >nul
+        
+        call :EXECUTE_PYTHON_SCRIPT "%VBS_LOGIN%" "VBS_LOGIN2"
+        timeout /t 30 /nobreak >nul
+        
+        call :EXECUTE_PYTHON_SCRIPT "%VBS_REPORT%" "VBS_REPORT"
+        if !ERRORLEVEL! equ 0 (
+            call :SAVE_STATE "REPORT_DONE=1"
+            call :LOG "PDF report generated successfully"
+        )
+    )
+)
+exit /b
+
+:CHECK_EMAIL_EXECUTION
+REM Email delivery next business day at 9:30 AM
+call :GET_WEEKDAY
+if !WEEKDAY! geq 2 if !WEEKDAY! leq 6 (
+    if !CURRENT_TIME_MIN! geq 570 if !CURRENT_TIME_MIN! leq 590 (
+        call :CHECK_YESTERDAY_REPORT
+        if "!YESTERDAY_REPORT_EXISTS!"=="1" if not "!EMAIL_SENT!"=="1" (
+            call :LOG "Sending email with yesterday's report"
+            call :EXECUTE_PYTHON_SCRIPT "%EMAIL_OUTLOOK%" "EMAIL"
+            if !ERRORLEVEL! equ 0 (
+                call :SAVE_STATE "EMAIL_SENT=1"
+                call :LOG "Email sent successfully"
+            )
+        )
+    )
+)
+exit /b
+
+REM ============================================================================
+REM Python Script Execution with Error Handling
+REM ============================================================================
+:EXECUTE_PYTHON_SCRIPT
+set "script_path=%~1"
+set "operation=%~2"
+set "retry_count=0"
+set "max_retries=3"
+
+:RETRY_EXECUTION
+call :LOG "Executing: %script_path% (Attempt %retry_count%/%max_retries%)"
+
+REM Check if script exists
+if not exist "%script_path%" (
+    call :LOG "ERROR: Script not found: %script_path%"
+    exit /b 1
+)
+
+REM Execute with timeout (3 hours max for uploads)
+if "%operation%"=="VBS_UPLOAD" (
+    timeout /t 10800 /nobreak >nul & taskkill /f /im python.exe 2>nul
+    %PYTHON_EXE% "%script_path%" 2>&1 | call :LOG_OUTPUT
+) else (
+    timeout /t 1800 /nobreak >nul & taskkill /f /im python.exe 2>nul
+    %PYTHON_EXE% "%script_path%" 2>&1 | call :LOG_OUTPUT
+)
+
+set "script_result=!ERRORLEVEL!"
+
+if !script_result! neq 0 (
+    set /a retry_count+=1
+    if !retry_count! leq !max_retries! (
+        call :LOG "Script failed, retrying in 60 seconds..."
+        timeout /t 60 /nobreak >nul
+        goto RETRY_EXECUTION
+    ) else (
+        call :LOG "ERROR: Script failed after %max_retries% attempts"
+        call :SEND_ERROR_EMAIL "Script Failed: %script_path%"
+        exit /b 1
+    )
+)
+
+call :LOG "Script completed successfully: %script_path%"
+exit /b 0
+
+REM ============================================================================
+REM Environment Setup and Validation
+REM ============================================================================
+:SETUP_ENVIRONMENT
+call :LOG "Setting up environment and validating dependencies"
+
+REM Check Python installation
+%PYTHON_EXE% --version >nul 2>&1
+if !ERRORLEVEL! neq 0 (
+    call :LOG "ERROR: Python not found or not in PATH"
+    call :INSTALL_PYTHON
+)
+
+REM Create required folders
+for %%F in ("%EHC_DATA%" "%EHC_MERGE%" "%EHC_PDF%" "%EHC_LOGS%") do (
+    if not exist "%%F" (
+        mkdir "%%F" >nul 2>&1
+        call :LOG "Created folder: %%F"
+    )
+)
+
+REM Validate Python scripts exist
+call :VALIDATE_SCRIPTS
+
+REM Install required Python packages
+call :INSTALL_PYTHON_PACKAGES
+
+call :LOG "Environment setup completed"
+exit /b
+
+:VALIDATE_SCRIPTS
+call :LOG "Validating Python scripts..."
+set "missing_scripts="
+
+for %%S in ("%CSV_DOWNLOADER%" "%EXCEL_GENERATOR%" "%VBS_LOGIN%" "%VBS_NAVIGATE%" "%VBS_UPLOAD%" "%VBS_REPORT%" "%EMAIL_OUTLOOK%" "%EMAIL_DELIVERY%" "%DAILY_FOLDER%") do (
+    if not exist "%%S" (
+        set "missing_scripts=!missing_scripts! %%S"
+        call :LOG "ERROR: Missing script: %%S"
+    )
+)
+
+if defined missing_scripts (
+    call :LOG "CRITICAL: Missing required scripts. Please ensure all Python files are in correct locations."
+    call :SEND_ERROR_EMAIL "Missing Scripts: !missing_scripts!"
+)
+exit /b
+
+:INSTALL_PYTHON_PACKAGES
+call :LOG "Installing/updating required Python packages..."
+%PYTHON_EXE% -m pip install --upgrade pip >nul 2>&1
+%PYTHON_EXE% -m pip install selenium pandas openpyxl pyautogui opencv-python pywin32 >nul 2>&1
+call :LOG "Python packages installation completed"
+exit /b
+
+REM ============================================================================
+REM State Management
+REM ============================================================================
+:LOAD_STATE
+REM Reset daily state if new day
+call :GET_CURRENT_DATE
+if not "!CURRENT_DATE!"=="!LAST_DATE!" (
+    call :RESET_DAILY_STATE
+    call :SAVE_STATE "LAST_DATE=!CURRENT_DATE!"
+)
+
+REM Load existing state variables
+if exist "%STATE_FILE%" (
+    for /f "tokens=1,2 delims==" %%A in (%STATE_FILE%) do (
+        set "%%A=%%B"
+    )
+)
+exit /b
+
+:SAVE_STATE
+echo %~1 >> "%STATE_FILE%.tmp"
+if exist "%STATE_FILE%" (
+    findstr /v "^%~1" "%STATE_FILE%" >> "%STATE_FILE%.tmp" 2>nul
+)
+move "%STATE_FILE%.tmp" "%STATE_FILE%" >nul 2>&1
+exit /b
+
+:RESET_DAILY_STATE
+call :LOG "Resetting daily state for new day"
+set "SLOT1_DONE="
+set "SLOT2_DONE="
+set "MERGE_DONE="
+set "VBS_LOGIN_DONE="
+set "VBS_UPLOAD_DONE="
+set "REPORT_DONE="
+set "EMAIL_SENT="
+if exist "%STATE_FILE%" del "%STATE_FILE%" >nul 2>&1
+exit /b
+
+REM ============================================================================
+REM Daily Folder Management
+REM ============================================================================
+:CHECK_AND_CREATE_DAILY_FOLDERS
+call :GET_DATE_FOLDER_NAME
+for %%F in ("%EHC_DATA%" "%EHC_MERGE%" "%EHC_PDF%" "%EHC_LOGS%") do (
+    set "daily_folder=%%F\!DATE_FOLDER!"
+    if not exist "!daily_folder!" (
+        mkdir "!daily_folder!" >nul 2>&1
+        call :LOG "Created daily folder: !daily_folder!"
+    )
+)
+
+REM Also run the Python daily folder creator
+call :EXECUTE_PYTHON_SCRIPT "%DAILY_FOLDER%" "DAILY_FOLDER" >nul 2>&1
+exit /b
+
+:GET_DATE_FOLDER_NAME
+REM Create folder name in format: DDmmm (e.g., 08aug)
+for /f "tokens=1-3 delims=/" %%A in ("%date%") do (
+    set "day=%%A"
+    set "month=%%B"
+    set "year=%%C"
+)
+REM Ensure day is 2 digits
+if !day! lss 10 set "day=0!day!"
+
+REM Convert month number to short name
+set "month_names=jan feb mar apr may jun jul aug sep oct nov dec"
+set "i=0"
+for %%M in (!month_names!) do (
+    set /a i+=1
+    if !i! equ !month! set "month_short=%%M"
+)
+
+set "DATE_FOLDER=!day!!month_short!"
+exit /b
+
+REM ============================================================================
+REM VBS Software Management
+REM ============================================================================
+:CLOSE_VBS_SOFTWARE
+call :LOG "Attempting to close VBS software"
+REM Force close common VBS/automation software processes
+taskkill /f /im "*.exe" /fi "WINDOWTITLE eq VBS*" >nul 2>&1
+taskkill /f /im "vbs.exe" >nul 2>&1
+taskkill /f /im "automation.exe" >nul 2>&1
+REM Add specific process names for your VBS software here
+timeout /t 5 /nobreak >nul
+call :LOG "VBS software close attempted"
+exit /b
+
+REM ============================================================================
+REM Error Handling and Recovery
+REM ============================================================================
+:CHECK_ERROR_RECOVERY
+REM Check for common error conditions and attempt recovery
+call :CHECK_ORPHANED_PROCESSES
+call :CHECK_DISK_SPACE
+call :CHECK_NETWORK_CONNECTIVITY
+exit /b
+
+:CHECK_ORPHANED_PROCESSES
+REM Clean up any orphaned Python/browser processes
+for /f "tokens=2" %%A in ('tasklist /fi "imagename eq python.exe" /fo csv ^| find /c /v ""') do set "python_count=%%A"
+if !python_count! gtr 5 (
+    call :LOG "WARNING: Too many Python processes detected, cleaning up"
+    taskkill /f /im python.exe >nul 2>&1
+    timeout /t 10 /nobreak >nul
+)
+
+REM Clean up browser processes
+taskkill /f /im chrome.exe >nul 2>&1
+taskkill /f /im chromedriver.exe >nul 2>&1
+taskkill /f /im firefox.exe >nul 2>&1
+taskkill /f /im geckodriver.exe >nul 2>&1
+exit /b
+
+:CHECK_DISK_SPACE
+REM Check available disk space (minimum 1GB required)
+for /f "tokens=3" %%A in ('dir C:\ ^| findstr "bytes free"') do set "free_space=%%A"
+if !free_space! lss 1000000000 (
+    call :LOG "WARNING: Low disk space detected"
+    call :CLEANUP_OLD_FILES
+)
+exit /b
+
+:CHECK_NETWORK_CONNECTIVITY
+ping google.com -n 1 -w 3000 >nul 2>&1
+if !ERRORLEVEL! neq 0 (
+    call :LOG "WARNING: Network connectivity issue detected"
+    REM Try to reset network
+    ipconfig /release >nul 2>&1
+    ipconfig /renew >nul 2>&1
+)
+exit /b
+
+:CLEANUP_OLD_FILES
+call :LOG "Performing cleanup of old files"
+REM Clean files older than 30 days from data folders
+forfiles /p "%EHC_DATA%" /s /m *.* /d -30 /c "cmd /c del @path" 2>nul
+forfiles /p "%EHC_MERGE%" /s /m *.* /d -30 /c "cmd /c del @path" 2>nul
+forfiles /p "%EHC_PDF%" /s /m *.* /d -7 /c "cmd /c del @path" 2>nul
+forfiles /p "%EHC_LOGS%" /s /m *.log /d -7 /c "cmd /c del @path" 2>nul
+call :LOG "Cleanup completed"
+exit /b
+
+REM ============================================================================
+REM Email and Notification Functions
+REM ============================================================================
+:SEND_ERROR_EMAIL
+set "error_message=%~1"
+call :LOG "Sending error notification: %error_message%"
+%PYTHON_EXE% "%EMAIL_DELIVERY%" "%error_message%" >nul 2>&1
+exit /b
+
+:CHECK_YESTERDAY_REPORT
+call :GET_YESTERDAY_DATE
+set "yesterday_pdf=%EHC_PDF%\!YESTERDAY_FOLDER!\report_!YESTERDAY_DATE!.pdf"
+if exist "%yesterday_pdf%" (
+    set "YESTERDAY_REPORT_EXISTS=1"
+) else (
+    set "YESTERDAY_REPORT_EXISTS="
+    call :LOG "Yesterday's report not found: %yesterday_pdf%"
+)
+exit /b
+
+:GET_YESTERDAY_DATE
+REM Calculate yesterday's date and folder name
+REM This is a simplified version - you may need more robust date calculation
+set /a yesterday_day=!day!-1
+if !yesterday_day! leq 0 (
+    REM Handle month rollover (simplified)
+    set /a yesterday_day=30
+    set /a yesterday_month=!month!-1
+    if !yesterday_month! leq 0 (
+        set /a yesterday_month=12
+        set /a yesterday_year=!year!-1
+    )
+) else (
+    set "yesterday_month=!month!"
+    set "yesterday_year=!year!"
+)
+set "YESTERDAY_DATE=!yesterday_day!!month_short!"
+set "YESTERDAY_FOLDER=!yesterday_day!!month_short!"
+exit /b
+
+REM ============================================================================
+REM Startup Task Management
+REM ============================================================================
+:CREATE_STARTUP_TASK
+call :LOG "Setting up Windows startup task"
+schtasks /query /tn "AutomationMaster" >nul 2>&1
+if !ERRORLEVEL! neq 0 (
+    schtasks /create /tn "AutomationMaster" /tr "\"%~dpnx0\"" /sc onstart /ru "SYSTEM" /f >nul 2>&1
+    if !ERRORLEVEL! equ 0 (
+        call :LOG "Startup task created successfully"
+    ) else (
+        call :LOG "WARNING: Failed to create startup task"
+    )
+) else (
+    call :LOG "Startup task already exists"
+)
+exit /b
+
+REM ============================================================================
+REM Single Instance Management
+REM ============================================================================
+:CHECK_SINGLE_INSTANCE
+if exist "%LOCK_FILE%" (
+    call :LOG "Another instance is already running. Exiting."
+    exit /b 1
+)
+echo %date% %time% > "%LOCK_FILE%"
+REM Setup cleanup on exit
+set "cleanup_registered=1"
+exit /b
+
+REM ============================================================================
+REM Utility Functions
+REM ============================================================================
+:GET_CURRENT_TIME_MINUTES
+REM Convert current time to minutes since midnight
+for /f "tokens=1-2 delims=:" %%A in ("%time%") do (
+    set "hour=%%A"
+    set "minute=%%B"
+)
+REM Remove leading spaces/zeros
+set /a hour=1!hour! - 100
+set /a minute=1!minute! - 100
+set /a CURRENT_TIME_MIN=!hour!*60+!minute!
+exit /b
+
+:GET_CURRENT_DATE
+set "CURRENT_DATE=%date%"
+exit /b
+
+:GET_WEEKDAY
+REM Get day of week (1=Sunday, 7=Saturday)
+for /f "skip=1" %%A in ('wmic path win32_localtime get dayofweek /format:table') do (
+    set "WEEKDAY=%%A"
+    goto :weekday_done
+)
+:weekday_done
+exit /b
+
+:LOG
+set "log_message=%~1"
+set "timestamp=%date% %time%"
+echo [!timestamp!] !log_message! >> "%LOG_FILE%" 2>&1
+echo [!timestamp!] !log_message!
+exit /b
+
+:LOG_OUTPUT
+set /p "output_line="
+call :LOG "OUTPUT: !output_line!"
+exit /b
+
+REM ============================================================================
+REM Cleanup on Exit
+REM ============================================================================
+:CLEANUP_ON_EXIT
+if exist "%LOCK_FILE%" del "%LOCK_FILE%" >nul 2>&1
+call :LOG "AutomationMaster shutting down"
+exit /b
+
+REM Register cleanup handler
+if not defined cleanup_registered (
+    REM This runs when script exits
+    call :CLEANUP_ON_EXIT
+)
+//Powershell ideas
+#Requires -Version 5.1
+<#
+.SYNOPSIS
+    Automated Task Scheduler & Runner - 365 Day Operation System
+.DESCRIPTION
+    Comprehensive automation system for web scraping, file processing, VBS automation, and email reporting
+    Runs continuously with self-healing capabilities and automatic recovery
+.AUTHOR
+    Generated for 365-day automation requirements
+.VERSION
+    1.0.0
+#>
+
+# ================================================================================================
+# CONFIGURATION SECTION - Modify these settings as needed
+# ================================================================================================
+
+$Global:Config = @{
+    # File Paths and Directories
+    Paths = @{
+        PythonScripts = "C:\Automation\Scripts"  # Base path for Python scripts
+        DataFolder = "C:\Automation\Data"        # Base data folder
+        LogFolder = "C:\Automation\Logs"         # Log files location
+        StateFile = "C:\Automation\state.json"   # State persistence file
+        LockFile = "C:\Automation\automation.lock" # Lock file for single instance
+        BackupFolder = "C:\Automation\Backups"   # Backup location
+    }
+    
+    # Python Script Names
+    Scripts = @{
+        CSVDownloader = "csv_downloader_resilient.py"
+        ExcelGenerator = "excel_generator.py"
+        VBSPhase1 = "vbs_phase1_login.py"
+        VBSPhase2 = "vbs_phase2_navigation_fixed.py"
+        VBSPhase3 = "vbs_phase3_upload_complete.py"
+        VBSPhase4 = "vbs_phase4_report_fixed.py"
+        OutlookAutomation = "outlook_automation.py"
+        FileChecker = "file_checker.py"
+    }
+    
+    # Execution Schedule (24-hour format)
+    Schedule = @{
+        MorningSlot = "09:00"      # First CSV download
+        MiddaySlot = "12:30"       # Second CSV download + Excel generation
+        VBSStart = "12:40"         # VBS automation start
+        AfternoonSlot = "16:00"    # VBS report generation
+        EmailTime = "08:00"        # Next day email delivery
+    }
+    
+    # Timeout Settings (in minutes)
+    Timeouts = @{
+        CSVDownload = 15
+        ExcelGeneration = 10
+        VBSLogin = 5
+        VBSNavigation = 10
+        VBSUpload = 180           # 3 hours for upload
+        VBSReport = 30
+        EmailSend = 10
+    }
+    
+    # Retry Settings
+    Retries = @{
+        MaxRetries = 3
+        RetryDelay = 60           # seconds
+        BackoffMultiplier = 2
+    }
+    
+    # Email Configuration
+    Email = @{
+        Recipients = @("recipient1@company.com", "recipient2@company.com")
+        Subject = "Daily EHC Report - {DATE}"
+        SendOnWeekends = $false
+        SendMondayReportOnTuesday = $true
+    }
+    
+    # Folder Structure
+    FolderStructure = @{
+        EHCDataSubfolder = "EHC_Data"
+        EHCPdfSubfolder = "EHC_Data_Pdf" 
+        DateFormat = "yyyy-MM-dd"
+    }
+}
+
+# ================================================================================================
+# GLOBAL VARIABLES AND INITIALIZATION
+# ================================================================================================
+
+$Global:LogLevel = "INFO"
+$Global:CurrentState = @{}
+$Global:StartTime = Get-Date
+$Global:ExecutionId = [System.Guid]::NewGuid().ToString().Substring(0,8)
+$Global:IsDebugMode = $false
+
+# ================================================================================================
+# UTILITY FUNCTIONS
+# ================================================================================================
+
+function Write-CustomLog {
+    param(
+        [Parameter(Mandatory)]
+        [string]$Message,
+        [ValidateSet("DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL")]
+        [string]$Level = "INFO",
+        [switch]$WriteToConsole = $true
+    )
+    
+    $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss.fff"
+    $logEntry = "[$timestamp] [$Global:ExecutionId] [$Level] $Message"
+    
+    # Create log folder if it doesn't exist
+    $logDir = $Global:Config.Paths.LogFolder
+    if (-not (Test-Path $logDir)) {
+        New-Item -ItemType Directory -Path $logDir -Force | Out-Null
+    }
+    
+    # Write to daily log file
+    $logFile = Join-Path $logDir "AutomationMaster_$(Get-Date -Format 'yyyy-MM-dd').log"
+    Add-Content -Path $logFile -Value $logEntry -Encoding UTF8
+    
+    # Write to console if requested
+    if ($WriteToConsole) {
+        switch ($Level) {
+            "ERROR" { Write-Host $logEntry -ForegroundColor Red }
+            "WARNING" { Write-Host $logEntry -ForegroundColor Yellow }
+            "CRITICAL" { Write-Host $logEntry -ForegroundColor Magenta }
+            "DEBUG" { if ($Global:IsDebugMode) { Write-Host $logEntry -ForegroundColor Gray } }
+            default { Write-Host $logEntry -ForegroundColor White }
+        }
+    }
+}
+
+function Test-SingleInstance {
+    $lockFile = $Global:Config.Paths.LockFile
+    
+    if (Test-Path $lockFile) {
+        $lockData = Get-Content $lockFile -Raw -ErrorAction SilentlyContinue | ConvertFrom-Json -ErrorAction SilentlyContinue
+        if ($lockData -and $lockData.ProcessId) {
+            $process = Get-Process -Id $lockData.ProcessId -ErrorAction SilentlyContinue
+            if ($process) {
+                Write-CustomLog "Another instance is already running (PID: $($lockData.ProcessId))" -Level "ERROR"
+                return $false
+            }
+        }
+    }
+    
+    # Create lock file
+    $lockData = @{
+        ProcessId = $PID
+        StartTime = $Global:StartTime.ToString("yyyy-MM-dd HH:mm:ss")
+        ExecutionId = $Global:ExecutionId
+    }
+    
+    $lockData | ConvertTo-Json | Set-Content $lockFile -Encoding UTF8
+    Write-CustomLog "Lock file created successfully" -Level "DEBUG"
+    return $true
+}
+
+function Remove-LockFile {
+    $lockFile = $Global:Config.Paths.LockFile
+    if (Test-Path $lockFile) {
+        Remove-Item $lockFile -Force -ErrorAction SilentlyContinue
+        Write-CustomLog "Lock file removed" -Level "DEBUG"
+    }
+}
+
+function Initialize-Environment {
+    Write-CustomLog "Initializing environment..." -Level "INFO"
+    
+    # Create all required directories
+    $directories = @(
+        $Global:Config.Paths.DataFolder,
+        $Global:Config.Paths.LogFolder,
+        $Global:Config.Paths.BackupFolder,
+        (Split-Path $Global:Config.Paths.StateFile -Parent)
+    )
+    
+    foreach ($dir in $directories) {
+        if (-not (Test-Path $dir)) {
+            try {
+                New-Item -ItemType Directory -Path $dir -Force | Out-Null
+                Write-CustomLog "Created directory: $dir" -Level "DEBUG"
+            }
+            catch {
+                Write-CustomLog "Failed to create directory $dir`: $_" -Level "ERROR"
+                return $false
+            }
+        }
+    }
+    
+    # Verify Python installation
+    try {
+        $pythonVersion = & python --version 2>&1
+        Write-CustomLog "Python detected: $pythonVersion" -Level "INFO"
+    }
+    catch {
+        Write-CustomLog "Python not found in PATH. Please ensure Python is installed and accessible." -Level "CRITICAL"
+        return $false
+    }
+    
+    # Verify Python scripts exist
+    $scriptsPath = $Global:Config.Paths.PythonScripts
+    foreach ($script in $Global:Config.Scripts.Values) {
+        $scriptPath = Join-Path $scriptsPath $script
+        if (-not (Test-Path $scriptPath)) {
+            Write-CustomLog "Python script not found: $scriptPath" -Level "ERROR"
+            return $false
+        }
+    }
+    
+    Write-CustomLog "Environment initialization completed successfully" -Level "INFO"
+    return $true
+}
+
+function Get-TodayDataFolder {
+    $dateStr = Get-Date -Format $Global:Config.FolderStructure.DateFormat
+    $ehcFolder = Join-Path $Global:Config.Paths.DataFolder $Global:Config.FolderStructure.EHCDataSubfolder
+    return Join-Path $ehcFolder $dateStr
+}
+
+function Get-TodayPdfFolder {
+    $dateStr = Get-Date -Format $Global:Config.FolderStructure.DateFormat
+    $pdfFolder = Join-Path $Global:Config.Paths.DataFolder $Global:Config.FolderStructure.EHCPdfSubfolder
+    return Join-Path $pdfFolder $dateStr
+}
+
+function Save-State {
+    param([hashtable]$State)
+    
+    try {
+        $State.LastUpdated = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+        $State | ConvertTo-Json -Depth 10 | Set-Content $Global:Config.Paths.StateFile -Encoding UTF8
+        Write-CustomLog "State saved successfully" -Level "DEBUG"
+    }
+    catch {
+        Write-CustomLog "Failed to save state: $_" -Level "ERROR"
+    }
+}
+
+function Load-State {
+    try {
+        if (Test-Path $Global:Config.Paths.StateFile) {
+            $state = Get-Content $Global:Config.Paths.StateFile -Raw | ConvertFrom-Json
+            # Convert PSCustomObject to hashtable
+            $hashtable = @{}
+            $state.PSObject.Properties | ForEach-Object { $hashtable[$_.Name] = $_.Value }
+            Write-CustomLog "State loaded successfully" -Level "DEBUG"
+            return $hashtable
+        }
+    }
+    catch {
+        Write-CustomLog "Failed to load state: $_" -Level "WARNING"
+    }
+    
+    # Return default state
+    return @{
+        LastRun = ""
+        MorningCompleted = $false
+        MiddayCompleted = $false
+        VBSCompleted = $false
+        AfternoonCompleted = $false
+        EmailSent = $false
+        CurrentDate = Get-Date -Format "yyyy-MM-dd"
+    }
+}
+
+function Reset-DailyState {
+    $currentDate = Get-Date -Format "yyyy-MM-dd"
+    if ($Global:CurrentState.CurrentDate -ne $currentDate) {
+        Write-CustomLog "New day detected, resetting state" -Level "INFO"
+        $Global:CurrentState = @{
+            LastRun = ""
+            MorningCompleted = $false
+            MiddayCompleted = $false
+            VBSCompleted = $false
+            AfternoonCompleted = $false
+            EmailSent = $false
+            CurrentDate = $currentDate
+        }
+        Save-State $Global:CurrentState
+    }
+}
+
+function Invoke-PythonScript {
+    param(
+        [Parameter(Mandatory)]
+        [string]$ScriptName,
+        [string[]]$Arguments = @(),
+        [int]$TimeoutMinutes = 10,
+        [int]$MaxRetries = 3
+    )
+    
+    $scriptPath = Join-Path $Global:Config.Paths.PythonScripts $ScriptName
+    $attempt = 1
+    
+    while ($attempt -le $MaxRetries) {
+        try {
+            Write-CustomLog "Executing $ScriptName (attempt $attempt/$MaxRetries)" -Level "INFO"
+            
+            $processArgs = @("python", $scriptPath) + $Arguments
+            $process = Start-Process -FilePath "python" -ArgumentList ($scriptPath, $Arguments) -NoNewWindow -PassThru -RedirectStandardOutput "output.txt" -RedirectStandardError "error.txt"
+            
+            $timeoutMs = $TimeoutMinutes * 60 * 1000
+            if ($process.WaitForExit($timeoutMs)) {
+                $exitCode = $process.ExitCode
+                
+                if ($exitCode -eq 0) {
+                    Write-CustomLog "$ScriptName completed successfully" -Level "INFO"
+                    return @{ Success = $true; ExitCode = $exitCode }
+                }
+                else {
+                    $errorOutput = ""
+                    if (Test-Path "error.txt") {
+                        $errorOutput = Get-Content "error.txt" -Raw
+                    }
+                    Write-CustomLog "$ScriptName failed with exit code $exitCode`: $errorOutput" -Level "ERROR"
+                }
+            }
+            else {
+                Write-CustomLog "$ScriptName timed out after $TimeoutMinutes minutes" -Level "ERROR"
+                $process.Kill()
+            }
+        }
+        catch {
+            Write-CustomLog "Exception executing $ScriptName`: $_" -Level "ERROR"
+        }
+        finally {
+            # Cleanup temporary files
+            @("output.txt", "error.txt") | ForEach-Object {
+                if (Test-Path $_) { Remove-Item $_ -Force -ErrorAction SilentlyContinue }
+            }
+        }
+        
+        if ($attempt -lt $MaxRetries) {
+            $delay = $Global:Config.Retries.RetryDelay * [Math]::Pow($Global:Config.Retries.BackoffMultiplier, $attempt - 1)
+            Write-CustomLog "Retrying in $delay seconds..." -Level "WARNING"
+            Start-Sleep -Seconds $delay
+        }
+        
+        $attempt++
+    }
+    
+    return @{ Success = $false; ExitCode = -1 }
+}
+
+function Test-NetworkConnectivity {
+    try {
+        $result = Test-NetConnection -ComputerName "8.8.8.8" -Port 53 -WarningAction SilentlyContinue
+        return $result.TcpTestSucceeded
+    }
+    catch {
+        return $false
+    }
+}
+
+function Wait-ForTimeSlot {
+    param([string]$TargetTime)
+    
+    $target = [DateTime]::ParseExact($TargetTime, "HH:mm", $null)
+    $target = Get-Date -Hour $target.Hour -Minute $target.Minute -Second 0
+    
+    # If target time has passed today, set for tomorrow
+    if ($target -lt (Get-Date)) {
+        $target = $target.AddDays(1)
+    }
+    
+    $waitTime = $target - (Get-Date)
+    if ($waitTime.TotalSeconds -gt 0) {
+        Write-CustomLog "Waiting until $TargetTime ($('{0:hh\:mm\:ss}' -f $waitTime) remaining)" -Level "INFO"
+        Start-Sleep -Seconds $waitTime.TotalSeconds
+    }
+}
+
+function Test-IsWeekday {
+    $dayOfWeek = (Get-Date).DayOfWeek
+    return $dayOfWeek -ne [DayOfWeek]::Saturday -and $dayOfWeek -ne [DayOfWeek]::Sunday
+}
+
+function Get-PreviousBusinessDay {
+    $date = (Get-Date).AddDays(-1)
+    while ($date.DayOfWeek -eq [DayOfWeek]::Saturday -or $date.DayOfWeek -eq [DayOfWeek]::Sunday) {
+        $date = $date.AddDays(-1)
+    }
+    return $date
+}
+
+# ================================================================================================
+# MAIN WORKFLOW FUNCTIONS
+# ================================================================================================
+
+function Start-MorningSlot {
+    Write-CustomLog "=== Starting Morning Slot (CSV Download) ===" -Level "INFO"
+    
+    if ($Global:CurrentState.MorningCompleted) {
+        Write-CustomLog "Morning slot already completed today" -Level "INFO"
+        return $true
+    }
+    
+    # Ensure network connectivity
+    if (-not (Test-NetworkConnectivity)) {
+        Write-CustomLog "No network connectivity detected" -Level "ERROR"
+        return $false
+    }
+    
+    # Create today's data folder
+    $todayFolder = Get-TodayDataFolder
+    if (-not (Test-Path $todayFolder)) {
+        New-Item -ItemType Directory -Path $todayFolder -Force | Out-Null
+        Write-CustomLog "Created data folder: $todayFolder" -Level "INFO"
+    }
+    
+    # Execute CSV downloader
+    $result = Invoke-PythonScript -ScriptName $Global:Config.Scripts.CSVDownloader -TimeoutMinutes $Global:Config.Timeouts.CSVDownload
+    
+    if ($result.Success) {
+        # Verify 4 CSV files were downloaded
+        $csvFiles = Get-ChildItem -Path $todayFolder -Filter "*.csv" -ErrorAction SilentlyContinue
+        if ($csvFiles.Count -ge 4) {
+            Write-CustomLog "Morning CSV download completed successfully ($($csvFiles.Count) files)" -Level "INFO"
+            $Global:CurrentState.MorningCompleted = $true
+            $Global:CurrentState.LastRun = "MorningSlot"
+            Save-State $Global:CurrentState
+            return $true
+        }
+        else {
+            Write-CustomLog "Expected 4 CSV files, found $($csvFiles.Count)" -Level "ERROR"
+        }
+    }
+    
+    return $false
+}
+
+function Start-MiddaySlot {
+    Write-CustomLog "=== Starting Midday Slot (CSV + Excel Generation) ===" -Level "INFO"
+    
+    if ($Global:CurrentState.MiddayCompleted) {
+        Write-CustomLog "Midday slot already completed today" -Level "INFO"
+        return $true
+    }
+    
+    # Ensure network connectivity
+    if (-not (Test-NetworkConnectivity)) {
+        Write-CustomLog "No network connectivity detected" -Level "ERROR"
+        return $false
+    }
+    
+    $todayFolder = Get-TodayDataFolder
+    
+    # Execute second CSV download
+    $result = Invoke-PythonScript -ScriptName $Global:Config.Scripts.CSVDownloader -TimeoutMinutes $Global:Config.Timeouts.CSVDownload
+    
+    if (-not $result.Success) {
+        Write-CustomLog "Second CSV download failed" -Level "ERROR"
+        return $false
+    }
+    
+    # Verify total CSV files (should be 8 now)
+    $csvFiles = Get-ChildItem -Path $todayFolder -Filter "*.csv" -ErrorAction SilentlyContinue
+    Write-CustomLog "Total CSV files after second download: $($csvFiles.Count)" -Level "INFO"
+    
+    # Execute Excel generator immediately
+    $result = Invoke-PythonScript -ScriptName $Global:Config.Scripts.ExcelGenerator -TimeoutMinutes $Global:Config.Timeouts.ExcelGeneration
+    
+    if ($result.Success) {
+        # Verify Excel file was created
+        $excelFiles = Get-ChildItem -Path $todayFolder -Filter "*.xlsx" -ErrorAction SilentlyContinue
+        if ($excelFiles.Count -gt 0) {
+            Write-CustomLog "Excel file generation completed successfully" -Level "INFO"
+            $Global:CurrentState.MiddayCompleted = $true
+            $Global:CurrentState.LastRun = "MiddaySlot"
+            Save-State $Global:CurrentState
+            return $true
+        }
+        else {
+            Write-CustomLog "Excel file was not created" -Level "ERROR"
+        }
+    }
+    
+    return $false
+}
+
+function Start-VBSAutomation {
+    Write-CustomLog "=== Starting VBS Automation Phase ===" -Level "INFO"
+    
+    if ($Global:CurrentState.VBSCompleted) {
+        Write-CustomLog "VBS automation already completed today" -Level "INFO"
+        return $true
+    }
+    
+    # Phase 1: Login
+    Write-CustomLog "VBS Phase 1: Login" -Level "INFO"
+    $result = Invoke-PythonScript -ScriptName $Global:Config.Scripts.VBSPhase1 -TimeoutMinutes $Global:Config.Timeouts.VBSLogin
+    if (-not $result.Success) {
+        Write-CustomLog "VBS Phase 1 (Login) failed" -Level "ERROR"
+        return $false
+    }
+    
+    # Short delay between phases
+    Start-Sleep -Seconds 10
+    
+    # Phase 2: Navigation
+    Write-CustomLog "VBS Phase 2: Navigation" -Level "INFO"
+    $result = Invoke-PythonScript -ScriptName $Global:Config.Scripts.VBSPhase2 -TimeoutMinutes $Global:Config.Timeouts.VBSNavigation
+    if (-not $result.Success) {
+        Write-CustomLog "VBS Phase 2 (Navigation) failed" -Level "ERROR"
+        return $false
+    }
+    
+    # Short delay before upload
+    Start-Sleep -Seconds 5
+    
+    # Phase 3: Upload (Long running - 3 hours timeout)
+    Write-CustomLog "VBS Phase 3: Upload (This may take up to 3 hours)" -Level "INFO"
+    $result = Invoke-PythonScript -ScriptName $Global:Config.Scripts.VBSPhase3 -TimeoutMinutes $Global:Config.Timeouts.VBSUpload
+    
+    if ($result.Success) {
+        Write-CustomLog "VBS automation completed successfully" -Level "INFO"
+        $Global:CurrentState.VBSCompleted = $true
+        $Global:CurrentState.LastRun = "VBSAutomation"
+        Save-State $Global:CurrentState
+        return $true
+    }
+    else {
+        Write-CustomLog "VBS Phase 3 (Upload) failed or timed out" -Level "ERROR"
+        return $false
+    }
+}
+
+function Start-AfternoonSlot {
+    Write-CustomLog "=== Starting Afternoon Slot (VBS Report Generation) ===" -Level "INFO"
+    
+    if ($Global:CurrentState.AfternoonCompleted) {
+        Write-CustomLog "Afternoon slot already completed today" -Level "INFO"
+        return $true
+    }
+    
+    # Force close any VBS software that might still be running
+    Write-CustomLog "Ensuring VBS software is closed" -Level "INFO"
+    Get-Process | Where-Object { $_.ProcessName -like "*vbs*" -or $_.ProcessName -like "*visual*" } | Stop-Process -Force -ErrorAction SilentlyContinue
+    
+    # Wait a moment for cleanup
+    Start-Sleep -Seconds 5
+    
+    # Fresh login for report generation
+    Write-CustomLog "Starting fresh VBS session for report generation" -Level "INFO"
+    $result = Invoke-PythonScript -ScriptName $Global:Config.Scripts.VBSPhase1 -TimeoutMinutes $Global:Config.Timeouts.VBSLogin
+    if (-not $result.Success) {
+        Write-CustomLog "VBS login for report generation failed" -Level "ERROR"
+        return $false
+    }
+    
+    # Short delay
+    Start-Sleep -Seconds 10
+    
+    # Generate report
+    Write-CustomLog "Generating PDF report" -Level "INFO"
+    $result = Invoke-PythonScript -ScriptName $Global:Config.Scripts.VBSPhase4 -TimeoutMinutes $Global:Config.Timeouts.VBSReport
+    
+    if ($result.Success) {
+        # Verify PDF was created
+        $pdfFolder = Get-TodayPdfFolder
+        if (-not (Test-Path $pdfFolder)) {
+            New-Item -ItemType Directory -Path $pdfFolder -Force | Out-Null
+        }
+        
+        $pdfFiles = Get-ChildItem -Path $pdfFolder -Filter "*.pdf" -ErrorAction SilentlyContinue
+        if ($pdfFiles.Count -gt 0) {
+            Write-CustomLog "PDF report generated successfully" -Level "INFO"
+            $Global:CurrentState.AfternoonCompleted = $true
+            $Global:CurrentState.LastRun = "AfternoonSlot"
+            Save-State $Global:CurrentState
+            return $true
+        }
+        else {
+            Write-CustomLog "PDF report was not found in expected location" -Level "ERROR"
+        }
+    }
+    
+    return $false
+}
+
+function Send-DailyEmail {
+    Write-CustomLog "=== Starting Email Delivery ===" -Level "INFO"
+    
+    if ($Global:CurrentState.EmailSent) {
+        Write-CustomLog "Email already sent today" -Level "INFO"
+        return $true
+    }
+    
+    # Check if we should send email today
+    $today = Get-Date
+    $isWeekday = Test-IsWeekday
+    
+    if (-not $isWeekday -and -not $Global:Config.Email.SendOnWeekends) {
+        Write-CustomLog "Skipping email delivery on weekend" -Level "INFO"
+        $Global:CurrentState.EmailSent = $true
+        Save-State $Global:CurrentState
+        return $true
+    }
+    
+    # Handle Monday reports sent on Tuesday
+    $reportDate = Get-PreviousBusinessDay
+    if ($today.DayOfWeek -eq [DayOfWeek]::Tuesday -and $Global:Config.Email.SendMondayReportOnTuesday) {
+        # Use Friday's report for Tuesday delivery
+        while ($reportDate.DayOfWeek -ne [DayOfWeek]::Friday) {
+            $reportDate = $reportDate.AddDays(-1)
+        }
+    }
+    
+    # Find PDF file for the report date
+    $reportDateStr = $reportDate.ToString($Global:Config.FolderStructure.DateFormat)
+    $pdfFolder = Join-Path (Join-Path $Global:Config.Paths.DataFolder $Global:Config.FolderStructure.EHCPdfSubfolder) $reportDateStr
+    
+    if (-not (Test-Path $pdfFolder)) {
+        Write-CustomLog "PDF folder not found for date $reportDateStr" -Level "ERROR"
+        return $false
+    }
+    
+    $pdfFiles = Get-ChildItem -Path $pdfFolder -Filter "*.pdf" -ErrorAction SilentlyContinue
+    if ($pdfFiles.Count -eq 0) {
+        Write-CustomLog "No PDF files found for date $reportDateStr" -Level "ERROR"
+        return $false
+    }
+    
+    # Execute email automation
+    $pdfPath = $pdfFiles[0].FullName
+    $result = Invoke-PythonScript -ScriptName $Global:Config.Scripts.OutlookAutomation -Arguments @($pdfPath) -TimeoutMinutes $Global:Config.Timeouts.EmailSend
+    
+    if ($result.Success) {
+        Write-CustomLog "Email sent successfully with report for $reportDateStr" -Level "INFO"
+        $Global:CurrentState.EmailSent = $true
+        $Global:CurrentState.LastRun = "EmailDelivery"
+        Save-State $Global:CurrentState
+        return $true
+    }
+    else {
+        Write-CustomLog "Email delivery failed" -Level "ERROR"
+        return $false
+    }
+}
+
+# ================================================================================================
+# MAIN EXECUTION LOGIC
+# ================================================================================================
+
+function Start-DailyWorkflow {
+    Write-CustomLog "=== Starting Daily Workflow ===" -Level "INFO"
+    
+    $currentTime = Get-Date
+    $currentTimeStr = $currentTime.ToString("HH:mm")
+    
+    Write-CustomLog "Current time: $currentTimeStr" -Level "INFO"
+    Write-CustomLog "Morning completed: $($Global:CurrentState.MorningCompleted)" -Level "DEBUG"
+    Write-CustomLog "Midday completed: $($Global:CurrentState.MiddayCompleted)" -Level "DEBUG"
+    Write-CustomLog "VBS completed: $($Global:CurrentState.VBSCompleted)" -Level "DEBUG"
+    Write-CustomLog "Afternoon completed: $($Global:CurrentState.AfternoonCompleted)" -Level "DEBUG"
+    Write-CustomLog "Email sent: $($Global:CurrentState.EmailSent)" -Level "DEBUG"
+    
+    # Parse schedule times
+    $morningTime = [DateTime]::ParseExact($Global:Config.Schedule.MorningSlot, "HH:mm", $null)
+    $middayTime = [DateTime]::ParseExact($Global:Config.Schedule.MiddaySlot, "HH:mm", $null)
+    $vbsTime = [DateTime]::ParseExact($Global:Config.Schedule.VBSStart, "HH:mm", $null)
+    $afternoonTime = [DateTime]::ParseExact($Global:Config.Schedule.AfternoonSlot, "HH:mm", $null)
+    $emailTime = [DateTime]::ParseExact($Global:Config.Schedule.EmailTime, "HH:mm", $null)
+    
+    # Determine what should be executed now
+    if ($currentTime.TimeOfDay -ge $emailTime.TimeOfDay -and -not $Global:CurrentState.EmailSent) {
+        Send-DailyEmail
+    }
+    
+    if ($currentTime.TimeOfDay -ge $morningTime.TimeOfDay -and -not $Global:CurrentState.MorningCompleted) {
+        Start-MorningSlot
+    }
+    
+    if ($currentTime.TimeOfDay -ge $middayTime.TimeOfDay -and -not $Global:CurrentState.MiddayCompleted) {
+        Start-MiddaySlot
+    }
+    
+    if ($currentTime.TimeOfDay -ge $vbsTime.TimeOfDay -and $Global:CurrentState.MiddayCompleted -and -not $Global:CurrentState.VBSCompleted) {
+        Start-VBSAutomation
+    }
+    
+    if ($currentTime.TimeOfDay -ge $afternoonTime.TimeOfDay -and -not $Global:CurrentState.AfternoonCompleted) {
+        Start-AfternoonSlot
+    }
+}
+
+function Start-ContinuousExecution {
+    Write-CustomLog "=== Starting Continuous Execution Mode ===" -Level "INFO"
+    
+    try {
+        while ($true) {
+            # Reset state for new day
+            Reset-DailyState
+            
+            # Run daily workflow
+            Start-DailyWorkflow
+            
+            # Check if all tasks are completed
+            if ($Global:CurrentState.MorningCompleted -and 
+                $Global:CurrentState.MiddayCompleted -and 
+                $Global:CurrentState.VBSCompleted -and 
+                $Global:CurrentState.AfternoonCompleted -and 
+                $Global:CurrentState.EmailSent) {
+                
+                Write-CustomLog "All daily tasks completed. Waiting for next day..." -Level "INFO"
+                
+                # Wait until next day starts (00:01)
+                $tomorrow = (Get-Date).Date.AddDays(1).AddMinutes(1)
+                $waitTime = $tomorrow - (Get-Date)
+                Write-CustomLog "Sleeping until tomorrow at 00:01 ($('{0:hh\:mm\:ss}' -f $waitTime) remaining)" -Level "INFO"
+                Start-Sleep -Seconds $waitTime.TotalSeconds
+            }
+            else {
+                # Check again in 30 minutes
+                Write-CustomLog "Workflow check complete. Next check in 30 minutes..." -Level "INFO"
+                Start-Sleep -Seconds 1800  # 30 minutes
+
+//file checker
+#!/usr/bin/env python3
+"""
+File Checker and Recovery System
+Validates downloaded files, checks integrity, and triggers recovery actions
+"""
+
+import os
+import sys
+import json
+import logging
+import pandas as pd
+import openpyxl
+from pathlib import Path
+from datetime import datetime, timedelta
+import hashlib
+import time
+import argparse
+import subprocess
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler('file_checker.log'),
+        logging.StreamHandler(sys.stdout)
+    ]
+)
+logger = logging.getLogger(__name__)
+
+class FileChecker:
+    def __init__(self, config_path=None):
+        """Initialize the file checker with configuration"""
+        self.config = self.load_config(config_path)
+        self.base_data_path = self.config.get('base_data_path', 'C:\\Automation\\Data')
+        self.today_str = datetime.now().strftime('%Y-%m-%d')
+        self.today_data_folder = os.path.join(self.base_data_path, 'EHC_Data', self.today_str)
+        self.today_pdf_folder = os.path.join(self.base_data_path, 'EHC_Data_Pdf', self.today_str)
+        
+        # Expected file patterns and counts
+        self.expected_files = {
+            'morning_csv': 4,
+            'total_csv': 8,
+            'excel_files': 1,
+            'pdf_files': 1
+        }
+        
+        # File integrity thresholds
+        self.min_file_sizes = {
+            'csv': 1024,      # 1KB minimum for CSV files
+            'xlsx': 8192,     # 8KB minimum for Excel files
+            'pdf': 10240      # 10KB minimum for PDF files
+        }
+
+    def load_config(self, config_path):
+        """Load configuration from JSON file or return defaults"""
+        default_config = {
+            'base_data_path': 'C:\\Automation\\Data',
+            'required_csv_columns': ['Date', 'Time', 'Value'],
+            'max_retry_attempts': 3,
+            'file_age_tolerance_hours': 2,
+            'checksum_validation': True
+        }
+        
+        if config_path and os.path.exists(config_path):
+            try:
+                with open(config_path, 'r') as f:
+                    config = json.load(f)
+                    # Merge with defaults
+                    default_config.update(config)
+                    logger.info(f"Configuration loaded from {config_path}")
+            except Exception as e:
+                logger.warning(f"Failed to load config from {config_path}: {e}")
+        
+        return default_config
+
+    def ensure_directories_exist(self):
+        """Create necessary directories if they don't exist"""
+        directories = [self.today_data_folder, self.today_pdf_folder]
+        
+        for directory in directories:
+            Path(directory).mkdir(parents=True, exist_ok=True)
+            logger.debug(f"Ensured directory exists: {directory}")
+
+    def calculate_file_hash(self, file_path):
+        """Calculate MD5 hash of a file for integrity checking"""
+        try:
+            hash_md5 = hashlib.md5()
+            with open(file_path, "rb") as f:
+                for chunk in iter(lambda: f.read(4096), b""):
+                    hash_md5.update(chunk)
+            return hash_md5.hexdigest()
+        except Exception as e:
+            logger.error(f"Failed to calculate hash for {file_path}: {e}")
+            return None
+
+    def check_file_basic_integrity(self, file_path):
+        """Perform basic file integrity checks"""
+        if not os.path.exists(file_path):
+            logger.error(f"File does not exist: {file_path}")
+            return False
+        
+        try:
+            file_size = os.path.getsize(file_path)
+            file_ext = os.path.splitext(file_path)[1].lower()
+            
+            # Check minimum file size based on type
+            min_size = self.min_file_sizes.get(file_ext.lstrip('.'), 0)
+            if file_size < min_size:
+                logger.error(f"File {file_path} is too small ({file_size} bytes, minimum: {min_size})")
+                return False
+            
+            # Check file age (shouldn't be too old)
+            file_modified_time = datetime.fromtimestamp(os.path.getmtime(file_path))
+            age_hours = (datetime.now() - file_modified_time).total_seconds() / 3600
+            max_age = self.config.get('file_age_tolerance_hours', 2)
+            
+            if age_hours > max_age:
+                logger.warning(f"File {file_path} is {age_hours:.1f} hours old (max: {max_age})")
+            
+            # Check if file is currently being written to
+            initial_size = file_size
+            time.sleep(1)
+            current_size = os.path.getsize(file_path)
+            if initial_size != current_size:
+                logger.warning(f"File {file_path} appears to be still being written to")
+                return False
+            
+            return True
+            
+        except Exception as e:
+            logger.error(f"Error checking file integrity for {file_path}: {e}")
+            return False
+
+    def validate_csv_file(self, file_path):
+        """Validate CSV file structure and content"""
+        try:
+            # Try to read the CSV file
+            df = pd.read_csv(file_path)
+            
+            # Check if file is empty
+            if df.empty:
+                logger.error(f"CSV file is empty: {file_path}")
+                return False
+            
+            # Check for required columns if specified
+            required_columns = self.config.get('required_csv_columns', [])
+            if required_columns:
+                missing_columns = set(required_columns) - set(df.columns)
+                if missing_columns:
+                    logger.error(f"CSV file {file_path} missing required columns: {missing_columns}")
+                    return False
+            
+            # Check for basic data integrity
+            if df.isnull().all().any():
+                logger.warning(f"CSV file {file_path} contains columns with all null values")
+            
+            logger.info(f"CSV file validated successfully: {file_path} ({len(df)} rows, {len(df.columns)} columns)")
+            return True
+            
+        except Exception as e:
+            logger.error(f"Failed to validate CSV file {file_path}: {e}")
+            return False
+
+    def validate_excel_file(self, file_path):
+        """Validate Excel file structure and content"""
+        try:
+            # Try to read the Excel file
+            workbook = openpyxl.load_workbook(file_path, read_only=True)
+            
+            # Check if workbook has sheets
+            if not workbook.sheetnames:
+                logger.error(f"Excel file has no sheets: {file_path}")
+                return False
+            
+            # Read first sheet to check basic structure
+            df = pd.read_excel(file_path, sheet_name=0)
+            
+            if df.empty:
+                logger.error(f"Excel file first sheet is empty: {file_path}")
+                return False
+            
+            logger.info(f"Excel file validated successfully: {file_path} ({len(workbook.sheetnames)} sheets)")
+            return True
+            
+        except Exception as e:
+            logger.error(f"Failed to validate Excel file {file_path}: {e}")
+            return False
+
+    def validate_pdf_file(self, file_path):
+        """Validate PDF file (basic checks)"""
+        try:
+            # Basic PDF header check
+            with open(file_path, 'rb') as f:
+                header = f.read(8)
+                if not header.startswith(b'%PDF-'):
+                    logger.error(f"File does not appear to be a valid PDF: {file_path}")
+                    return False
+            
+            logger.info(f"PDF file validated successfully: {file_path}")
+            return True
+            
+        except Exception as e:
+            logger.error(f"Failed to validate PDF file {file_path}: {e}")
+            return False
+
+    def check_morning_csv_files(self):
+        """Check if morning CSV download completed successfully"""
+        logger.info("Checking morning CSV files...")
+        
+        if not os.path.exists(self.today_data_folder):
+            logger.error(f"Today's data folder does not exist: {self.today_data_folder}")
+            return False
+        
+        csv_files = [f for f in os.listdir(self.today_data_folder) if f.endswith('.csv')]
+        
+        if len(csv_files) < self.expected_files['morning_csv']:
+            logger.error(f"Expected {self.expected_files['morning_csv']} CSV files for morning, found {len(csv_files)}")
+            return False
+        
+        # Validate each CSV file
+        valid_files = 0
+        for csv_file in csv_files[:self.expected_files['morning_csv']]:
+            file_path = os.path.join(self.today_data_folder, csv_file)
+            if self.check_file_basic_integrity(file_path) and self.validate_csv_file(file_path):
+                valid_files += 1
+        
+        success = valid_files >= self.expected_files['morning_csv']
+        logger.info(f"Morning CSV check: {valid_files}/{self.expected_files['morning_csv']} files valid")
+        return success
+
+    def check_all_csv_files(self):
+        """Check if all CSV downloads completed successfully"""
+        logger.info("Checking all CSV files...")
+        
+        if not os.path.exists(self.today_data_folder):
+            logger.error(f"Today's data folder does not exist: {self.today_data_folder}")
+            return False
+        
+        csv_files = [f for f in os.listdir(self.today_data_folder) if f.endswith('.csv')]
+        
+        if len(csv_files) < self.expected_files['total_csv']:
+            logger.error(f"Expected {self.expected_files['total_csv']} CSV files total, found {len(csv_files)}")
+            return False
+        
+        # Validate each CSV file
+        valid_files = 0
+        for csv_file in csv_files:
+            file_path = os.path.join(self.today_data_folder, csv_file)
+            if self.check_file_basic_integrity(file_path) and self.validate_csv_file(file_path):
+                valid_files += 1
+        
+        success = valid_files >= self.expected_files['total_csv']
+        logger.info(f"All CSV check: {valid_files}/{len(csv_files)} files valid")
+        return success
+
+    def check_excel_files(self):
+        """Check if Excel file generation completed successfully"""
+        logger.info("Checking Excel files...")
+        
+        if not os.path.exists(self.today_data_folder):
+            logger.error(f"Today's data folder does not exist: {self.today_data_folder}")
+            return False
+        
+        excel_files = [f for f in os.listdir(self.today_data_folder) if f.endswith(('.xlsx', '.xls'))]
+        
+        if len(excel_files) < self.expected_files['excel_files']:
+            logger.error(f"Expected {self.expected_files['excel_files']} Excel file, found {len(excel_files)}")
+            return False
+        
+        # Validate Excel file
+        for excel_file in excel_files:
+            file_path = os.path.join(self.today_data_folder, excel_file)
+            if not (self.check_file_basic_integrity(file_path) and self.validate_excel_file(file_path)):
+                return False
+        
+        logger.info("Excel file check: PASSED")
+        return True
+
+    def check_pdf_files(self):
+        """Check if PDF report generation completed successfully"""
+        logger.info("Checking PDF files...")
+        
+        if not os.path.exists(self.today_pdf_folder):
+            logger.error(f"Today's PDF folder does not exist: {self.today_pdf_folder}")
+            return False
+        
+        pdf_files = [f for f in os.listdir(self.today_pdf_folder) if f.endswith('.pdf')]
+        
+        if len(pdf_files) < self.expected_files['pdf_files']:
+            logger.error(f"Expected {self.expected_files['pdf_files']} PDF file, found {len(pdf_files)}")
+            return False
+        
+        # Validate PDF file
+        for pdf_file in pdf_files:
+            file_path = os.path.join(self.today_pdf_folder, pdf_file)
+            if not (self.check_file_basic_integrity(file_path) and self.validate_pdf_file(file_path)):
+                return False
+        
+        logger.info("PDF file check: PASSED")
+        return True
+
+    def cleanup_corrupted_files(self):
+        """Remove corrupted or invalid files"""
+        logger.info("Cleaning up corrupted files...")
+        
+        cleaned_files = []
+        
+        # Check CSV files
+        if os.path.exists(self.today_data_folder):
+            csv_files = [f for f in os.listdir(self.today_data_folder) if f.endswith('.csv')]
+            for csv_file in csv_files:
+                file_path = os.path.join(self.today_data_folder, csv_file)
+                if not (self.check_file_basic_integrity(file_path) and self.validate_csv_file(file_path)):
+                    try:
+                        os.remove(file_path)
+                        cleaned_files.append(file_path)
+                        logger.warning(f"Removed corrupted CSV file: {file_path}")
+                    except Exception as e:
+                        logger.error(f"Failed to remove corrupted file {file_path}: {e}")
+        
+        # Check Excel files
+        if os.path.exists(self.today_data_folder):
+            excel_files = [f for f in os.listdir(self.today_data_folder) if f.endswith(('.xlsx', '.xls'))]
+            for excel_file in excel_files:
+                file_path = os.path.join(self.today_data_folder, excel_file)
+                if not (self.check_file_basic_integrity(file_path) and self.validate_excel_file(file_path)):
+                    try:
+                        os.remove(file_path)
+                        cleaned_files.append(file_path)
+                        logger.warning(f"Removed corrupted Excel file: {file_path}")
+                    except Exception as e:
+                        logger.error(f"Failed to remove corrupted file {file_path}: {e}")
+        
+        # Check PDF files
+        if os.path.exists(self.today_pdf_folder):
+            pdf_files = [f for f in os.listdir(self.today_pdf_folder) if f.endswith('.pdf')]
+            for pdf_file in pdf_files:
+                file_path = os.path.join(self.today_pdf_folder, pdf_file)
+                if not (self.check_file_basic_integrity(file_path) and self.validate_pdf_file(file_path)):
+                    try:
+                        os.remove(file_path)
+                        cleaned_files.append(file_path)
+                        logger.warning(f"Removed corrupted PDF file: {file_path}")
+                    except Exception as e:
+                        logger.error(f"Failed to remove corrupted file {file_path}: {e}")
+        
+        return cleaned_files
+
+    def generate_file_report(self):
+        """Generate a detailed report of file status"""
+        report = {
+            'timestamp': datetime.now().isoformat(),
+            'date': self.today_str,
+            'folders': {
+                'data_folder': self.today_data_folder,
+                'pdf_folder': self.today_pdf_folder
+            },
+            'files': {
+                'csv_files': [],
+                'excel_files': [],
+                'pdf_files': []
+            },
+            'summary': {
+                'morning_csv_complete': False,
+                'all_csv_complete': False,
+                'excel_complete': False,
+                'pdf_complete': False,
+                'overall_status': 'INCOMPLETE'
+            }
+        }
+        
+        # Check CSV files
+        if os.path.exists(self.today_data_folder):
+            csv_files = [f for f in os.listdir(self.today_data_folder) if f.endswith('.csv')]
+            for csv_file in csv_files:
+                file_path = os.path.join(self.today_data_folder, csv_file)
+                file_info = {
+                    'name': csv_file,
+                    'path': file_path,
+                    'size': os.path.getsize(file_path) if os.path.exists(file_path) else 0,
+                    'modified': datetime.fromtimestamp(os.path.getmtime(file_path)).isoformat() if os.path.exists(file_path) else None,
+                    'valid': self.check_file_basic_integrity(file_path) and self.validate_csv_file(file_path)
+                }
+                if self.config.get('checksum_validation', True):
+                    file_info['checksum'] = self.calculate_file_hash(file_path)
+                report['files']['csv_files'].append(file_info)
+        
+        # Check Excel files
+        if os.path.exists(self.today_data_folder):
+            excel_files = [f for f in os.listdir(self.today_data_folder) if f.endswith(('.xlsx', '.xls'))]
+            for excel_file in excel_files:
+                file_path = os.path.join(self.today_data_folder, excel_file)
+                file_info = {
+                    'name': excel_file,
+                    'path': file_path,
+                    'size': os.path.getsize(file_path) if os.path.exists(file_path) else 0,
+                    'modified': datetime.fromtimestamp(os.path.getmtime(file_path)).isoformat() if os.path.exists(file_path) else None,
+                    'valid': self.check_file_basic_integrity(file_path) and self.validate_excel_file(file_path)
+                }
+                if self.config.get('checksum_validation', True):
+                    file_info['checksum'] = self.calculate_file_hash(file_path)
+                report['files']['excel_files'].append(file_info)
+        
+        # Check PDF files
+        if os.path.exists(self.today_pdf_folder):
+            pdf_files = [f for f in os.listdir(self.today_pdf_folder) if f.endswith('.pdf')]
+            for pdf_file in pdf_files:
+                file_path = os.path.join(self.today_pdf_folder, pdf_file)
+                file_info = {
+                    'name': pdf_file,
+                    'path': file_path,
+                    'size': os.path.getsize(file_path) if os.path.exists(file_path) else 0,
+                    'modified': datetime.fromtimestamp(os.path.getmtime(file_path)).isoformat() if os.path.exists(file_path) else None,
+                    'valid': self.check_file_basic_integrity(file_path) and self.validate_pdf_file(file_path)
+                }
+                if self.config.get('checksum_validation', True):
+                    file_info['checksum'] = self.calculate_file_hash(file_path)
+                report['files']['pdf_files'].append(file_info)
+        
+        # Update summary
+        valid_csv = len([f for f in report['files']['csv_files'] if f['valid']])
+        report['summary']['morning_csv_complete'] = valid_csv >= self.expected_files['morning_csv']
+        report['summary']['all_csv_complete'] = valid_csv >= self.expected_files['total_csv']
+        report['summary']['excel_complete'] = len([f for f in report['files']['excel_files'] if f['valid']]) >= self.expected_files['excel_files']
+        report['summary']['pdf_complete'] = len([f for f in report['files']['pdf_files'] if f['valid']]) >= self.expected_files['pdf_files']
+        
+        # Overall status
+        if (report['summary']['all_csv_complete'] and 
+            report['summary']['excel_complete'] and 
+            report['summary']['pdf_complete']):
+            report['summary']['overall_status'] = 'COMPLETE'
+        elif report['summary']['morning_csv_complete']:
+            report['summary']['overall_status'] = 'PARTIAL'
+        else:
+            report['summary']['overall_status'] = 'INCOMPLETE'
+        
+        return report
+
+    def run_check(self, check_type='all'):
+        """Run specific file checks"""
+        self.ensure_directories_exist()
+        
+        results = {}
+        
+        if check_type in ['all', 'morning_csv']:
+            results['morning_csv'] = self.check_morning_csv_files()
+        
+        if check_type in ['all', 'csv']:
+            results['all_csv'] = self.check_all_csv_files()
+        
+        if check_type in ['all', 'excel']:
+            results['excel'] = self.check_excel_files()
+        
+        if check_type in ['all', 'pdf']:
+            results['pdf'] = self.check_pdf_files()
+        
+        if check_type == 'cleanup':
+            cleaned = self.cleanup_corrupted_files()
+            results['cleanup'] = len(cleaned)
+            results['cleaned_files'] = cleaned
+        
+        if check_type == 'report':
+            results['report'] = self.generate_file_report()
+        
+        return results
+
+def main():
+    parser = argparse.ArgumentParser(description='File Checker and Recovery System')
+    parser.add_argument('--check', 
+                       choices=['all', 'morning_csv', 'csv', 'excel', 'pdf', 'cleanup', 'report'],
+                       default='all',
+                       help='Type of check to perform')
+    parser.add_argument('--config', 
+                       type=str,
+                       help='Path to configuration file')
+    parser.add_argument('--verbose', 
+                       action='store_true',
+                       help='Enable verbose logging')
+    
+    args = parser.parse_args()
+    
+    if args.verbose:
+        logging.getLogger().setLevel(logging.DEBUG)
+    
+    # Initialize file checker
+    checker = FileChecker(config_path=args.config)
+    
+    # Run the check
+    try:
+        results = checker.run_check(args.check)
+        
+        # Output results
+        if args.check == 'report':
+            print(json.dumps(results['report'], indent=2))
+        else:
+            for check_name, result in results.items():
+                if isinstance(result, bool):
+                    status = "PASS" if result else "FAIL"
+                    print(f"{check_name.upper()}: {status}")
+                else:
+                    print(f"{check_name.upper()}: {result}")
+        
+        # Return appropriate exit code
+        if args.check == 'report':
+            sys.exit(0)  # Always success for report
+        elif all(isinstance(v, bool) and v for v in results.values() if isinstance(v, bool)):
+            sys.exit(0)  # All checks passed
+        else:
+            sys.exit(1)  # Some checks failed
+            
+    except Exception as e:
+        logger.error(f"Unexpected error during file check: {e}")
+        sys.exit(2)
+
+if __name__ == "__main__":
+    main()

@@ -1,0 +1,123 @@
+# MoonFlower CSV Download System Configuration
+# Edit this file to change folder locations and settings
+
+# ============================================================================
+# FOLDER LOCATIONS
+# ============================================================================
+
+# Base directory for CSV files (downloaded files will be saved here)
+CSV_BASE_DIR=EHC_Data
+
+# Base directory for merged Excel files
+EXCEL_BASE_DIR=EHC_Data_Merge
+
+# Base directory for PDF files (used by VBS application)
+PDF_BASE_DIR=EHC_Data_Pdf
+
+# Base directory for log files
+LOG_BASE_DIR=EHC_Logs
+
+# ============================================================================
+# TIME SLOTS CONFIGURATION
+# ============================================================================
+
+# Morning session time range (24-hour format)
+MORNING_START_TIME=08:00
+MORNING_END_TIME=12:59
+
+# Morning download times (comma-separated, 24-hour format)
+MORNING_DOWNLOAD_TIMES=08:30,09:30,10:30,11:30,12:30
+
+# Afternoon session time range (24-hour format)
+AFTERNOON_START_TIME=13:00
+AFTERNOON_END_TIME=17:00
+
+# Afternoon download times (comma-separated, 24-hour format)
+AFTERNOON_DOWNLOAD_TIMES=13:30,14:30,15:30,16:30
+
+# ============================================================================
+# EMAIL CONFIGURATION
+# ============================================================================
+
+# Email address to send notifications to
+NOTIFICATION_EMAIL=faseenm@gmail.com
+
+# Email subject prefix
+EMAIL_SUBJECT_PREFIX=📊 CSV Download Complete
+
+# ============================================================================
+# SYSTEM SETTINGS
+# ============================================================================
+
+# How often to check for downloads (in minutes)
+CHECK_INTERVAL=1
+
+# Maximum retry attempts for failed downloads
+MAX_RETRY_ATTEMPTS=3
+
+# Timeout for each download attempt (in seconds)
+DOWNLOAD_TIMEOUT=300
+
+# ============================================================================
+# ADVANCED SETTINGS
+# ============================================================================
+
+# Enable debug logging (true/false)
+DEBUG_LOGGING=false
+
+# Keep browser open after downloads for inspection (in seconds)
+BROWSER_INSPECTION_TIME=10
+
+# Automatic dependency installation (true/false)
+AUTO_INSTALL_DEPENDENCIES=true
+
+# ============================================================================
+# INSTRUCTIONS FOR CHANGING FOLDER LOCATIONS
+# ============================================================================
+
+# To change where files are saved:
+# 1. Edit the paths above (use forward slashes / or double backslashes \\)
+# 2. Use absolute paths like C:/MyFolder/CSV_Data or relative paths like ../MyData
+# 3. The system will automatically create these folders if they don't exist
+# 4. Save this file and restart the BAT file
+
+# Examples:
+# CSV_BASE_DIR=C:/MyCompany/CSVFiles
+# EXCEL_BASE_DIR=D:/Reports/ExcelFiles
+# PDF_BASE_DIR=C:/VBS_Application/PDFs
+# LOG_BASE_DIR=C:/Logs/CSVDownloader
+
+# ============================================================================
+# INSTRUCTIONS FOR CHANGING TIME SLOTS
+# ============================================================================
+
+# To change download times:
+# 1. Edit the MORNING_DOWNLOAD_TIMES and AFTERNOON_DOWNLOAD_TIMES above
+# 2. Use 24-hour format (HH:MM)
+# 3. Separate multiple times with commas
+# 4. Make sure times are within the session time ranges
+# 5. Save this file and restart the BAT file
+
+# Examples:
+# MORNING_DOWNLOAD_TIMES=09:00,10:00,11:00,12:00
+# AFTERNOON_DOWNLOAD_TIMES=14:00,15:00,16:00
+
+# ============================================================================
+# TROUBLESHOOTING
+# ============================================================================
+
+# If downloads fail:
+# - Check that Chrome browser is installed
+# - Ensure internet connection is stable
+# - Check log files in the LOG_BASE_DIR folder
+# - Try running csv_download.bat /now for immediate download
+
+# If emails don't arrive:
+# - Check spam folder
+# - Verify NOTIFICATION_EMAIL is correct
+# - Check log files for email delivery errors
+
+# If folders are not created:
+# - Ensure the paths are valid
+# - Check that you have write permissions to the directories
+# - Use absolute paths if relative paths don't work

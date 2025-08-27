@@ -1,0 +1,52 @@
+{
+  "ocr_settings": {
+    "tesseract_path": "C:\\Program Files\\Tesseract-OCR\\tesseract.exe",
+    "language": "eng",
+    "confidence_threshold": 0.7,
+    "page_segmentation_mode": 6,
+    "character_whitelist": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 .-_()[]{}:;,!?@#$%&*+=<>/\\|\"'`~",
+    "preprocessing": {
+      "gaussian_blur_kernel": 3,
+      "adaptive_threshold_block_size": 11,
+      "adaptive_threshold_c": 2,
+      "morphology_kernel_size": 2
+    }
+  },
+  "template_matching": {
+    "confidence_threshold": 0.8,
+    "template_cache_size": 50,
+    "max_template_variations": 5,
+    "scale_factors": [0.8, 0.9, 1.0, 1.1, 1.2],
+    "template_directory": "vbs/templates"
+  },
+  "smart_automation": {
+    "method_priority": ["ocr", "template", "coordinates"],
+    "max_retries": 3,
+    "retry_delay": 1.0,
+    "exponential_backoff": true,
+    "screenshot_on_error": true,
+    "performance_tracking": true
+  },
+  "vbs_specific": {
+    "window_title_patterns": ["absons", "arabian", "moonflower", "erp"],
+    "exclude_window_patterns": ["login", "security", "warning", "browser"],
+    "import_timeout_minutes": 5,
+    "update_timeout_minutes": 30,
+    "popup_detection_timeout": 10,
+    "ui_response_delay": 0.5
+  },
+  "performance": {
+    "screenshot_region_optimization": true,
+    "parallel_processing": false,
+    "cache_successful_locations": true,
+    "cache_duration_seconds": 300,
+    "max_concurrent_operations": 2
+  },
+  "debugging": {
+    "debug_mode": false,
+    "save_debug_images": true,
+    "debug_image_path": "debug_images",
+    "verbose_logging": true,
+    "screenshot_failed_operations": true
+  }
+}

@@ -1,0 +1,66 @@
+VBS Phase 1: Login Process Documentation
+============================================
+
+PURPOSE:
+Automate the login process for the VBS application using keyboard navigation and credentials.
+
+TECHNOLOGY USED:
+- PyAutoGUI for keyboard automation
+- Win32API for window management and focus control
+- Logging for step-by-step execution tracking
+- TAB navigation for reliable field traversal
+
+PROCESS FLOW:
+1. Window Detection
+   - Find VBS application window by title keywords
+   - Validate window is visible and active
+   - Set focus to VBS window
+
+2. Two-Cycle Login Approach
+   FIRST CYCLE (Clearing):
+   - Tab 3 times to reach Company field
+   - Clear Company field (Ctrl+A, Delete)
+   - Tab to Financial Year field
+   - Clear Financial Year field
+   - Tab to Username field
+   - Clear Username field
+   - Tab to Password field
+   - Clear Password field
+   
+   SECOND CYCLE (Filling):
+   - Tab 3 times to reach Company field
+   - Type "EHC"
+   - Tab to Financial Year field
+   - Type "2025-26"
+   - Tab to Username field
+   - Type "admin"
+   - Tab to Password field
+   - Type "admin"
+
+3. Login Execution
+   - Press Enter to submit login
+   - Wait for login completion (1-2 seconds)
+   - Verify successful login
+
+CRITICAL FEATURES:
+- Dual-cycle approach prevents field contamination
+- TAB navigation is more reliable than clicking
+- Window focus management prevents interference
+- Comprehensive error logging for debugging
+
+TIMING REQUIREMENTS:
+- 0.3 seconds between TAB presses
+- 0.3 seconds after field clearing
+- 1 second wait after login submission
+- Total execution time: ~10-15 seconds
+
+ERROR HANDLING:
+- Window not found: Retry window detection
+- Focus lost: Refocus VBS window
+- Field navigation failed: Log error and continue
+- Login timeout: Report failure and exit
+
+INTEGRATION:
+- Called by: automation_workflow.bat
+- Next phase: vbs_phase2_navigation_fixed.py
+- Runtime: ~1 minute as specified in requirements 

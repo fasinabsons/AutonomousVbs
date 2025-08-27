@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mkdir:*)",
+      "Bash(rm:*)",
+      "Bash(dir:*)",
+      "Bash(python:*)",
+      "Bash(moonflower_automation.bat)",
+      "Bash(cmd /c:*)",
+      "Bash(git restore:*)",
+      "Bash(cp:*)"
+    ],
+    "deny": []
+  }
+}

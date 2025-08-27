@@ -1,0 +1,288 @@
+MOONFLOWER HOTEL WIFI AUTOMATION SYSTEM - COMPLETE FLOW
+================================================================
+AUTOMATA: CSV → EXCEL → VBS → PDF → EMAIL
+================================================================
+
+🎯 SYSTEM OVERVIEW:
+Complete automated WiFi data collection, processing, and reporting system
+for MoonFlower Hotel. Operates 365 days/year with scheduled data collection,
+processing, and management reporting.
+
+📋 COMPLETE AUTOMATION FLOW:
+================================================================
+
+🕘 PHASE 1: CSV DATA COLLECTION
+--------------------------------
+SCHEDULE:
+• Morning Slot: 09:30 AM (collect 4 network files)
+• Afternoon Slot: 12:30 PM (collect 4 network files)
+• Maximum deadline: 01:30 PM
+
+NETWORKS MONITORED:
+1. EHC TV Network
+2. EHC-15 Network  
+3. Reception Hall-Mobile Network
+4. Reception Hall-TV Network
+
+AUTOMATED ACTIONS:
+✅ Download CSV files from WiFi controller
+✅ Save to EHC_Data/{date} folder (e.g., EHC_Data/25jul)
+✅ Validate file integrity and content
+✅ Email notification after complete slots only
+
+OUTPUT: 8 CSV files total (4 morning + 4 afternoon)
+
+🕐 PHASE 2: EXCEL GENERATION & MERGE
+------------------------------------
+SCHEDULE:
+• Execute at: 01:35 PM (after CSV collection complete)
+• Completion by: 01:36 PM
+
+AUTOMATED ACTIONS:
+✅ Merge all 8 CSV files into single Excel file
+✅ Map CSV columns to VBS-compatible format:
+   - Hostname → Hostname
+   - IP Address → IP_Address
+   - MAC Address → MAC_Address
+   - WLAN (SSID) → Package
+   - AP MAC → AP_MAC
+   - Data Rate (up) → Upload
+   - Data Rate (down) → Download
+✅ Save as EHC_Upload_Mac_{DDMMYYYY}.xls in EHC_Data_Merge/{date}
+✅ Email notification with file attachment
+✅ Validate Excel file is not empty and has correct structure
+
+OUTPUT: Single Excel file ready for VBS processing
+
+🕑 PHASE 3: VBS DATA UPLOAD (CRITICAL PHASE)
+--------------------------------------------
+SCHEDULE:
+• Start at: 02:00 PM (configurable via frontend)
+• Upload duration: 2-5 hours (VBS processing time)
+• "Not Responding" state: NORMAL during upload
+
+CRITICAL SEQUENCE:
+1. ✅ Click Import EHC checkbox (01_import_ehc_checkbox.png)
+2. ✅ Click 3 dots button + INSTANT ENTER (popup sound detection)
+3. ✅ Address bar navigation (optimization - skip 6 manual steps)
+4. ✅ Select Excel file and click Open
+5. ✅ **CRITICAL**: Re-click 3 dots → RIGHT → ENTER → TAB → type "EHC_Data"
+6. ✅ **CRITICAL**: Click Import button (13_import_button.png) - NEVER MISS
+7. ✅ Audio detection: Listen for import success popup sound
+8. ✅ Press ENTER when 14_import_ok_button appears with sound
+9. ✅ Click EHC User Detail header (15_ehc_user_detail_header.png)
+10. ✅ Double-click Update button (16_update_button.png)
+11. ✅ **CRITICAL**: Upload monitoring (up to 5 hours with audio detection)
+12. ✅ Close VBS application after upload success (wait 30 seconds)
+
+AUDIO DETECTION POINTS:
+🔊 3 dots click sound (verification audio system works)
+🔊 Import success popup sound (import completion)
+🔊 Update completion sound (upload finished)
+
+OUTPUT: Data uploaded to VBS system, ready for report generation
+
+🕕 PHASE 4: PDF REPORT GENERATION
+---------------------------------
+SCHEDULE:
+• Execute after: Phase 3 upload completion
+• VBS restart: Automatic via Phase 1
+
+AUTOMATED ACTIONS:
+✅ Navigate VBS Reports menu
+✅ Select "WiFi Active Users Count" (54 DOWN arrows + ENTER)
+✅ Set date range (From/To current date)
+✅ Generate and print report (1 minute wait)
+✅ Export to PDF with date-based filename
+✅ Save to EHC_Data_Pdf/{date} folder
+
+OUTPUT: Daily WiFi usage PDF report
+
+🕘 PHASE 5: EMAIL DELIVERY TO GENERAL MANAGER
+---------------------------------------------
+SCHEDULE:
+• Send time: 09:00 AM - 09:45 AM (next morning)
+• Random timing: 09:07 AM, 09:03 AM, 09:33 AM etc. (configurable)
+• Natural schedule variation to avoid automation detection
+
+EMAIL CONFIGURATION:
+• SMTP: Outlook (smtp-mail.outlook.com:587)
+• Recipient: General Manager email
+• Subject: "📄 Daily WiFi Report - {date} - MoonFlower Hotel"
+• Attachment: PDF report from Phase 4
+
+AUTOMATED ACTIONS:
+✅ Professional email body with report details
+✅ PDF attachment (validate file exists and size)
+✅ Delivery confirmation logging
+✅ Fallback to testing email if GM delivery fails
+
+OUTPUT: GM receives daily WiFi report
+
+📊 PHASE 6: VALIDATION & MONITORING
+-----------------------------------
+AUTOMATED CHECKS:
+✅ check.py: PDF content validation
+✅ Compare today's vs yesterday's "Total Active User Count"
+✅ Validate Excel file has correct row count and structure
+✅ Email delivery confirmation
+✅ System health monitoring
+
+VALIDATION CRITERIA:
+• Today's active users > Yesterday's active users (growth validation)
+• Excel file not empty (minimum 100 rows expected)
+• PDF contains expected report sections
+• All network data properly merged
+
+ERROR HANDLING:
+🚨 Email alerts for critical failures
+📧 Development notifications for issues
+🔄 Automatic retry mechanisms
+📝 Comprehensive logging for troubleshooting
+
+================================================================
+⚙️ SYSTEM CONFIGURATION
+================================================================
+
+🕒 TIME SCHEDULE (CONFIGURABLE):
+Morning CSV: 09:30 AM
+Afternoon CSV: 12:30 PM
+Excel Merge: 01:35 PM
+VBS Upload: 02:00 PM (configurable)
+PDF Generation: After upload completion
+Email Delivery: 09:00-09:45 AM next day (random, configurable)
+
+📁 DIRECTORY STRUCTURE:
+EHC_Data/{date}/          - CSV files storage
+EHC_Data_Merge/{date}/    - Excel files storage  
+EHC_Data_Pdf/{date}/      - PDF reports storage
+EHC_Logs/{date}/          - System logs
+
+🎛️ FRONTEND CONFIGURATION:
+• Upload time adjustment (default 02:00 PM)
+• Email delivery time range (default 09:00-09:45 AM)
+• Random timing patterns
+• System monitoring dashboard
+• Manual triggers for each phase
+• Log file viewer
+• Progress tracking
+
+================================================================
+🔧 TECHNICAL IMPLEMENTATION
+================================================================
+
+CORE COMPONENTS:
+1. csv_downloader_resilient.py - WiFi data collection
+2. excel_generator.py - CSV to Excel conversion
+3. vbs_phase3_upload_complete.py - VBS data upload (CRITICAL)
+4. vbs_phase4_report_fixed.py - PDF report generation
+5. email_delivery.py - Professional email system
+6. check.py - PDF and Excel validation
+7. master_automation_orchestrator.py - Complete flow coordination
+
+AUDIO DETECTION:
+• vbs_audio_detector.py - Popup sound detection
+• Three critical detection points in Phase 3
+• Fallback visual confirmation methods
+• Timeout handling for long operations
+
+PATH MANAGEMENT:
+• utils/path_manager.py - Centralized path configuration
+• config/paths_config.json - Absolute path definitions
+• Cross-component consistency
+
+ERROR HANDLING:
+• Comprehensive logging at each phase
+• Email notifications for failures
+• Automatic retry mechanisms  
+• Manual intervention alerts
+
+SCHEDULING:
+• Windows Task Scheduler integration
+• Service-based operation (365-day uptime)
+• Configurable timing via frontend
+• Random delivery patterns
+
+================================================================
+🎯 SUCCESS CRITERIA
+================================================================
+
+DAILY OPERATION:
+✅ 8 CSV files collected (4 morning + 4 afternoon)
+✅ 1 Excel file generated with all network data
+✅ VBS upload completed successfully (audio confirmation)
+✅ 1 PDF report generated with current date
+✅ Email delivered to GM between 09:00-09:45 AM
+✅ Validation confirms data growth and integrity
+
+MONITORING METRICS:
+• CSV collection success rate: 100%
+• Excel generation success rate: 100%
+• VBS upload success rate: 100% (CRITICAL)
+• PDF generation success rate: 100%
+• Email delivery success rate: 100%
+• Data validation pass rate: 100%
+
+PERFORMANCE TARGETS:
+• CSV collection: < 5 minutes per slot
+• Excel generation: < 2 minutes
+• VBS upload: 2-5 hours (normal processing time)
+• PDF generation: < 10 minutes
+• Email delivery: < 1 minute
+• Total automation cycle: < 6 hours (CSV to PDF ready)
+
+================================================================
+🚀 DEPLOYMENT & OPERATION
+================================================================
+
+INSTALLATION:
+1. Run universal_installer.py
+2. Configure email credentials
+3. Set up Windows service
+4. Configure frontend access
+5. Test complete flow
+
+DAILY MONITORING:
+• Check email notifications
+• Review system logs
+• Validate PDF reports
+• Monitor VBS upload completion
+• Verify data growth trends
+
+MAINTENANCE:
+• Weekly log cleanup
+• Monthly performance review
+• Quarterly system updates
+• Annual configuration review
+
+================================================================
+📞 SUPPORT & CONTACT
+================================================================
+
+AUTOMATED NOTIFICATIONS:
+• Development: faseenm@gmail.com
+• Testing: faseen1532@gmail.com  
+• General Manager: {configured_gm_email}
+
+MANUAL INTERVENTION:
+• If Phase 3 upload fails: Check VBS application state
+• If email delivery fails: Verify SMTP configuration
+• If PDF validation fails: Review data collection integrity
+• If system stops: Restart Windows service
+
+================================================================
+END OF AUTOMATA SPECIFICATION
+================================================================
+
+This document defines the complete automation flow for MoonFlower Hotel
+WiFi management system. The system operates continuously, providing daily
+WiFi usage reports to management while maintaining full automation and
+minimal manual intervention requirements.
+
+CRITICAL SUCCESS FACTOR: Phase 3 VBS upload must complete successfully
+as it is the core of the entire automation system. All other phases
+depend on this critical data upload operation.
+
+Version: 1.0
+Last Updated: {datetime.now().strftime('%d %B %Y')}
+System Status: OPERATIONAL ✅ 

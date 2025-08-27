@@ -1,0 +1,16 @@
+{
+  "email_time": "08:45",
+  "data_slots": [
+    "09:00",
+    "12:30"
+  ],
+  "upload_delay_minutes": 10,
+  "report_delay_minutes": 180,
+  "python_exe": "C:\\Users\\Lenovo\\AppData\\Local\\Microsoft\\WindowsApps\\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\\python.exe",
+  "startup_enabled": true,
+  "last_run_date": "2025-08-05",
+  "icon_path": "C:\\Users\\Lenovo\\Documents\\Automate2\\Automata2\\icons\\moonflower.ico",
+  "last_run_email": "2025-08-05",
+  "last_run_data_0900": "2025-08-05",
+  "last_run_data_1230": "2025-08-05"
+}

@@ -1,0 +1,79 @@
+{
+  "ruckus_controller": {
+    "url": "https://51.38.163.73:8443/wsg/",
+    "username": "admin",
+    "password": "AdminFlower@123"
+  },
+  "networks": {
+    "page_1": [
+      {
+        "name": "EHC TV",
+        "needs_clients_tab": true,
+        "selectors": {
+          "primary": "//span[contains(text(), 'EHC TV')]",
+          "fallback": "#ext-element-94"
+        }
+      },
+      {
+        "name": "EHC-15",
+        "needs_clients_tab": false,
+        "selectors": {
+          "primary": "//span[contains(text(), 'EHC-15')]",
+          "fallback": "#ext-element-93"
+        }
+      }
+    ],
+    "page_2": [
+      {
+        "name": "Reception Hall-Mobile",
+        "needs_clients_tab": true,
+        "selectors": {
+          "primary": "//span[contains(text(), 'Reception Hall-Mobile')]",
+          "fallback": "#ext-element-115"
+        }
+      },
+      {
+        "name": "Reception Hall-TV",
+        "needs_clients_tab": false,
+        "selectors": {
+          "primary": "//span[contains(text(), 'Reception Hall-TV')]",
+          "fallback": "#ext-element-114"
+        }
+      }
+    ]
+  },
+  "download_schedule": [
+    "09:30",
+    "13:00"
+  ],
+  "email_settings": {
+    "send_weekdays_only": true,
+    "send_all_days": false,
+    "daily_recipients": [],
+    "completion_recipients": [],
+    "error_recipients": []
+  },
+  "system_settings": {
+    "auto_restart": true,
+    "debug_mode": false,
+    "max_retry_attempts": 3,
+    "retry_delay": 30
+  },
+  "vbs_application": {
+    "primary_path": "C:\\Program Files\\AbsonsItERP\\AbsonsItERP.exe",
+    "backup_path": "D:\\AbsonsItERP\\AbsonsItERP.exe",
+    "window_title": "AbsonsItERP",
+    "login": {
+      "username": "admin",
+      "password": "admin123",
+      "database": "MoonFlower"
+    },
+    "timeout": {
+      "app_launch": 30,
+      "login": 20,
+      "navigation": 15,
+      "data_import": 7200,
+      "pdf_generation": 300
+    }
+  }
+}

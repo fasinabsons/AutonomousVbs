@@ -1,0 +1,201 @@
+# MoonFlower CSV Download System - Configuration Guide
+# ====================================================
+
+## QUICK START
+1. Right-click csv_download.bat and select "Run as administrator"
+2. The system will automatically download CSV files at scheduled times
+3. Files will be merged into Excel and email sent to faseenm@gmail.com
+4. Keep the window open to see progress
+
+## CURRENT CONFIGURATION
+- Morning Downloads: 8:30, 9:30, 10:30, 11:30, 12:30
+- Afternoon Downloads: 13:30, 14:30, 15:30, 16:30
+- CSV Files: EHC_Data/[date]/
+- Excel Files: EHC_Data_Merge/[date]/
+- PDF Files: EHC_Data_Pdf/[date]/ (for VBS application)
+- Email: faseenm@gmail.com
+
+## HOW TO CHANGE FOLDER LOCATIONS
+
+### Method 1: Edit config.txt file
+1. Open config.txt in notepad
+2. Find the folder settings:
+   CSV_BASE_DIR=EHC_Data
+   EXCEL_BASE_DIR=EHC_Data_Merge
+   PDF_BASE_DIR=EHC_Data_Pdf
+   LOG_BASE_DIR=EHC_Logs
+
+3. Change to your desired paths:
+   CSV_BASE_DIR=C:/MyCompany/CSVFiles
+   EXCEL_BASE_DIR=D:/Reports/ExcelFiles
+   PDF_BASE_DIR=C:/VBS_Application/PDFs
+   LOG_BASE_DIR=C:/Logs/CSVDownloader
+
+4. Save the file and restart csv_download.bat
+
+### Method 2: Use full paths
+Examples of valid paths:
+- C:/MyFolder/CSVData
+- D:/CompanyData/Reports
+- ../ParentFolder/Data
+- ./SubFolder/Files
+
+### Method 3: Network drives
+- \\\\ServerName\\ShareName\\CSVFiles
+- Z:/NetworkDrive/Data
+
+## HOW TO CHANGE DOWNLOAD TIMES
+
+1. Open config.txt in notepad
+2. Find the time settings:
+   MORNING_DOWNLOAD_TIMES=08:30,09:30,10:30,11:30,12:30
+   AFTERNOON_DOWNLOAD_TIMES=13:30,14:30,15:30,16:30
+
+3. Change to your desired times (24-hour format):
+   MORNING_DOWNLOAD_TIMES=09:00,10:00,11:00,12:00
+   AFTERNOON_DOWNLOAD_TIMES=14:00,15:00,16:00,17:00
+
+4. Save the file and restart csv_download.bat
+
+## HOW TO CHANGE EMAIL ADDRESS
+
+1. Open config.txt in notepad
+2. Find: NOTIFICATION_EMAIL=faseenm@gmail.com
+3. Change to: NOTIFICATION_EMAIL=your.email@company.com
+4. Save and restart
+
+## FOLDER STRUCTURE CREATED
+
+When you run the system, it creates this structure:
+```
+Automata2/
+├── EHC_Data/22jul/           ← CSV files downloaded here
+├── EHC_Data_Merge/22jul/     ← Excel files created here
+├── EHC_Data_Pdf/22jul/       ← PDF directory for VBS app
+└── EHC_Logs/22jul/           ← Log files for troubleshooting
+```
+
+Each day gets its own folder (22jul, 23jul, etc.)
+
+## SYSTEM BEHAVIOR
+
+### Normal Operation:
+- 8:30 AM: Downloads morning CSV files
+- 9:30 AM: Downloads more CSV files (if available)
+- ... continues at each scheduled time
+- 4:30 PM: Downloads afternoon CSV files
+- After all downloads: Merges into Excel
+- Finally: Sends email notification
+
+### If Started Late:
+- If you start at 10:00 AM: Downloads immediately
+- If you start at 2:00 PM: Downloads morning + afternoon
+- System is smart about catching up
+
+### If Downloads Fail:
+- Retries automatically
+- Continues with next scheduled time
+- Logs all errors for troubleshooting
+
+## TROUBLESHOOTING
+
+### BAT File Closes Immediately:
+- Run as administrator
+- Check that Python is installed
+- Look at log files in EHC_Logs/[date]/
+
+### No CSV Files Downloaded:
+- Check internet connection
+- Ensure Chrome browser is installed
+- Check log files for specific errors
+- Try running: csv_download.bat /now
+
+### No Email Received:
+- Check spam folder
+- Verify email address in config.txt
+- Check log files for email errors
+
+### Wrong Folder Locations:
+- Edit config.txt file
+- Use full paths like C:/MyFolder/
+- Restart csv_download.bat after changes
+
+## ADVANCED CONFIGURATION
+
+### Change Check Frequency:
+CHECK_INTERVAL=1  (minutes between checks)
+
+### Change Download Window:
+DOWNLOAD_WINDOW=120  (seconds around scheduled time)
+
+### Enable Debug Logging:
+DEBUG_LOGGING=true
+
+### Change Browser Inspection Time:
+BROWSER_INSPECTION_TIME=10  (seconds to keep browser open)
+
+## TESTING THE SYSTEM
+
+### Test Configuration:
+python utils/config_loader.py
+
+### Test Dependencies:
+python utils/dependency_manager.py
+
+### Test Immediate Download:
+csv_download.bat /now
+
+### Test Scheduler:
+python automated_scheduler.py --test
+
+## FILE LOCATIONS
+
+### Configuration Files:
+- config.txt (main configuration)
+- requirements.txt (Python dependencies)
+
+### Python Scripts:
+- automated_scheduler.py (main scheduler)
+- enhanced_csv_cli.py (download interface)
+- utils/config_loader.py (configuration loader)
+- utils/dependency_manager.py (dependency handler)
+
+### Log Files:
+- EHC_Logs/[date]/automated_scheduler_[date].log
+- EHC_Logs/[date]/enhanced_csv_cli_[session]_[time].log
+
+## EXAMPLES
+
+### Example 1: Change to D: drive
+CSV_BASE_DIR=D:/CSVFiles
+EXCEL_BASE_DIR=D:/ExcelFiles
+PDF_BASE_DIR=D:/PDFFiles
+
+### Example 2: Use company network
+CSV_BASE_DIR=\\\\CompanyServer\\Data\\CSV
+EXCEL_BASE_DIR=\\\\CompanyServer\\Reports\\Excel
+
+### Example 3: Change times to hourly
+MORNING_DOWNLOAD_TIMES=08:00,09:00,10:00,11:00,12:00
+AFTERNOON_DOWNLOAD_TIMES=13:00,14:00,15:00,16:00,17:00
+
+### Example 4: Different email
+NOTIFICATION_EMAIL=manager@company.com
+
+## SUPPORT
+
+If you need help:
+1. Check the log files in EHC_Logs/[date]/
+2. Try running csv_download.bat /help
+3. Test individual components using the test commands above
+4. Make sure to run as administrator
+
+## BACKUP
+
+Important files to backup:
+- config.txt (your settings)
+- csv_download.bat (main script)
+- All files in utils/ folder
+- Your downloaded CSV and Excel files
+
+Remember: Always run csv_download.bat as administrator for best results!

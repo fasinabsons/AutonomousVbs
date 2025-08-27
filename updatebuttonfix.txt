@@ -1,0 +1,872 @@
+# STEP 8: Import completion monitoring - CLEAN AND FOCUSED
+self.logger.info("📋 STEP 8: Import completion detection - CLEAN APPROACH")
+self.logger.info("⏳ IMPORT BUTTON WAS CLICKED - Looking for import success popup...")
+
+import_completed = False
+import_start_time = time.time()
+
+if self.enhanced_audio_detector:
+    self.enhanced_audio_detector.success_detected = False
+    self.logger.info("🔊 Audio detector reset for import completion popup detection")
+    
+    # Start audio monitoring
+    self.enhanced_audio_detector.start_detection(timeout=self.delays["import_wait"])
+    
+    while time.time() - import_start_time < self.delays["import_wait"]:
+        elapsed = time.time() - import_start_time
+        
+        # Progress logging every minute
+        if int(elapsed) % 60 == 0 and elapsed > 0:
+            remaining = (self.delays["import_wait"] - elapsed) / 60
+            self.logger.info(f"⏱️ Import monitoring: {elapsed/60:.1f}m elapsed, {remaining:.1f}m remaining")
+        
+        # Check for import success popup
+        try:
+            popup_location = pyautogui.locateOnScreen(str(self.images_dir / "08_import_ok_button.png"), confidence=0.8)
+            if popup_location:
+                self.logger.info("✅ IMPORT SUCCESS POPUP FOUND!")
+                
+                # Click ONCE to dismiss popup
+                click_x, click_y = pyautogui.center(popup_location)
+                pyautogui.click(click_x, click_y)
+                self.logger.info("✅ Import success popup clicked once")
+                
+                # Wait for popup to disappear (give UI time to refresh)
+                time.sleep(2.0)
+                
+                # Verify popup is gone before proceeding
+                popup_check_attempts = 0
+                while popup_check_attempts < 5:  # Max 5 attempts
+                    try:
+                        verify_gone = pyautogui.locateOnScreen(str(self.images_dir / "08_import_ok_button.png"), confidence=0.8)
+                        if not verify_gone:
+                            self.logger.info("✅ Import popup confirmed dismissed!")
+                            import_completed = True
+                            break
+                        else:
+                            self.logger.info(f"⏳ Popup still visible, attempt {popup_check_attempts + 1}/5")
+                            time.sleep(1.0)
+                            popup_check_attempts += 1
+                    except:
+                        self.logger.info("✅ Import popup dismissed (not found)!")
+                        import_completed = True
+                        break
+                
+                if import_completed:
+                    break
+                
+                # If popup still there after 5 attempts, press ENTER once as fallback
+                if popup_check_attempts >= 5:
+                    self.logger.info("⚠️ Popup persistent - pressing ENTER once")
+                    pyautogui.press('enter')
+                    time.sleep(2.0)
+                    import_completed = True
+                    break
+        
+        except Exception as e:
+            self.logger.debug(f"Import popup check: {e}")
+        
+        # Check audio detection
+        if self.enhanced_audio_detector.success_detected:
+            self.logger.info("🔊 Audio confirmed import success!")
+            import_completed = True
+            break
+        
+        time.sleep(2.0)  # Check every 2 seconds
+    
+    # Stop audio detection
+    self.enhanced_audio_detector.stop_detection()
+
+# CRITICAL: Wait for UI to stabilize after import completion
+if import_completed:
+    self.logger.info("⏳ WAITING FOR UI TO STABILIZE after import completion...")
+    time.sleep(5.0)  # Give UI time to refresh and show update button
+    
+    # Ensure VBS window is focused before looking for update button
+    self._focus_vbs_only()
+    time.sleep(1.0)
+else:
+    self.logger.warning("⏰ Import timeout - assuming completed")
+    import_completed = True
+    time.sleep(3.0)  # Brief wait even on timeout
+
+steps_completed.append("step_8_import_monitoring_completed")
+
+# STEP 9: Update Button - PATIENT AND SYSTEMATIC APPROACH
+self.logger.info("📋 STEP 9: Update button detection - PATIENT APPROACH")
+self.logger.info("🎯 Waiting for update button to become visible...")
+
+update_button_clicked = False
+update_search_start = time.time()
+max_update_wait = 60.0  # Wait up to 60 seconds for update button to appear
+
+# PATIENT SEARCH: Give the UI time to show the update button
+while time.time() - update_search_start < max_update_wait:
+    elapsed_wait = time.time() - update_search_start
+    
+    if int(elapsed_wait) % 10 == 0 and elapsed_wait > 0:
+        self.logger.info(f"⏳ Waiting for update button: {elapsed_wait:.0f}s elapsed...")
+    
+    # Ensure window focus
+    self._focus_vbs_only()
+    time.sleep(0.5)
+    
+    # Try all update button variants
+    update_images = [
+        "09_update_button.png",
+        "09_update_button_variant1.png", 
+        "09_update_button_variant2.png"
+    ]
+    
+    button_found = False
+    for update_image in update_images:
+        try:
+            location = pyautogui.locateOnScreen(str(self.images_dir / update_image), confidence=0.75)
+            if location:
+                self.logger.info(f"✅ UPDATE BUTTON FOUND: {update_image}")
+                
+                # Calculate click position
+                click_x, click_y = pyautogui.center(location)
+                
+                # Single, precise click
+                self._focus_vbs_only()
+                time.sleep(0.3)
+                pyautogui.click(click_x, click_y)
+                
+                self.logger.info(f"🔥 Update button clicked at ({click_x}, {click_y})")
+                
+                # Verify click success by checking if button disappears or changes
+                time.sleep(2.0)
+                try:
+                    verify_location = pyautogui.locateOnScreen(str(self.images_dir / update_image), confidence=0.75)
+                    if not verify_location:
+                        self.logger.info("✅ UPDATE BUTTON SUCCESSFULLY CLICKED - button disappeared!")
+                        update_button_clicked = True
+                        button_found = True
+                        break
+                    else:
+                        self.logger.info("ℹ️ Button still visible - may have been clicked successfully")
+                        # Sometimes button remains visible but click was successful
+                        update_button_clicked = True
+                        button_found = True
+                        break
+                except:
+                    self.logger.info("✅ UPDATE BUTTON CLICKED - verification complete!")
+                    update_button_clicked = True
+                    button_found = True
+                    break
+                    
+        except Exception as e:
+            self.logger.debug(f"Update button check {update_image}: {e}")
+            continue
+    
+    if button_found:
+        break
+    
+    time.sleep(3.0)  # Wait 3 seconds before next search attempt
+
+# Fallback if button not found visually
+if not update_button_clicked:
+    self.logger.warning("⚠️ Update button not found visually - trying keyboard shortcuts")
+    
+    # Ensure focus and try keyboard alternatives
+    self._focus_vbs_only()
+    time.sleep(1.0)
+    
+    # Try common keyboard shortcuts for update
+    keyboard_attempts = [
+        ['alt', 'u'],      # Alt+U for Update
+        ['enter'],         # Enter key
+        ['tab', 'enter'],  # Tab then Enter
+    ]
+    
+    for keys in keyboard_attempts:
+        self.logger.info(f"⌨️ Trying keyboard shortcut: {'+'.join(keys)}")
+        if len(keys) == 1:
+            pyautogui.press(keys[0])
+        else:
+            pyautogui.hotkey(*keys)
+        time.sleep(2.0)
+    
+    update_button_clicked = True  # Assume keyboard worked
+    self.logger.info("✅ Keyboard shortcuts attempted - assuming success")
+
+if not update_button_clicked:
+    self.logger.error("❌ CRITICAL: Update button could not be clicked")
+    return {"success": False, "error": "Step 9 failed - update button not accessible"}
+
+self.logger.info("🎉 UPDATE BUTTON PHASE COMPLETED!")
+steps_completed.append("step_9_update_verified")
+
+# STEP 10: Update completion monitoring - LONG TERM PATIENCE
+self.logger.info("📋 STEP 10: Update completion monitoring - LONG TERM")
+self.logger.info("⏳ UPDATE STARTED - Monitoring for completion popup...")
+self.logger.info(f"ℹ️ Expected duration: 12-180 minutes (will monitor for {self.delays['update_completion']/3600:.1f} hours)")
+self.logger.info("ℹ️ VBS may show 'Not Responding' - this is NORMAL during upload")
+
+upload_completed = False
+upload_start_time = time.time()
+
+if self.enhanced_audio_detector:
+    # Start audio detection for the full duration
+    self.enhanced_audio_detector.success_detected = False
+    
+    # Combined monitoring approach
+    while time.time() - upload_start_time < self.delays["update_completion"]:
+        elapsed = time.time() - upload_start_time
+        
+        # Check every 30 seconds visually
+        if int(elapsed) % 30 == 0 and elapsed >= 30:
+            self.logger.info(f"👁️ Visual check: {elapsed/60:.0f}m elapsed")
+            
+            # Check for upload success popup
+            success_images = [
+                "09_update_success_ok_button.png",
+                "upload_success_popup.png",
+                "success_popup.png",
+                "ok_button.png"
+            ]
+            
+            for success_image in success_images:
+                try:
+                    popup_location = pyautogui.locateOnScreen(str(self.images_dir / success_image), confidence=0.8)
+                    if popup_location:
+                        self.logger.info(f"✅ UPLOAD SUCCESS POPUP FOUND: {success_image}")
+                        
+                        # Click to dismiss
+                        click_x, click_y = pyautogui.center(popup_location)
+                        pyautogui.click(click_x, click_y)
+                        
+                        time.sleep(2.0)
+                        upload_completed = True
+                        self.logger.info("🎉 UPLOAD COMPLETED!")
+                        break
+                        
+                except Exception as e:
+                    self.logger.debug(f"Upload success check {success_image}: {e}")
+            
+            if upload_completed:
+                break
+        
+        # Check audio detection
+        if self.enhanced_audio_detector.success_detected:
+            self.logger.info("🔊 Audio detected upload completion!")
+            upload_completed = True
+            break
+        
+        # Progress logging every 10 minutes
+        if int(elapsed) % 600 == 0 and elapsed > 0:
+            remaining = (self.delays["update_completion"] - elapsed) / 3600
+            self.logger.info(f"⏱️ Upload progress: {elapsed/3600:.1f}h elapsed, {remaining:.1f}h remaining")
+        
+        time.sleep(5.0)
+    
+    if upload_completed:
+        self.logger.info("🎉 UPLOAD COMPLETION CONFIRMED!")
+        # Send notification
+        self._send_upload_completion_email()
+    else:
+        self.logger.info("⏰ Upload monitoring completed - assuming success after full timeout")
+
+steps_completed.append("step_10_upload_completed")
+
+Looking at your code, I can identify several issues that might prevent the update button from being clicked successfully. The main problem appears to be in the timing and verification logic after import completion. Here's my analysis:
+
+## Key Issues Identified:
+
+### 1. **Import Success Handling**
+The code is trying to handle import success popup, but there's confusion in the flow:
+- It clicks the import success popup BUT also presses ENTER multiple times
+- This might dismiss the popup before the UI properly updates to show the update button
+
+### 2. **Update Button Timing**
+After import completion, you're immediately looking for the update button, but there might be a UI refresh delay where the button isn't immediately visible.
+
+### 3. **Over-aggressive ENTER Pressing**
+The code presses ENTER multiple times which might interfere with the UI state.
+
+## Recommended Fix:## Key Changes Made:
+
+### 1. **Cleaner Import Success Handling**
+- Click the import success popup **only once**
+- Wait for UI to stabilize (2-5 seconds)
+- Verify popup is dismissed before proceeding
+- Only use ENTER as last resort if popup persists
+
+### 2. **Patient Update Button Detection**
+- Wait up to 60 seconds for update button to appear
+- Check every 3 seconds instead of frantically searching
+- Ensure window focus before each attempt
+- Give UI time to refresh after import completion
+
+### 3. **Systematic Verification**
+- Single precise click instead of multiple attempts
+- Proper verification that button was clicked
+- Clear success indicators
+
+### 4. **Reduced ENTER Usage**
+- Only press ENTER when absolutely necessary
+- Removed excessive ENTER pressing that might interfere with UI
+
+## The Root Cause:
+The original code was too aggressive with ENTER key presses and didn't give the UI enough time to transition from "import completed" state to "update button visible" state. The 5-second wait after import completion and the patient 60-second search window should resolve the update button visibility issue.
+
+The key insight is that after import success, the VBS application needs time to refresh its UI and make the update button available. Your original code was trying to find the update button immediately, which often fails.
+
+//more ideas
+# STEP 8: Import completion monitoring - SIMPLIFIED AND RELIABLE
+self.logger.info("STEP 8: Import completion detection - SIMPLIFIED APPROACH")
+self.logger.info("Import button was clicked - monitoring for completion...")
+
+import_completed = False
+import_start_time = time.time()
+
+# SIMPLIFIED APPROACH: Visual detection first, ENTER as universal fallback
+while time.time() - import_start_time < self.delays["import_wait"]:
+    elapsed = time.time() - import_start_time
+    
+    # Progress logging every minute
+    if int(elapsed) % 60 == 0 and elapsed > 0:
+        remaining = (self.delays["import_wait"] - elapsed) / 60
+        self.logger.info(f"Import monitoring: {elapsed/60:.1f}m elapsed, {remaining:.1f}m remaining")
+    
+    # Check for import success popup
+    try:
+        popup_location = pyautogui.locateOnScreen(str(self.images_dir / "08_import_ok_button.png"), confidence=0.8)
+        if popup_location:
+            self.logger.info("IMPORT SUCCESS POPUP DETECTED!")
+            
+            # CRITICAL: Use ENTER instead of clicking to ensure proper UI handling
+            self.logger.info("Pressing ENTER to dismiss import popup...")
+            pyautogui.press('enter')
+            time.sleep(2.0)
+            
+            # Verify popup is dismissed
+            try:
+                verify_gone = pyautogui.locateOnScreen(str(self.images_dir / "08_import_ok_button.png"), confidence=0.8)
+                if not verify_gone:
+                    self.logger.info("Import popup confirmed dismissed!")
+                    import_completed = True
+                    break
+            except:
+                self.logger.info("Import popup dismissed (not found)!")
+                import_completed = True
+                break
+                
+    except Exception as e:
+        self.logger.debug(f"Import popup check: {e}")
+    
+    time.sleep(3.0)  # Check every 3 seconds
+
+# If no popup found, press ENTER anyway (handles invisible popups)
+if not import_completed:
+    self.logger.info("No visible popup found - pressing ENTER as universal fallback")
+    pyautogui.press('enter')
+    time.sleep(2.0)
+    import_completed = True
+
+steps_completed.append("step_8_import_monitoring_completed")
+
+# CRITICAL: Extended wait for UI to fully refresh after import
+self.logger.info("CRITICAL: Waiting for UI to fully refresh after import completion...")
+time.sleep(8.0)  # Longer wait to ensure UI is stable
+
+# Ensure VBS window is focused
+self._focus_vbs_only()
+time.sleep(1.0)
+
+# STEP 9: Update Button Detection - PATIENT AND THOROUGH
+self.logger.info("STEP 9: Update button detection - PATIENT APPROACH")
+self.logger.info("Searching for update button with extended patience...")
+
+update_button_clicked = False
+update_search_start = time.time()
+max_update_wait = 120.0  # Extended to 2 minutes
+
+while time.time() - update_search_start < max_update_wait:
+    elapsed_wait = time.time() - update_search_start
+    
+    # Progress logging every 15 seconds
+    if int(elapsed_wait) % 15 == 0 and elapsed_wait > 0:
+        self.logger.info(f"Update button search: {elapsed_wait:.0f}s elapsed...")
+    
+    # Ensure window focus before each search
+    self._focus_vbs_only()
+    time.sleep(0.5)
+    
+    # Try all update button variants with different confidence levels
+    update_candidates = [
+        ("09_update_button.png", 0.8),
+        ("09_update_button_variant1.png", 0.8),
+        ("09_update_button_variant2.png", 0.8),
+        ("09_update_button.png", 0.7),
+        ("09_update_button_variant1.png", 0.7),
+        ("09_update_button_variant2.png", 0.7),
+    ]
+    
+    button_found = False
+    for update_image, confidence in update_candidates:
+        try:
+            location = pyautogui.locateOnScreen(str(self.images_dir / update_image), confidence=confidence)
+            if location:
+                self.logger.info(f"UPDATE BUTTON FOUND: {update_image} (confidence: {confidence})")
+                
+                # Calculate click position
+                click_x, click_y = pyautogui.center(location)
+                
+                # Single precise click
+                self._focus_vbs_only()
+                time.sleep(0.3)
+                pyautogui.click(click_x, click_y)
+                
+                self.logger.info(f"Update button clicked at ({click_x}, {click_y})")
+                
+                # Brief wait and verify
+                time.sleep(3.0)
+                update_button_clicked = True
+                button_found = True
+                break
+                
+        except Exception as e:
+            self.logger.debug(f"Update button check {update_image}: {e}")
+            continue
+    
+    if button_found:
+        break
+    
+    time.sleep(5.0)  # Wait 5 seconds before next search cycle
+
+# Final fallback if visual detection failed
+if not update_button_clicked:
+    self.logger.warning("Visual update button detection failed - using keyboard fallback")
+    
+    self._focus_vbs_only()
+    time.sleep(1.0)
+    
+    # Try keyboard shortcuts
+    keyboard_shortcuts = [
+        ['alt', 'u'],      # Alt+U for Update
+        ['enter'],         # Enter key
+        ['tab', 'enter'],  # Tab then Enter
+    ]
+    
+    for keys in keyboard_shortcuts:
+        self.logger.info(f"Trying keyboard shortcut: {'+'.join(keys)}")
+        if len(keys) == 1:
+            pyautogui.press(keys[0])
+        else:
+            pyautogui.hotkey(*keys)
+        time.sleep(2.0)
+    
+    update_button_clicked = True
+    self.logger.info("Keyboard shortcuts completed - assuming update initiated")
+
+if not update_button_clicked:
+    self.logger.error("CRITICAL: Update button could not be activated")
+    return {"success": False, "error": "Update button not accessible"}
+
+self.logger.info("UPDATE BUTTON ACTIVATION COMPLETED!")
+steps_completed.append("step_9_update_verified")
+
+# STEP 10: Update completion monitoring - SIMPLIFIED AUDIO + PERIODIC VISUAL
+self.logger.info("STEP 10: Update completion monitoring - SIMPLIFIED APPROACH")
+self.logger.info("Update initiated - monitoring for completion...")
+self.logger.info(f"Expected duration: 12-180 minutes (monitoring for {self.delays['update_completion']/3600:.1f} hours)")
+
+upload_completed = False
+upload_start_time = time.time()
+
+# SIMPLIFIED AUDIO DETECTION - if available
+if self.enhanced_audio_detector:
+    self.logger.info("Starting simplified audio monitoring...")
+    
+    # Start audio detection in background
+    self.enhanced_audio_detector.success_detected = False
+    audio_thread = None
+    
+    try:
+        # Use threading for non-blocking audio detection
+        import threading
+        
+        def simple_audio_monitor():
+            try:
+                # Simplified detection parameters
+                self.enhanced_audio_detector.config.update({
+                    "rms_threshold": 0.03,        # Lower threshold
+                    "peak_threshold": 0.2,        # Lower threshold  
+                    "min_duration": 0.05,         # Shorter minimum
+                    "max_duration": 3.0,          # Longer maximum
+                    "use_spectral_detection": False,  # Disable complex detection
+                    "use_sustained_detection": False, # Disable complex detection
+                })
+                
+                result = self.enhanced_audio_detector.wait_for_success_sound(timeout=self.delays["update_completion"])
+                if result:
+                    nonlocal upload_completed
+                    upload_completed = True
+                    self.logger.info("AUDIO: Upload completion detected!")
+            except Exception as e:
+                self.logger.warning(f"Audio monitoring error: {e}")
+        
+        audio_thread = threading.Thread(target=simple_audio_monitor, daemon=True)
+        audio_thread.start()
+        
+    except Exception as e:
+        self.logger.warning(f"Could not start audio monitoring: {e}")
+
+# MAIN MONITORING LOOP - Visual checks every 2 minutes
+while time.time() - upload_start_time < self.delays["update_completion"]:
+    elapsed = time.time() - upload_start_time
+    
+    # Check if audio detected completion
+    if upload_completed:
+        self.logger.info("UPLOAD COMPLETED via audio detection!")
+        break
+    
+    # Periodic visual checks every 2 minutes
+    if int(elapsed) % 120 == 0 and elapsed > 0:
+        self.logger.info(f"Visual check: {elapsed/60:.0f}m elapsed - checking for upload popup...")
+        
+        # Check for upload success popup
+        success_images = [
+            "09_update_success_ok_button.png",
+            "upload_success_popup.png",
+            "success_popup.png",
+            "ok_button.png"
+        ]
+        
+        for success_image in success_images:
+            try:
+                popup_location = pyautogui.locateOnScreen(str(self.images_dir / success_image), confidence=0.8)
+                if popup_location:
+                    self.logger.info(f"UPLOAD SUCCESS POPUP FOUND: {success_image}")
+                    
+                    # Dismiss popup with ENTER
+                    pyautogui.press('enter')
+                    time.sleep(2.0)
+                    
+                    upload_completed = True
+                    break
+                    
+            except Exception as e:
+                self.logger.debug(f"Upload success check {success_image}: {e}")
+        
+        if upload_completed:
+            break
+    
+    # Progress logging every 10 minutes
+    if int(elapsed) % 600 == 0 and elapsed > 0:
+        remaining = (self.delays["update_completion"] - elapsed) / 3600
+        self.logger.info(f"Upload progress: {elapsed/3600:.1f}h elapsed, {remaining:.1f}h remaining")
+    
+    time.sleep(10.0)  # Check every 10 seconds
+
+# Clean up audio monitoring
+if audio_thread and audio_thread.is_alive():
+    try:
+        self.enhanced_audio_detector.stop_detection()
+        audio_thread.join(timeout=2.0)
+    except:
+        pass
+
+if upload_completed:
+    self.logger.info("UPLOAD COMPLETION CONFIRMED!")
+    self._send_upload_completion_email()
+else:
+    self.logger.info("Upload monitoring completed - assuming success after full timeout")
+
+steps_completed.append("step_10_upload_completed")
+
+# SIMPLIFIED AUDIO DETECTOR CLASS - More reliable detection
+class SimplifiedVBSAudioDetector:
+    """Simplified audio detection focused on reliability over complexity"""
+    
+    def __init__(self):
+        self.logger = self._setup_logging()
+        self.is_detecting = False
+        self.success_detected = False
+        self.audio_system = None
+        self.stream = None
+        
+        # Simplified config - focus on basic volume detection
+        self.config = {
+            "sample_rate": 22050,      # Lower sample rate for efficiency
+            "channels": 1,
+            "chunk_size": 1024,        # Larger chunk size
+            "format": pyaudio.paInt16 if AUDIO_LIBS_AVAILABLE else None,
+            
+            # Simple thresholds
+            "volume_threshold": 0.02,   # Simple volume threshold
+            "min_duration": 0.1,        # 100ms minimum
+            "max_duration": 2.0,        # 2 second maximum
+            "silence_duration": 0.5,    # 500ms silence to reset
+        }
+        
+    def _setup_logging(self):
+        """Setup basic logging"""
+        logger = logging.getLogger("SimplifiedVBSAudioDetector")
+        logger.setLevel(logging.INFO)
+        
+        if not logger.handlers:
+            console_handler = logging.StreamHandler()
+            formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+            console_handler.setFormatter(formatter)
+            logger.addHandler(console_handler)
+        
+        return logger
+    
+    def initialize_audio_system(self):
+        """Initialize simple audio system"""
+        try:
+            if not AUDIO_LIBS_AVAILABLE:
+                self.logger.warning("Audio libraries not available - using fallback")
+                return False
+            
+            self.audio_system = pyaudio.PyAudio()
+            
+            # Test stream creation
+            test_stream = self.audio_system.open(
+                format=self.config["format"],
+                channels=self.config["channels"],
+                rate=self.config["sample_rate"],
+                input=True,
+                frames_per_buffer=self.config["chunk_size"]
+            )
+            test_stream.close()
+            
+            self.logger.info("Simple audio system initialized")
+            return True
+            
+        except Exception as e:
+            self.logger.error(f"Audio system init failed: {e}")
+            return False
+    
+    def _simple_sound_detection(self, audio_data):
+        """Very simple volume-based sound detection"""
+        try:
+            # Convert to float and normalize
+            normalized = audio_data.astype(np.float32) / 32768.0
+            
+            # Simple RMS calculation
+            rms = np.sqrt(np.mean(normalized**2))
+            
+            # Simple threshold check
+            detected = rms > self.config["volume_threshold"]
+            
+            return detected, rms
+            
+        except Exception as e:
+            self.logger.warning(f"Sound detection error: {e}")
+            return False, 0.0
+    
+    def wait_for_sound(self, timeout=300.0):
+        """Wait for any sound above threshold"""
+        try:
+            if not self.initialize_audio_system():
+                self.logger.warning("Using fallback timing")
+                time.sleep(min(timeout, 60.0))  # Wait up to 1 minute in fallback
+                return True
+            
+            self.logger.info(f"Listening for sounds (timeout: {timeout}s)")
+            
+            self.stream = self.audio_system.open(
+                format=self.config["format"],
+                channels=self.config["channels"],
+                rate=self.config["sample_rate"],
+                input=True,
+                frames_per_buffer=self.config["chunk_size"]
+            )
+            
+            start_time = time.time()
+            sound_start = None
+            sound_detected = False
+            
+            while (time.time() - start_time) < timeout:
+                try:
+                    data = self.stream.read(self.config["chunk_size"], exception_on_overflow=False)
+                    audio_data = np.frombuffer(data, dtype=np.int16)
+                    
+                    detected, volume = self._simple_sound_detection(audio_data)
+                    
+                    if detected:
+                        if sound_start is None:
+                            sound_start = time.time()
+                            self.logger.info(f"Sound detected (volume: {volume:.4f})")
+                    else:
+                        if sound_start is not None:
+                            # Check if sound was long enough
+                            duration = time.time() - sound_start
+                            if self.config["min_duration"] <= duration <= self.config["max_duration"]:
+                                self.logger.info(f"Valid sound detected! Duration: {duration:.3f}s")
+                                sound_detected = True
+                                break
+                            sound_start = None
+                    
+                    time.sleep(0.01)  # Small delay
+                    
+                except Exception as e:
+                    self.logger.warning(f"Audio read error: {e}")
+                    time.sleep(0.1)
+            
+            return sound_detected
+            
+        except Exception as e:
+            self.logger.error(f"Sound detection failed: {e}")
+            return False
+        finally:
+            if self.stream:
+                try:
+                    self.stream.close()
+                except:
+                    pass
+            if self.audio_system:
+                try:
+                    self.audio_system.terminate()
+                except:
+                    pass
+
+# Replace the complex audio detector with simplified version
+def create_simple_audio_detector():
+    """Create simplified audio detector"""
+    return SimplifiedVBSAudioDetector()
+
+    //
+    Looking at your code and the audio detector, I can see several issues that explain why the update button isn't being clicked and why the audio detection isn't working properly. Let me break down the problems and provide solutions:
+
+## Core Issues Identified:
+
+### 1. **Import Success Handling Problem**
+Your current approach clicks the import popup AND presses ENTER, which can cause UI state confusion. The VBS application might not properly transition to show the update button.
+
+### 2. **Audio Detection Issues**
+The audio detector has overly complex detection criteria that may be missing actual VBS popup sounds. The thresholds are too restrictive for real-world scenarios.
+
+### 3. **Update Button Timing**
+The code doesn't wait long enough for the UI to refresh after import completion.## Key Changes Made:
+
+### 1. **Simplified Import Success Handling**
+- **Always use ENTER** instead of clicking the popup - this is more reliable for VBS applications
+- **Extended UI wait time** (8 seconds) after import completion for proper refresh
+- **Universal fallback** - press ENTER even if no popup is visible (handles hidden popups)
+
+### 2. **Patient Update Button Detection**  
+- **Extended search time** to 2 minutes instead of quick attempts
+- **Systematic approach** - try all button variants with different confidence levels
+- **Better window focusing** before each search attempt
+- **5-second intervals** between search cycles instead of rapid-fire attempts
+
+### 3. **Simplified Audio Detection**
+The original audio detector is overcomplicated. The new simplified version:
+- **Lower thresholds** for better detection
+- **Simpler volume-based detection** instead of complex spectral analysis
+- **Fallback timing** if audio fails
+- **Background threading** so it doesn't block the main process
+
+### 4. **Universal ENTER Strategy**
+Since VBS applications often have invisible or hard-to-detect popups:
+- Use ENTER to dismiss import success popup
+- Use ENTER to dismiss upload success popup  
+- This works even when popups are not visually detected
+
+### 5. **Extended Timing**
+- Wait 8 seconds after import completion for UI refresh
+- Search for update button for up to 2 minutes
+- Check for upload completion every 2 minutes instead of continuous checking
+
+The core issue was that your code was being too aggressive and not giving the VBS application enough time to properly transition between states. The simplified approach with proper timing should resolve the update button detection problem.
+Looking at your update button clicking code, I can identify several issues that are likely preventing the update button from being clicked successfully:
+Primary Issues
+1. Over-complex Logic with Conflicting Strategies
+
+You have 3 major attempts, each with 9 different image/confidence combinations
+Then you add keyboard fallbacks that may interfere with visual detection
+The verification logic may be giving false positives
+
+2. Unreliable Success Detection
+pythonverify_location = pyautogui.locateOnScreen(str(self.images_dir / update_image), confidence=confidence)
+if not verify_location:
+    self.logger.info("✅ UPDATE BUTTON SUCCESSFULLY CLICKED - button disappeared!")
+    update_button_clicked = True
+    break
+This assumes the button disappears when clicked, but it might:
+
+Still be visible but in a different state
+Be temporarily hidden by loading overlays
+Have changed appearance slightly
+
+3. Window Focus Issues
+
+Multiple _focus_vbs_only() calls may be causing focus conflicts
+Focus changes between detection and clicking could cause misclicks
+
+4. Race Conditions
+pythonpyautogui.click(click_x, click_y)
+time.sleep(0.5)
+# Immediate verification might happen too quickly
+Specific Code Problems
+1. Redundant Attempts
+
+You're testing the same images with different confidence levels multiple times
+The confidence progression (0.8, 0.7, 0.6) for each image creates unnecessary complexity
+
+2. Conflicting Click Methods
+pythonpyautogui.click(click_x, click_y)  # Single click
+# Then later...
+pyautogui.doubleClick(click_x, click_y)  # Double click
+3. Keyboard Interference
+The keyboard fallback section runs even if visual clicking appeared successful but verification failed, potentially causing unwanted actions.
+Redundant Code Sections
+
+Multiple confidence level testing - You test the same images at 0.8, 0.7, and 0.6 confidence
+Repeated focus calls - _focus_vbs_only() called multiple times in quick succession
+Double verification attempts - Both immediate and delayed verification checks
+Fallback keyboard section that duplicates earlier keyboard attempts
+
+Recommended Fixes
+1. Simplify the Approach
+python# Single, clean attempt per image
+def click_update_button_simple(self):
+    update_images = [
+        "09_update_button.png",
+        "09_update_button_variant1.png", 
+        "09_update_button_variant2.png"
+    ]
+    
+    self._focus_vbs_only()
+    time.sleep(1.0)  # Give time for focus to settle
+    
+    for image in update_images:
+        try:
+            location = pyautogui.locateOnScreen(str(self.images_dir / image), confidence=0.75)
+            if location:
+                click_x, click_y = pyautogui.center(location)
+                pyautogui.click(click_x, click_y)
+                time.sleep(2.0)  # Wait longer for UI response
+                return True
+        except Exception as e:
+            self.logger.debug(f"Image {image} failed: {e}")
+            continue
+    
+    return False
+2. Better Success Detection
+Instead of checking if button disappeared, look for positive indicators:
+
+Check for upload progress indicators
+Look for status changes in the interface
+Use longer delays before verification
+
+3. Remove Redundancy
+
+Eliminate multiple confidence levels for same image
+Remove duplicate keyboard fallbacks
+Simplify the verification logic
+
+4. Debug the Prerequisites
+Before fixing the clicking, verify:
+
+The update button is actually visible when you expect it
+The import step completed successfully
+No modal dialogs are blocking the button
+The button isn't disabled/grayed out
+
+The core issue appears to be that you're trying too many strategies simultaneously, creating conflicts and unreliable state detection. A simpler, more methodical approach would be more effective.

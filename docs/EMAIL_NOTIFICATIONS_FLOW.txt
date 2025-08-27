@@ -1,0 +1,310 @@
+EMAIL NOTIFICATIONS FLOW DOCUMENTATION
+========================================
+
+OVERVIEW
+--------
+The email notifications system handles automated email delivery for status updates, reports, and alerts throughout the automation process.
+
+COMPONENTS
+----------
+1. Email Delivery System (email/email_delivery.py)
+2. Enhanced Email Scheduler (email/enhanced_email_scheduler.py)
+3. Email Template Engine
+4. SMTP Configuration Manager
+5. Attachment Handler
+
+NOTIFICATION TYPES
+------------------
+
+1. STATUS NOTIFICATIONS
+- CSV download completion
+- Excel merge completion  
+- VBS processing updates
+- PDF generation completion
+- Error alerts and failures
+
+2. SCHEDULED REPORTS
+- Daily automation summaries
+- Weekly performance reports
+- Monthly statistics
+- Error trend analysis
+
+3. ALERT NOTIFICATIONS
+- Critical system failures
+- Authentication issues
+- File processing errors
+- Network connectivity problems
+
+EMAIL TEMPLATES
+---------------
+
+STATUS UPDATE TEMPLATE:
+Subject: 🤖 MoonFlower Automation - {status} - {date}
+Body: Casual, friendly tone with emojis
+- Process status
+- Completion time
+- Next steps
+- File locations
+
+REPORT TEMPLATE:
+Subject: 📊 MoonFlower Daily Report - {date}
+Body: Professional, formal tone
+- Executive summary (2 sentences max)
+- Key metrics
+- File attachments
+- Signature with monthly rotation
+
+ERROR ALERT TEMPLATE:
+Subject: ⚠️ MoonFlower Automation Error - {error_type}
+Body: Urgent but professional tone
+- Error description
+- Impact assessment
+- Resolution steps
+- Contact information
+
+SMTP CONFIGURATION
+------------------
+Primary Server: Outlook/Exchange
+Backup Server: Gmail SMTP
+Authentication: OAuth2 preferred, App passwords fallback
+Encryption: TLS 1.2+
+Port: 587 (primary), 465 (backup)
+
+RECIPIENT CATEGORIES
+--------------------
+
+1. OPERATIONS TEAM
+- Real-time status updates
+- Error notifications
+- Process completion alerts
+
+2. MANAGEMENT
+- Daily reports only
+- Weekly summaries
+- Critical error alerts
+
+3. GENERAL MANAGER
+- Weekly PDF reports
+- Monthly statistics
+- Executive summaries only
+
+SCHEDULING LOGIC
+----------------
+
+DAILY NOTIFICATIONS:
+- Monday: Send Sunday's report + weekend summary
+- Tuesday-Thursday: Send previous day's report
+- Friday: Send Thursday's report (Friday held until Monday)
+- Saturday: No automatic sending (reports generated but held)
+- Sunday: No automatic sending (reports generated but held)
+
+WEEKEND HANDLING:
+- Friday reports: Held until Monday delivery
+- Saturday reports: Held until Monday delivery  
+- Sunday reports: Sent on Monday morning
+- Monday reports: Sent on Tuesday (normal schedule)
+
+SIGNATURE ROTATION SYSTEM
+--------------------------
+
+Monthly Signatures:
+- January: "Best regards for the New Year"
+- February: "With warm regards this February"
+- March: "Spring greetings" 
+- April: "Best wishes this April"
+- May: "Warm May regards"
+- June: "Mid-year greetings"
+- July: "Summer regards" (default)
+- August: "Late summer wishes"
+- September: "Autumn greetings"
+- October: "Fall regards"
+- November: "Pre-holiday wishes"
+- December: "Year-end regards"
+
+Signature Format:
+```
+{monthly_greeting},
+
+{sender_name}
+MoonFlower Automation System
+Generated on {date}
+```
+
+ATTACHMENT HANDLING
+-------------------
+
+PDF REPORTS:
+- Automatic attachment for daily reports
+- File size validation (max 10MB)
+- Compression for large files
+- Virus scanning integration
+
+CSV DATA:
+- Compressed ZIP attachments
+- Password protection for sensitive data
+- Retention period: 30 days
+- Archive cleanup automation
+
+LOG FILES:
+- Error logs for troubleshooting
+- Performance metrics
+- Debug information
+- Sanitized for security
+
+DELIVERY MONITORING
+-------------------
+
+1. SEND VERIFICATION
+- SMTP response validation
+- Delivery receipt requests
+- Bounce handling
+- Retry mechanisms
+
+2. FAILURE HANDLING
+- Alternative SMTP servers
+- Backup delivery methods
+- Manual notification triggers
+- Escalation procedures
+
+3. PERFORMANCE METRICS
+- Delivery success rates
+- Average send times
+- Queue processing speeds
+- Error frequency tracking
+
+EMAIL SECURITY
+---------------
+
+1. AUTHENTICATION
+- OAuth2 token management
+- App password rotation
+- MFA integration
+- Session management
+
+2. CONTENT SECURITY
+- Sensitive data masking
+- Attachment encryption
+- Link validation
+- Spam prevention
+
+3. COMPLIANCE
+- Data retention policies
+- Privacy protection
+- Audit trail maintenance
+- Regulatory compliance
+
+INTEGRATION POINTS
+------------------
+
+CSV FLOW INTEGRATION:
+- Trigger: CSV download completion
+- Data: Download statistics, file counts
+- Recipients: Operations team
+- Timing: Immediate notification
+
+VBS FLOW INTEGRATION:
+- Trigger: Phase completion events
+- Data: Processing status, duration
+- Recipients: Operations and management
+- Timing: Real-time updates
+
+EXCEL MERGE INTEGRATION:
+- Trigger: Merge process completion
+- Data: File locations, record counts
+- Recipients: Operations team
+- Timing: Immediate notification
+
+PDF GENERATION INTEGRATION:
+- Trigger: Report generation completion
+- Data: PDF file attachment
+- Recipients: Management and GM
+- Timing: Scheduled delivery
+
+ERROR HANDLING
+---------------
+
+1. SMTP FAILURES
+- Automatic server failover
+- Queue persistence
+- Retry with exponential backoff
+- Manual intervention alerts
+
+2. ATTACHMENT ISSUES
+- File size validation
+- Format verification
+- Alternative delivery methods
+- Cloud storage links
+
+3. TEMPLATE ERRORS
+- Fallback templates
+- Content validation
+- Dynamic content generation
+- Manual override options
+
+CONFIGURATION MANAGEMENT
+-------------------------
+
+Email Settings File: config/email_settings.json
+```json
+{
+  "smtp_primary": {
+    "server": "smtp.office365.com",
+    "port": 587,
+    "encryption": "tls"
+  },
+  "recipients": {
+    "operations": ["ops@company.com"],
+    "management": ["manager@company.com"],
+    "gm": ["gm@company.com"]
+  },
+  "schedules": {
+    "daily_reports": "08:00",
+    "error_alerts": "immediate",
+    "weekly_summary": "monday_09:00"
+  }
+}
+```
+
+TESTING & VALIDATION
+---------------------
+
+1. AUTOMATED TESTS
+- SMTP connectivity tests
+- Template rendering validation
+- Attachment processing verification
+- Delivery confirmation checks
+
+2. MANUAL TESTING
+- Weekly test emails
+- Template preview functions
+- Recipient verification
+- Bounce testing
+
+TROUBLESHOOTING GUIDE
+---------------------
+
+1. EMAILS NOT SENDING
+- Check SMTP credentials
+- Verify network connectivity
+- Review authentication tokens
+- Check server status
+
+2. FORMATTING ISSUES
+- Validate template syntax
+- Check encoding settings
+- Verify HTML compatibility
+- Test with different clients
+
+3. ATTACHMENT PROBLEMS
+- Check file permissions
+- Verify file sizes
+- Test file accessibility
+- Review security settings
+
+MAINTENANCE TASKS
+-----------------
+- Monthly credential rotation
+- Quarterly template updates
+- Annual signature review
+- Weekly delivery monitoring
+- Daily queue processing verification

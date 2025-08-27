@@ -1,0 +1,175 @@
+MOONFLOWER HOTEL AUTOMATION - COMPLETE TASK LIST
+=====================================================
+
+📅 DAILY AUTOMATION TASKS (365-DAY OPERATION):
+
+🗂️ 1. FOLDER MANAGEMENT
+   ├── Create daily date folders (format: ddMMM like 29jul)
+   ├── Setup: EHC_Data/[date]/ for CSV files
+   ├── Setup: EHC_Data_Merge/[date]/ for Excel files  
+   ├── Setup: EHC_Data_Pdf/[date]/ for PDF reports
+   ├── Setup: EHC_Logs/[date]/ for daily logs
+   └── Cleanup: Remove folders older than 7 days
+
+📥 2. CSV FILE DOWNLOADS
+   ├── Connect to WiFi controller web interface
+   ├── Login with credentials (automated)
+   ├── Navigate to Wireless LANs section
+   ├── Download CSV files from multiple access points:
+   │   ├── EHC TV (main hotel TV network)
+   │   ├── EHC-15 (conference room)
+   │   ├── Reception Hall-Mobile (mobile devices)
+   │   └── Reception Hall-TV (reception area)
+   ├── Validate downloads (minimum 4 CSV files)
+   ├── Check file sizes (ensure data exists)
+   └── Save to EHC_Data/[date]/ folder
+
+📊 3. EXCEL FILE GENERATION
+   ├── Parse all CSV files from today's folder
+   ├── Normalize column headers (handle variations)
+   ├── Merge data from all CSV files
+   ├── Apply data cleaning and filtering
+   ├── Generate Excel file (.xls format for VBS compatibility)
+   ├── Filename: EHC_Upload_Mac_[DDMMYYYY].xls
+   ├── Validate row count (minimum 6000+ rows expected)
+   └── Save to EHC_Data_Merge/[date]/ folder
+
+📧 4. EMAIL NOTIFICATIONS
+   ├── 4A. MILESTONE NOTIFICATIONS (to faseenm@gmail.com):
+   │   ├── Send after CSV download completion
+   │   ├── Send after Excel merge completion  
+   │   ├── Send after VBS upload completion
+   │   ├── Format: Simple, clear, no emojis
+   │   └── Include file counts and status
+   │
+   └── 4B. GM DAILY REPORTS (to ramon.logan@absons.ae):
+       ├── Send between 9:00-9:30 AM daily
+       ├── From: mohamed.fasin@absons.ae
+       ├── Attach previous day's PDF report
+       ├── Professional format with signature
+       ├── Subject: Daily WiFi Usage Report
+       └── Only on weekdays (Monday-Friday)
+
+🖥️ 5. VBS APPLICATION AUTOMATION
+   ├── 5A. VBS PHASE 1 (LOGIN):
+   │   ├── Launch AbsonsItERP.exe application
+   │   ├── Handle security popup (Alt+R bypass)
+   │   ├── Wait for login window to appear
+   │   ├── Execute two-cycle login sequence
+   │   ├── Clear all fields first, then fill
+   │   └── Verify successful login
+   │
+   ├── 5B. VBS PHASE 2 (NAVIGATION):
+   │   ├── Click Arrow button to open menu
+   │   ├── Navigate: Sales & Distribution → POS
+   │   ├── Use DOWN arrow keys (3 times) for navigation
+   │   ├── Select: WiFi User Registration
+   │   ├── Click New button for new record
+   │   └── Select Credit radio button
+   │
+   ├── 5C. VBS PHASE 3 (DATA UPLOAD):
+   │   ├── Click Import EHC checkbox
+   │   ├── Click three dots button (file browser)
+   │   ├── Navigate to Excel merge folder via address bar
+   │   ├── Select today's Excel file
+   │   ├── Handle sheet selection dialog
+   │   ├── Execute import process (wait 15 minutes)
+   │   ├── Detect import completion popup (audio/visual)
+   │   ├── Click update button (multiple variants):
+   │   │   ├── Try 09_update_button.png
+   │   │   ├── Try 09_update_button_variant1.png
+   │   │   └── Try 09_update_button_variant2.png
+   │   ├── Monitor upload progress (3 hours)
+   │   ├── Detect upload success popup (09_update_success_ok_button.png)
+   │   ├── Click OK to dismiss popup
+   │   ├── Wait 15 seconds before closing
+   │   └── Close VBS application (Alt+F4 + Enter)
+   │
+   └── 5D. VBS PHASE 4 (PDF REPORT GENERATION):
+       ├── Fresh VBS login (Phase 1 again)
+       ├── Navigate: Arrow → Sales & Distribution → Reports
+       ├── Scroll DOWN 54 times to WiFi Active Users Count
+       ├── Double-click to open report
+       ├── Set date range: Start of month to current date
+       ├── Print preview (wait 1 minute for processing)
+       ├── Export to PDF format
+       ├── Navigate to save location via address bar
+       ├── Save to EHC_Data_Pdf/[date]/ folder
+       ├── Filename: MoonFlower Active Users [DD_MM_YYYY].pdf
+       └── Close VBS application
+
+📋 6. LOGGING & MONITORING
+   ├── Create detailed logs for each component:
+   │   ├── CSV download logs with success/failure status
+   │   ├── Excel merge logs with row counts
+   │   ├── VBS automation logs with step completion
+   │   ├── Email delivery logs with timestamps
+   │   └── Error logs with stack traces
+   ├── Centralize all logs in EHC_Logs/[date]/ folder
+   ├── Log rotation: Keep 7 days of logs
+   ├── Performance monitoring (execution times)
+   └── Status tracking with daily_status.txt
+
+🔄 7. SCHEDULING & AUTOMATION
+   ├── Windows Task Scheduler integration
+   ├── Run at optimal times to avoid conflicts:
+   │   ├── 00:01 AM - Daily folder creation
+   │   ├── 09:05 AM - Morning email to GM
+   │   ├── 11:00 AM - Main automation (CSV→Excel→VBS)
+   │   └── Tasks complete by 7:00 PM daily
+   ├── 365-day continuous operation
+   ├── Admin permissions for all tasks
+   ├── Handle PC lock/unlock if needed
+   └── Self-recovery from failures
+
+🛠️ 8. SYSTEM MAINTENANCE
+   ├── Monitor VBS application responsiveness
+   ├── Handle "Not Responding" states (normal during upload)
+   ├── Process termination and cleanup
+   ├── Disk space monitoring
+   ├── Network connectivity checks
+   ├── Automatic error recovery
+   └── System health reporting
+
+⚠️ 9. ERROR HANDLING & RECOVERY
+   ├── Network connectivity issues
+   ├── VBS application crashes or hangs
+   ├── File download failures
+   ├── Email delivery failures
+   ├── Authentication problems
+   ├── Disk space issues
+   ├── Popup detection failures
+   └── Automatic retry mechanisms
+
+🎯 10. QUALITY ASSURANCE
+    ├── Validate file counts and sizes
+    ├── Verify data integrity in Excel files
+    ├── Confirm PDF generation success
+    ├── Test email delivery reliability
+    ├── Monitor VBS automation accuracy
+    ├── Check image recognition confidence
+    ├── Validate date folder creation
+    └── End-to-end workflow testing
+
+=====================================================
+EXECUTION ORDER FOR COMPLETE WORKFLOW:
+=====================================================
+
+1. Create daily folders
+2. Download CSV files (4+ files expected)
+3. Generate Excel merge file (6000+ rows expected)
+4. Send CSV/Excel completion notification
+5. Execute VBS Phase 1 (Login)
+6. Execute VBS Phase 2 (Navigation)
+7. Execute VBS Phase 3 (Import + Upload + 3hr wait)
+8. Close VBS application
+9. Execute VBS Phase 1 (Fresh login)
+10. Execute VBS Phase 4 (PDF Report generation)
+11. Close VBS application
+12. Send VBS completion notification
+13. Schedule next day's GM email
+14. Generate summary logs
+
+ESTIMATED TOTAL TIME: ~4 hours (mostly upload wait time)
+TARGET COMPLETION: Before 7:00 PM daily
+HUMAN INTERVENTION: ZERO (fully autonomous) 

@@ -1,0 +1,56 @@
+# MoonFlowerBot - Required Python Packages
+# Install with: pip install -r requirements.txt
+
+# Web automation and CSV downloads
+selenium>=4.0.0
+webdriver-manager>=3.8.0
+
+# Excel file processing
+pandas>=1.5.0
+openpyxl>=3.1.0
+xlsxwriter>=3.0.0
+
+# Windows automation and GUI
+pyautogui>=0.9.54
+pygetwindow>=0.0.9
+Pillow>=9.0.0
+
+# Windows system integration
+pywin32>=306
+psutil>=5.9.0
+
+# Audio detection (optional - for VBS popup detection)
+pyaudio>=0.2.11
+numpy>=1.21.0
+scipy>=1.9.0
+
+# Requests for web operations
+requests>=2.28.0
+urllib3>=1.26.0
+
+# Image processing
+opencv-python>=4.6.0
+
+# Date and time utilities
+python-dateutil>=2.8.0
+
+# Configuration and logging
+configparser>=5.3.0
+
+# Email automation (usually pre-installed with Windows)
+# win32com.client (part of pywin32)
+
+# GUI toolkit (usually pre-installed with Python)
+# tkinter (built-in with Python)
+
+# Additional utilities
+pathlib2>=2.3.0
+typing-extensions>=4.0.0
+
+# Development and testing tools (optional)
+pytest>=7.0.0
+black>=22.0.0
+
+# Note: Some packages may require Microsoft Visual C++ Build Tools
+# If installation fails, install Visual Studio Build Tools first:
+# https://visualstudio.microsoft.com/visual-cpp-build-tools/

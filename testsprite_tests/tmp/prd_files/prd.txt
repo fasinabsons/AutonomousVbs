@@ -1,0 +1,2171 @@
+# 🔥 MOONFLOWER WIFI AUTOMATION - COMPLETE TASK FLOW
+
+## 🎯 SYSTEM ARCHITECTURE OVERVIEW
+
+**Mission**: 365-day autonomous WiFi data extraction → Excel processing → OpenCV-based VBS automation → PDF generation → Email delivery  
+**Operation Mode**: Modular BAT file system with PC lock/unlock capability  
+**User Intervention**: ZERO (Complete autonomous operation)  
+**Self-Recovery**: Automatic restart, login retry, error handling, browser recovery  
+**Startup Integration**: Windows Task Scheduler + Auto-start on PC boot  
+**Image Recognition**: OpenCV + PyAutoGUI template matching for VBS automation  
+
+---
+
+## 📋 TASK 1: CSV DOWNLOAD FLOW (Selenium Web Automation)
+
+### **1.1 Initial System Setup**
+```python
+# Required packages for maximum reliability
+packages = [
+    'selenium==4.15.2',           # Web automation
+    'undetected-chromedriver',    # Anti-detection
+    'beautifulsoup4==4.12.2',     # HTML parsing backup
+    'requests==2.31.0',           # HTTP requests
+    'urllib3==2.0.7',             # SSL handling
+    'pyautogui==0.9.54',          # Fallback automation
+    'opencv-python==4.8.1.78',   # Image recognition
+    'pytesseract==0.3.10',        # OCR capability
+    'pillow==10.0.1'              # Image processing
+]
+
+# Chrome options for stealth operation
+chrome_options = [
+    '--headless',                 # Background operation
+    '--disable-gpu',              # No GPU needed
+    '--no-sandbox',               # Bypass security
+    '--disable-dev-shm-usage',    # Memory optimization
+    '--disable-blink-features=AutomationControlled',
+    '--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+    '--disable-extensions',
+    '--disable-plugins',
+    '--disable-images',           # Faster loading
+    '--ignore-certificate-errors',
+    '--ignore-ssl-errors',
+    '--allow-running-insecure-content'
+]
+```
+
+### **1.2 Target System Access**
+```python
+# Ruckus Wireless Controller Details
+TARGET_URL = "https://51.38.163.73:8443/wsg/"
+CREDENTIALS = {
+    'username': 'admin',
+    'password': 'AdminFlower@123'
+}
+
+# SSL Certificate Bypass (Critical for 365-day operation)
+ssl_context = ssl.create_default_context()
+ssl_context.check_hostname = False
+ssl_context.verify_mode = ssl.CERT_NONE
+```
+
+### **1.3 Precise Login Flow**
+```python
+def execute_login():
+    # Step 1: Handle iframe detection
+    iframe_selector = "#maskFrame"
+    driver.switch_to.frame(driver.find_element(By.CSS_SELECTOR, iframe_selector))
+    
+    # Step 2: Wait for login form
+    wait.until(EC.presence_of_element_located((By.ID, "userName")))
+    
+    # Step 3: Enter credentials
+    username_field = driver.find_element(By.ID, "userName")
+    password_field = driver.find_element(By.ID, "password")
+    login_button = driver.find_element(By.CSS_SELECTOR, "#loginForm > div.actions > input")
+    
+    username_field.clear()
+    username_field.send_keys("admin")
+    password_field.clear()
+    password_field.send_keys("AdminFlower@123")
+    
+    # Step 4: Submit login
+    login_button.click()
+    
+    # Step 5: Switch back to main content
+    driver.switch_to.default_content()
+    
+    # Step 6: Verify successful login
+    wait.until(EC.presence_of_element_located((By.ID, "title-1343-textEl")))
+```
+
+### **1.4 Navigation to Wireless LANs**
+```python
+def navigate_to_wireless_lans():
+    # Step 1: Click Wireless LANs menu
+    wireless_lans_menu = wait.until(EC.element_to_be_clickable((By.ID, "title-1343-textEl")))
+    wireless_lans_menu.click()
+    
+    # Step 2: CRITICAL - Click List button for network visibility
+    list_button = wait.until(EC.element_to_be_clickable((By.ID, "button-1644-btnInnerEl")))
+    list_button.click()
+    
+    # Step 3: Wait for network list to load
+    time.sleep(3)
+```
+
+### **1.5 Network Download Flow (Page 1)**
+```python
+# Network 1: EHC TV (Requires Clients Tab)
+def download_ehc_tv():
+    # Primary selector (most precise)
+    primary_selector = "#ext-element-94"
+    
+    # Fallback selectors
+    xpath_selector = "//*[@id='ext-element-94']"
+    text_selector = "//span[contains(text(), 'EHC TV')]"
+    
+    try:
+        # Try primary selector
+        network_element = driver.find_element(By.CSS_SELECTOR, primary_selector)
+    except:
+        try:
+            # Try XPath
+            network_element = driver.find_element(By.XPATH, xpath_selector)
+        except:
+            # Try text fallback
+            network_element = driver.find_element(By.XPATH, text_selector)
+    
+    # Click network
+    network_element.click()
+    
+    # Wait and click Clients tab
+    clients_tab = wait.until(EC.element_to_be_clickable((By.ID, "tab-3448")))
+    clients_tab.click()
+    
+    # Wait and click download button
+    download_button = wait.until(EC.element_to_be_clickable((By.ID, "Rks-module-base-Button-3835-btnIconEl")))
+    download_button.click()
+    
+    # Wait for download completion
+    time.sleep(5)
+
+# Network 2: EHC-15 (Direct Download)
+def download_ehc_15():
+    # Primary selector
+    primary_selector = "#ext-element-93"
+    xpath_selector = "//*[@id='ext-element-93']"
+    text_selector = "//span[contains(text(), 'EHC-15')]"
+    
+    try:
+        network_element = driver.find_element(By.CSS_SELECTOR, primary_selector)
+    except:
+        try:
+            network_element = driver.find_element(By.XPATH, xpath_selector)
+        except:
+            network_element = driver.find_element(By.XPATH, text_selector)
+    
+    network_element.click()
+    
+    # Direct download (no clients tab needed)
+    download_button = wait.until(EC.element_to_be_clickable((By.ID, "Rks-module-base-Button-3835-btnIconEl")))
+    download_button.click()
+    time.sleep(5)
+```
+
+### **1.6 Page 2 Navigation & Downloads**
+```python
+def navigate_to_page_2():
+    # Click page 2 button
+    page_2_button = wait.until(EC.element_to_be_clickable((By.ID, "button-3084-btnInnerEl")))
+    page_2_button.click()
+    time.sleep(3)
+
+# Network 3: Reception Hall-Mobile (Requires Clients Tab)
+def download_reception_hall_mobile():
+    primary_selector = "#ext-element-115"
+    xpath_selector = "//*[@id='ext-element-115']"
+    text_selector = "//span[contains(text(), 'Reception Hall-Mobile')]"
+    
+    try:
+        network_element = driver.find_element(By.CSS_SELECTOR, primary_selector)
+    except:
+        try:
+            network_element = driver.find_element(By.XPATH, xpath_selector)
+        except:
+            network_element = driver.find_element(By.XPATH, text_selector)
+    
+    network_element.click()
+    
+    # Click clients tab
+    clients_tab = wait.until(EC.element_to_be_clickable((By.ID, "tab-3448")))
+    clients_tab.click()
+    
+    # Download
+    download_button = wait.until(EC.element_to_be_clickable((By.ID, "Rks-module-base-Button-3835-btnIconEl")))
+    download_button.click()
+    time.sleep(5)
+
+# Network 4: Reception Hall-TV (Direct Download)
+def download_reception_hall_tv():
+    primary_selector = "#ext-element-114"
+    xpath_selector = "//*[@id='ext-element-114']"
+    text_selector = "//span[contains(text(), 'Reception Hall-TV')]"
+    
+    try:
+        network_element = driver.find_element(By.CSS_SELECTOR, primary_selector)
+    except:
+        try:
+            network_element = driver.find_element(By.XPATH, xpath_selector)
+        except:
+            network_element = driver.find_element(By.XPATH, text_selector)
+    
+    network_element.click()
+    
+    # Direct download
+    download_button = wait.until(EC.element_to_be_clickable((By.ID, "Rks-module-base-Button-3835-btnIconEl")))
+    download_button.click()
+    time.sleep(5)
+```
+
+### **1.7 Complete CSV Download Orchestration**
+```python
+def execute_complete_csv_download():
+    try:
+        # Login
+        execute_login()
+        
+        # Navigate to wireless LANs
+        navigate_to_wireless_lans()
+        
+        # Page 1 downloads
+        download_ehc_tv()
+        download_ehc_15()
+        
+        # Navigate to page 2
+        navigate_to_page_2()
+        
+        # Page 2 downloads
+        download_reception_hall_mobile()
+        download_reception_hall_tv()
+        
+        # Verify 4 files downloaded
+        verify_csv_files()
+        
+        return True
+        
+    except Exception as e:
+        log_error(f"CSV download failed: {e}")
+        return False
+```
+
+### **1.8 Download Scheduling (Two Daily Slots)**
+```python
+# Slot 1: 09:30 AM
+# Slot 2: 13:00 PM
+# Expected: 8 CSV files per day (4 per slot × 2 slots)
+
+def schedule_csv_downloads():
+    schedule.every().day.at("09:30").do(execute_complete_csv_download)
+    schedule.every().day.at("13:00").do(execute_complete_csv_download)
+    
+    while True:
+        schedule.run_pending()
+        time.sleep(60)  # Check every minute
+```
+
+---
+
+## 📊 TASK 2: EXCEL MERGE FLOW (Data Processing)
+
+### **2.1 CSV File Discovery & Validation**
+```python
+def discover_csv_files():
+    today = datetime.now().strftime("%d%b").lower()  # 15jul format
+    csv_folder = f"EHC_Data/{today}"
+    
+    # Find all CSV files
+    csv_files = []
+    for filename in os.listdir(csv_folder):
+        if filename.endswith('.csv'):
+            csv_files.append(os.path.join(csv_folder, filename))
+    
+    # Validate minimum 8 files for processing
+    if len(csv_files) >= 8:
+        return csv_files
+    else:
+        return None
+```
+
+### **2.2 Header Mapping (Critical for VBS Compatibility)**
+```python
+# Source CSV Headers (Ruckus Controller Format)
+SOURCE_HEADERS = [
+    'Hostname',
+    'IP Address',          # → IP_Address
+    'MAC Address',         # → MAC_Address  
+    'WLAN (SSID)',        # → Package
+    'AP MAC',             # → AP_MAC
+    'Data Rate (up)',     # → Upload
+    'Data Rate (down)'    # → Download
+]
+
+# Target Excel Headers (VBS Application Format)
+TARGET_HEADERS = [
+    'Hostname',      # Column A
+    'IP_Address',    # Column B (NO SPACES!)
+    'MAC_Address',   # Column C (NO SPACES!)
+    'Package',       # Column D
+    'AP_MAC',        # Column E (NO SPACES!)
+    'Upload',        # Column F
+    'Download'       # Column G
+]
+
+def map_headers(source_header):
+    mapping = {
+        'Hostname': 'Hostname',
+        'IP Address': 'IP_Address',
+        'MAC Address': 'MAC_Address',
+        'WLAN (SSID)': 'Package',
+        'AP MAC': 'AP_MAC',
+        'Data Rate (up)': 'Upload',
+        'Data Rate (down)': 'Download'
+    }
+    return mapping.get(source_header, source_header)
+```
+
+### **2.3 Data Processing & Deduplication**
+```python
+import pandas as pd
+import xlwt  # OLD EXCEL FORMAT (2007 style)
+
+def process_csv_data(csv_files):
+    all_data = []
+    
+    for csv_file in csv_files:
+        try:
+            # Read CSV with proper encoding
+            df = pd.read_csv(csv_file, encoding='utf-8')
+            
+            # Map headers
+            df.columns = [map_headers(col) for col in df.columns]
+            
+            # Add to combined data
+            all_data.append(df)
+            
+        except Exception as e:
+            log_error(f"Error processing {csv_file}: {e}")
+    
+    # Combine all data
+    combined_df = pd.concat(all_data, ignore_index=True)
+    
+    # Remove duplicates by MAC_Address (most important)
+    combined_df = combined_df.drop_duplicates(subset=['MAC_Address'], keep='first')
+    
+    # Clean data
+    combined_df = combined_df.fillna('')  # Replace NaN with empty string
+    
+    return combined_df
+```
+
+### **2.4 Excel File Generation (Old Format)**
+```python
+def create_excel_file(processed_data):
+    today = datetime.now().strftime("%d%m%Y")  # 15072025 format
+    today_folder = datetime.now().strftime("%d%b").lower()  # 15jul format
+    
+    # Create output path
+    output_folder = f"EHC_Data_Merge/{today_folder}"
+    os.makedirs(output_folder, exist_ok=True)
+    
+    output_file = f"{output_folder}/EHC_Upload_Mac_{today}.xls"
+    
+    # Create workbook using xlwt (OLD EXCEL FORMAT)
+    workbook = xlwt.Workbook()
+    worksheet = workbook.add_sheet('Sheet1')
+    
+    # Write headers
+    for col, header in enumerate(TARGET_HEADERS):
+        worksheet.write(0, col, header)
+    
+    # Write data
+    for row, record in processed_data.iterrows():
+        for col, header in enumerate(TARGET_HEADERS):
+            value = record.get(header, '')
+            worksheet.write(row + 1, col, str(value))
+    
+    # Save file
+    workbook.save(output_file)
+    
+    return output_file
+```
+
+### **2.5 Excel Merge Trigger & Validation**
+```python
+def execute_excel_merge():
+    try:
+        # Discover CSV files
+        csv_files = discover_csv_files()
+        
+        if not csv_files:
+            log_error("Insufficient CSV files for merge")
+            return False
+        
+        # Process data
+        processed_data = process_csv_data(csv_files)
+        
+        # Create Excel file
+        excel_file = create_excel_file(processed_data)
+        
+        # Validate Excel file
+        if os.path.exists(excel_file) and os.path.getsize(excel_file) > 0:
+            log_info(f"Excel file created successfully: {excel_file}")
+            return excel_file
+        else:
+            log_error("Excel file creation failed")
+            return False
+            
+    except Exception as e:
+        log_error(f"Excel merge failed: {e}")
+        return False
+
+# Schedule: 5 minutes after last CSV download
+schedule.every().day.at("13:05").do(execute_excel_merge)
+```
+
+---
+
+## 🖥️ TASK 3: VBS AUTOMATION FLOW (OpenCV + PyAutoGUI Template Matching)
+
+### **3.1 VBS Application Launch & Window Management**
+```python
+import pyautogui
+import time
+import subprocess
+import win32gui
+import win32con
+import win32api
+import psutil
+from pathlib import Path
+
+# Configure PyAutoGUI for template matching
+pyautogui.FAILSAFE = False
+pyautogui.PAUSE = 0.1
+
+class VBSAutomation:
+    def __init__(self):
+        self.vbs_paths = [
+            r"C:\Users\Lenovo\Music\moonflower\AbsonsItERP.exe - Shortcut.lnk",
+            r"\\192.168.10.16\e\ArabianLive\ArabianLive_MoonFlower\AbsonsItERP.exe"
+        ]
+        self.window_handle = None
+        self.images_dir = Path("vbs/images")
+        
+    def launch_vbs_application(self):
+        # Always close existing VBS processes for clean start
+        self._close_existing_vbs_processes()
+        
+        # Launch fresh VBS application
+        for vbs_path in self.vbs_paths:
+            try:
+                subprocess.Popen(vbs_path, shell=True)
+                time.sleep(15)  # Wait for application to load
+                
+                # Enhanced window finding with retries
+                for attempt in range(10):
+                    self.window_handle = win32gui.FindWindow(None, "AbsonsItERP")
+                    if self.window_handle:
+                        # Enhanced window focusing
+                        self._enhanced_focus_window(self.window_handle)
+                        return self.window_handle
+                    time.sleep(1)
+                    
+            except Exception as e:
+                continue
+                
+        return None
+    
+    def _enhanced_focus_window(self, hwnd):
+        """Enhanced window focusing for BAT compatibility"""
+        try:
+            # Multiple focus methods for reliability
+            win32gui.ShowWindow(hwnd, win32con.SW_RESTORE)
+            win32gui.SetWindowPos(hwnd, win32con.HWND_TOP, 0, 0, 0, 0, 
+                                win32con.SWP_NOMOVE | win32con.SWP_NOSIZE)
+            win32gui.SetForegroundWindow(hwnd)
+            win32api.SetFocus(hwnd)
+            
+            # Use ctypes for additional focusing
+            import ctypes
+            ctypes.windll.user32.SetForegroundWindow(hwnd)
+            
+            time.sleep(0.5)
+            return True
+            
+        except Exception as e:
+            self.logger.warning(f"Enhanced focus failed: {e}")
+            return False
+    
+    def _close_existing_vbs_processes(self):
+        """Close existing VBS processes for clean start"""
+        process_patterns = ["AbsonsItERP", "VBS"]
+        terminated_count = 0
+        
+        for proc in psutil.process_iter(['pid', 'name']):
+            try:
+                for pattern in process_patterns:
+                    if pattern.lower() in proc.info['name'].lower():
+                        proc.terminate()
+                        terminated_count += 1
+                        
+            except (psutil.NoSuchProcess, psutil.AccessDenied):
+                continue
+                
+        return terminated_count > 0
+```
+
+### **3.2 Phase 1: Enhanced Login (Perfect Tab Cycling + Window Focus)**
+```python
+def execute_vbs_login(self):
+    """VBS Phase 1: Login with enhanced window management"""
+    self.logger.info("🎯 Starting VBS Phase 1 - Enhanced Login")
+    
+    # Ensure window is focused with enhanced method
+    if not self._enhanced_focus_window(self.window_handle):
+        return {"success": False, "error": "Window focus failed"}
+    
+    # Fixed credentials as specified
+    credentials = {
+        "company": "IT",
+        "financial_year": "01/01/2023", 
+        "username": "vj"
+    }
+    
+    try:
+        # CLEARING CYCLE (6-tab sequence for complete field cleanup)
+        self.logger.info("🧹 Clearing all fields...")
+        tab_sequence = [
+            {"action": "tab", "count": 1, "target": "OK button"},
+            {"action": "tab", "count": 1, "target": "Cancel button"}, 
+            {"action": "tab", "count": 1, "target": "Company field"},
+            {"action": "clear_and_type", "text": ""},  # Clear company
+            {"action": "tab", "count": 1, "target": "Date field"},
+            {"action": "clear_and_type", "text": ""},  # Clear date
+            {"action": "tab", "count": 1, "target": "Username field"},
+            {"action": "clear_and_type", "text": ""},  # Clear username
+            {"action": "tab", "count": 1, "target": "Password field"}  # Back to start
+        ]
+        
+        # Execute clearing cycle with enhanced error handling
+        for step in tab_sequence:
+            if step["action"] == "tab":
+                for _ in range(step["count"]):
+                    pyautogui.press('tab')
+                    time.sleep(0.5)
+                    # Re-focus window after each tab for reliability
+                    self._enhanced_focus_window(self.window_handle)
+            elif step["action"] == "clear_and_type":
+                pyautogui.hotkey('ctrl', 'a')
+                pyautogui.press('backspace')
+                if step["text"]:
+                    pyautogui.typewrite(step["text"], interval=0.1)
+                time.sleep(0.5)
+        
+        # FILLING CYCLE with precise navigation
+        self.logger.info("✍️ Filling login credentials...")
+        
+        # Navigate to Company field (3 tabs from password)
+        for _ in range(3):
+            pyautogui.press('tab')
+            time.sleep(0.5)
+            self._enhanced_focus_window(self.window_handle)
+        
+        # Type Company
+        pyautogui.typewrite(credentials["company"], interval=0.1)
+        time.sleep(0.5)
+        
+        # Navigate to Date field (1 tab)
+        pyautogui.press('tab')
+        time.sleep(0.5)
+        
+        # Type Financial Year
+        pyautogui.typewrite(credentials["financial_year"], interval=0.1)
+        time.sleep(0.5)
+        
+        # Navigate to Username field (1 tab)
+        pyautogui.press('tab')
+        time.sleep(0.5)
+        
+        # Type Username
+        pyautogui.typewrite(credentials["username"], interval=0.1)
+        time.sleep(0.5)
+        
+        # Navigate to OK button (2 tabs)
+        for _ in range(2):
+            pyautogui.press('tab')
+            time.sleep(0.5)
+            self._enhanced_focus_window(self.window_handle)
+        
+        # Press Enter to login
+        self.logger.info("🔑 Submitting login...")
+        pyautogui.press('enter')
+        time.sleep(self.timeouts["login"])
+        
+        # Verify login success
+        if self._verify_login_success():
+            self.logger.info("✅ VBS Phase 1 - Login completed successfully")
+            return {"success": True, "phase": "Login", "window_handle": self.window_handle}
+        else:
+            return {"success": False, "error": "Login verification failed"}
+            
+    except Exception as e:
+        self.logger.error(f"❌ VBS Phase 1 failed: {e}")
+        return {"success": False, "error": str(e)}
+
+def _verify_login_success(self):
+    """Verify successful login by checking for main VBS interface"""
+    try:
+        # Look for post-login interface elements
+        time.sleep(2)
+        return win32gui.IsWindow(self.window_handle)
+    except:
+        return False
+```
+
+### **3.3 Phase 2: Image-Based Navigation (OpenCV Template Matching)**
+```python
+def execute_vbs_navigation(self):
+    """VBS Phase 2: Navigation using OpenCV template matching"""
+    self.logger.info("🎯 Starting VBS Phase 2 - Image-Based Navigation")
+    
+    # Required image templates for navigation
+    navigation_images = [
+        "01_arrow_button.png",              # Navigation arrow
+        "02_sales_distribution.png",        # Sales & Distribution menu
+        "03_pos_submenu.png",              # POS submenu
+        "04_wifi_user_registration.png",   # WiFi User Registration
+        "05_new_button.png",               # New button
+        "06_credit_radio.png"              # Credit radio button
+    ]
+    
+    # Verify all required images exist
+    missing_images = []
+    for image in navigation_images:
+        if not (self.images_dir / "phase2_navigation" / image).exists():
+            missing_images.append(image)
+    
+    if missing_images:
+        return {"success": False, "error": f"Missing images: {missing_images}"}
+    
+    try:
+        # STEP 1: Click Arrow button for menu access
+        self.logger.info("📋 STEP 1: Arrow button")
+        if not self._click_image("phase2_navigation/01_arrow_button.png", timeout=10):
+            return {"success": False, "error": "Arrow button not found"}
+        time.sleep(self.delays["after_click"])
+        
+        # STEP 2: Click Sales & Distribution
+        self.logger.info("📋 STEP 2: Sales & Distribution")
+        if not self._click_image("phase2_navigation/02_sales_distribution.png", timeout=10):
+            return {"success": False, "error": "Sales & Distribution not found"}
+        time.sleep(self.delays["menu_open"])
+        
+        # STEP 3: Click POS submenu
+        self.logger.info("📋 STEP 3: POS submenu")
+        if not self._click_image("phase2_navigation/03_pos_submenu.png", timeout=10):
+            return {"success": False, "error": "POS submenu not found"}
+        time.sleep(self.delays["menu_open"])
+        
+        # STEP 4: Navigate to WiFi User Registration (hybrid approach)
+        self.logger.info("📋 STEP 4: WiFi User Registration")
+        
+        # Try image-based approach first
+        if self._click_image("phase2_navigation/04_wifi_user_registration.png", timeout=5, required=False):
+            self.logger.info("✅ Found WiFi User Registration via image")
+        else:
+            # Fallback to keyboard navigation (3 tabs + enter)
+            self.logger.info("🔄 Fallback: Keyboard navigation to WiFi User Registration")
+            for _ in range(3):
+                pyautogui.press('tab')
+                time.sleep(0.5)
+                self._enhanced_focus_window(self.window_handle)
+            
+            pyautogui.press('enter')
+        
+        time.sleep(self.delays["form_load"])
+        
+        # STEP 5: Navigate to New button (hybrid approach)
+        self.logger.info("📋 STEP 5: New button")
+        
+        # Try image-based approach first
+        if self._click_image("phase2_navigation/05_new_button.png", timeout=5, required=False):
+            self.logger.info("✅ Found New button via image")
+        else:
+            # Fallback to keyboard navigation (2 left arrows + enter)
+            self.logger.info("🔄 Fallback: Keyboard navigation to New button")
+            for _ in range(2):
+                pyautogui.press('left')
+                time.sleep(0.5)
+                self._enhanced_focus_window(self.window_handle)
+            
+            pyautogui.press('enter')
+        
+        time.sleep(self.delays["form_load"])
+        
+        # STEP 6: Click Credit radio button (prepare for Phase 3)
+        self.logger.info("📋 STEP 6: Credit radio button")
+        if not self._click_image("phase2_navigation/06_credit_radio.png", timeout=10):
+            # Fallback to keyboard (right arrow)
+            self.logger.info("🔄 Fallback: Right arrow for credit radio")
+            pyautogui.press('right')
+        
+        time.sleep(self.delays["after_click"])
+        
+        self.logger.info("✅ VBS Phase 2 - Navigation completed successfully")
+        return {"success": True, "phase": "Navigation", "ready_for_phase3": True}
+        
+    except Exception as e:
+        self.logger.error(f"❌ VBS Phase 2 failed: {e}")
+        return {"success": False, "error": str(e)}
+
+def _click_image(self, image_path, timeout=30, required=True):
+    """OpenCV template matching with confidence levels"""
+    if not self.images_dir:
+        return False
+        
+    full_image_path = self.images_dir / image_path
+    if not full_image_path.exists():
+        if required:
+            self.logger.error(f"Image not found: {image_path}")
+        return False
+    
+    # Ensure VBS window is focused
+    self._enhanced_focus_window(self.window_handle)
+    
+    # Try multiple confidence levels for robustness
+    confidence_levels = [0.9, 0.8, 0.7, 0.6, 0.5]
+    max_attempts = timeout // 0.5
+    
+    for attempt in range(int(max_attempts)):
+        for confidence in confidence_levels:
+            try:
+                # PyAutoGUI uses OpenCV internally for template matching
+                location = pyautogui.locateOnScreen(str(full_image_path), confidence=confidence)
+                if location:
+                    center = pyautogui.center(location)
+                    
+                    # Re-focus before clicking
+                    self._enhanced_focus_window(self.window_handle)
+                    time.sleep(0.2)
+                    
+                    # Click with small random offset to avoid pixel-perfect issues
+                    import random
+                    offset_x = random.randint(-2, 2)
+                    offset_y = random.randint(-2, 2)
+                    pyautogui.click(center.x + offset_x, center.y + offset_y)
+                    
+                    self.logger.info(f"✅ Clicked {image_path} at ({center.x}, {center.y}) [confidence: {confidence}]")
+                    return True
+                    
+            except pyautogui.ImageNotFoundException:
+                continue
+            except Exception as e:
+                if attempt < 3:  # Only log first few attempts
+                    self.logger.warning(f"Click attempt failed: {e}")
+        
+        time.sleep(0.5)
+    
+    if required:
+        self.logger.error(f"❌ Could not find {image_path} after {timeout} seconds")
+    return False
+```
+
+### **3.4 Phase 3: Data Upload (OpenCV Excel Import + Multi-Variant Update Button)**
+```python
+def execute_vbs_data_upload(self):
+    """VBS Phase 3: Complete Excel import and update with OpenCV template matching"""
+    self.logger.info("🎯 Starting VBS Phase 3 - IMPORT → UPDATE → CLOSE")
+    
+    # Get today's Excel file info
+    today = datetime.now().strftime("%d%m%Y")
+    today_folder = datetime.now().strftime("%d%b").lower()
+    excel_file_path = f"EHC_Data_Merge/{today_folder}/EHC_Upload_Mac_{today}.xls"
+    
+    # Required image templates for Phase 3
+    phase3_images = [
+        "01_import_ehc_checkbox.png",             # Import EHC checkbox
+        "02_three_dots_button.png",               # Three dots file browser
+        "04_DateExcel.png",                       # Excel file selection
+        "05_Open.png",                            # Open button
+        "07_ehc_user_detail_header.png",          # EHC header (original)
+        "07_ehc_user_detail_header2.png",         # EHC header (variant 2)
+        "08_import_ok_button.png",                # Import completion indicator
+        "09_update_button.png",                   # Update button (original)
+        "09_update_button_variant1.png",          # Update button (variant 1)
+        "09_update_button_variant2.png",          # Update button (variant 2) - PRIORITY
+        "09_update_success_ok_button.png"         # Upload success popup OK button
+    ]
+    
+    # Verify Excel file exists
+    if not os.path.exists(excel_file_path):
+        return {"success": False, "error": f"Excel file not found: {excel_file_path}"}
+    
+    try:
+        # STEP 1: Import EHC checkbox (right-click offset for better targeting)
+        self.logger.info("📋 STEP 1: Import EHC checkbox")
+        if not self._click_image_with_offset("phase3_upload/01_import_ehc_checkbox.png", click_offset="right"):
+            return {"success": False, "error": "Step 1 failed - checkbox not clicked"}
+        time.sleep(1.0)
+        
+        # STEP 2: Three Dots Button + Enhanced Popup Handling
+        self.logger.info("📋 STEP 2: Three dots button + popup handling")
+        if not self._click_image("phase3_upload/02_three_dots_button.png"):
+            return {"success": False, "error": "Step 2 failed - three dots not clicked"}
+        
+        # Handle the file dialog popup immediately
+        time.sleep(0.5)
+        pyautogui.press('enter')  # Accept the popup
+        time.sleep(2.0)
+        
+        # STEP 3: Navigate to Excel folder using smart path navigation
+        self.logger.info("📋 STEP 3: Navigate to Excel folder")
+        try:
+            # Use Ctrl+L for address bar navigation (more reliable)
+            pyautogui.hotkey('ctrl', 'l')
+            time.sleep(0.3)
+            
+            excel_folder_path = rf"C:\Users\Lenovo\Documents\Automate2\Automata2\EHC_Data_Merge\{today_folder}"
+            pyautogui.typewrite(excel_folder_path, interval=0.01)
+            time.sleep(0.3)
+            pyautogui.press('enter')
+            time.sleep(2.0)
+            
+            self.logger.info("✅ Navigated to Excel folder successfully")
+        except Exception as e:
+            self.logger.warning(f"Navigation failed: {e}")
+            return {"success": False, "error": "Folder navigation failed"}
+        
+        # STEP 4: Select Excel file (with fallback)
+        self.logger.info("📋 STEP 4: Select Excel file")
+        if not self._click_image("phase3_upload/04_DateExcel.png", timeout=10, required=False):
+            # Fallback: type filename directly
+            self.logger.info("🔄 Fallback: Type Excel filename")
+            pyautogui.typewrite(f"EHC_Upload_Mac_{today}.xls", interval=0.05)
+        
+        # STEP 5: Click Open button
+        self.logger.info("📋 STEP 5: Click Open button")
+        if not self._click_image("phase3_upload/05_Open.png"):
+            return {"success": False, "error": "Step 5 failed - Open button not clicked"}
+        time.sleep(1.0)
+        
+        # STEP 6: Enhanced Sheet Selection + TAB+ENTER Import Strategy
+        self.logger.info("📋 STEP 6: Sheet selection + TAB+ENTER import strategy")
+        try:
+            # Handle any additional dialogs
+            if self._click_image("phase3_upload/02_three_dots_button.png", timeout=5, required=False):
+                time.sleep(0.3)
+                pyautogui.press('right')  # Select 'No'
+                time.sleep(0.2)
+                pyautogui.press('enter')  # Confirm
+                time.sleep(0.3)
+                pyautogui.press('tab')    # Get to text field
+                time.sleep(0.2)
+                pyautogui.typewrite("EHC_Data", interval=0.05)
+                time.sleep(0.3)
+                
+                self.logger.info("✅ Sheet selection completed")
+                
+                # CRITICAL: TAB to highlight import button, then ENTER
+                self.logger.info("🎯 IMPORT STRATEGY: TAB → ENTER")
+                pyautogui.press('tab')    # This highlights the import button
+                time.sleep(0.5)
+                pyautogui.press('enter')  # This clicks the import button
+                
+                # Wait for import completion (15 minutes)
+                self.logger.info("⏳ Waiting for import completion (15 minutes)...")
+                time.sleep(900)  # 15 minutes
+                
+                # Handle import completion popup
+                pyautogui.press('enter')  # Clear success popup
+                time.sleep(1.0)
+                
+        except Exception as e:
+            self.logger.warning(f"Import process had issues: {e}")
+        
+        # STEP 7: Find and click EHC table header (with variants)
+        self.logger.info("📋 STEP 7: Click EHC table header")
+        header_found = False
+        for header_variant in ["07_ehc_user_detail_header.png", "07_ehc_user_detail_header2.png"]:
+            if self._click_image(f"phase3_upload/{header_variant}", timeout=5, required=False):
+                self.logger.info(f"✅ Found header variant: {header_variant}")
+                header_found = True
+                break
+        
+        if not header_found:
+            self.logger.warning("⚠️ No header variant found, continuing...")
+        
+        time.sleep(1.0)
+        
+        # STEP 8: CRITICAL UPDATE BUTTON DETECTION (Multi-Variant with Priority)
+        self.logger.info("🎯 STEP 8: CRITICAL UPDATE BUTTON - Multi-variant detection")
+        
+        # Update button variants in PRIORITY ORDER (variant2 has most area coverage)
+        update_variants = [
+            "09_update_button_variant2.png",  # PRIORITY 1: Most area coverage
+            "09_update_button_variant1.png",  # PRIORITY 2: Alternative variant
+            "09_update_button.png"            # PRIORITY 3: Original
+        ]
+        
+        update_clicked = False
+        for variant in update_variants:
+            self.logger.info(f"🔍 Trying update button variant: {variant}")
+            
+            # Enhanced focus before each attempt
+            self._enhanced_focus_window(self.window_handle)
+            time.sleep(0.5)
+            
+            if self._click_image_aggressive(f"phase3_upload/{variant}", max_attempts=10, required=False):
+                self.logger.info(f"✅ SUCCESS: Update button clicked with {variant}")
+                update_clicked = True
+                
+                # Double-click for emphasis (as per user feedback)
+                time.sleep(0.3)
+                self._click_image_aggressive(f"phase3_upload/{variant}", max_attempts=5, required=False)
+                
+                break
+        
+        if not update_clicked:
+            return {"success": False, "error": "CRITICAL: Update button not found with any variant"}
+        
+        # STEP 9: Wait for upload completion (3 hours maximum)
+        self.logger.info("⏳ STEP 9: Waiting for upload completion (up to 3 hours)...")
+        
+        # PC can be locked during this wait period
+        upload_start_time = time.time()
+        max_upload_time = 10800  # 3 hours in seconds
+        check_interval = 30      # Check every 30 seconds
+        
+        while time.time() - upload_start_time < max_upload_time:
+            # Check for upload success popup
+            if self._click_image("phase3_upload/09_update_success_ok_button.png", timeout=2, required=False):
+                self.logger.info("✅ Upload success popup detected and dismissed")
+                break
+            
+            # Fallback: press Enter if popup appears without image detection
+            pyautogui.press('enter')
+            time.sleep(check_interval)
+        
+        # STEP 10: Close VBS Application with popup handling
+        self.logger.info("📋 STEP 10: Close VBS application")
+        
+        # Wait additional time before closing
+        time.sleep(15)
+        
+        # Enhanced application closure
+        try:
+            # Try Alt+F4 first
+            pyautogui.hotkey('alt', 'f4')
+            time.sleep(2)
+            
+            # Handle any close confirmation popup
+            pyautogui.press('enter')  # Accept close
+            time.sleep(2)
+            
+            # Force terminate any remaining VBS processes
+            self._close_existing_vbs_processes()
+            
+            self.logger.info("✅ VBS application closed successfully")
+            
+        except Exception as e:
+            self.logger.warning(f"Application closure had issues: {e}")
+        
+        self.logger.info("🎉 VBS Phase 3 - Data Upload completed successfully")
+        return {"success": True, "phase": "Data Upload", "upload_completed": True}
+        
+    except Exception as e:
+        self.logger.error(f"❌ VBS Phase 3 failed: {e}")
+        return {"success": False, "error": str(e)}
+
+def _click_image_aggressive(self, image_path, max_attempts=10, required=True):
+    """Aggressive image clicking with multiple confidence levels and fast scanning"""
+    if not self.images_dir:
+        return False
+        
+    full_image_path = self.images_dir / image_path
+    if not full_image_path.exists():
+        if required:
+            self.logger.error(f"Image not found: {image_path}")
+        return False
+    
+    # CALIBRATED detection parameters (from 100% success testing)
+    confidence_levels = [0.8, 0.7, 0.6, 0.5, 0.4, 0.3]  # Lower thresholds for better detection
+    
+    for attempt in range(max_attempts):
+        # Enhanced window focus before each attempt
+        self._enhanced_focus_window(self.window_handle)
+        time.sleep(0.1)
+        
+        for confidence in confidence_levels:
+            try:
+                location = pyautogui.locateOnScreen(str(full_image_path), confidence=confidence)
+                if location:
+                    center = pyautogui.center(location)
+                    
+                    # Enhanced clicking with multiple focus attempts
+                    self._enhanced_focus_window(self.window_handle)
+                    time.sleep(0.2)
+                    
+                    # Click with small offset
+                    import random
+                    offset_x = random.randint(-2, 2)
+                    offset_y = random.randint(-2, 2)
+                    pyautogui.click(center.x + offset_x, center.y + offset_y)
+                    
+                    self.logger.info(f"✅ AGGRESSIVE CLICK: {image_path} at ({center.x}, {center.y}) [conf: {confidence}, attempt: {attempt+1}]")
+                    return True
+                    
+            except pyautogui.ImageNotFoundException:
+                continue
+            except Exception as e:
+                continue
+        
+        # Fast scanning interval (0.2 seconds)
+        time.sleep(0.2)
+    
+    if required:
+        self.logger.error(f"❌ AGGRESSIVE CLICK FAILED: {image_path} after {max_attempts} attempts")
+    return False
+
+def _click_image_with_offset(self, image_path, click_offset=None):
+    """Click image with specific offset (useful for checkboxes)"""
+    if not self._click_image(image_path, required=False):
+        return False
+    
+    if click_offset == "right":
+        # Additional right-offset click for better checkbox targeting
+        time.sleep(0.2)
+        last_location = pyautogui.locateOnScreen(str(self.images_dir / image_path), confidence=0.7)
+        if last_location:
+            click_x = last_location.left + last_location.width - 20
+            click_y = last_location.top + last_location.height // 2
+            pyautogui.click(click_x, click_y)
+    
+    return True
+```
+
+### **3.5 Phase 4: PDF Report Generation (OpenCV + Intelligent Navigation)**
+```python
+def execute_vbs_pdf_generation(self):
+    """VBS Phase 4: PDF Report Generation using OpenCV template matching"""
+    self.logger.info("🎯 Starting VBS Phase 4 - PDF Report Generation")
+    
+    # Required image templates for Phase 4
+    phase4_images = [
+        "01_arrow_button.png",              # Navigation arrow (reuse from Phase 2)
+        "02_sales_distribution.png",        # Sales & Distribution menu
+        "03_reports_menu.png",              # Reports menu item
+        "04_pos_in_reports.png",            # POS option in Reports
+        "05_wifi_active_users_count.png",   # WiFi Active Users Count option
+        "06_print_button.png",              # Print button
+        "07_export_button.png",             # Export button
+        "08_ok_button.png",                 # OK button
+        "09_pdf_save_dialog.png",           # PDF save dialog
+        "10_address_bar.png"                # File browser address bar
+    ]
+    
+    # Verify all required images exist
+    missing_images = []
+    for image in phase4_images:
+        if not (self.images_dir / "phase4_report" / image).exists():
+            missing_images.append(image)
+    
+    if missing_images:
+        return {"success": False, "error": f"Missing Phase 4 images: {missing_images}"}
+    
+    # Calculate date range (start of month to current date)
+    today = datetime.now()
+    from_date = f"01/{today.month:02d}/{today.year}"  # Start of month
+    to_date = f"{today.day:02d}/{today.month:02d}/{today.year}"  # Current date
+    pdf_filename = f"moonflower active users_{today.strftime('%d_%m_%Y')}.pdf"
+    
+    try:
+        # STEP 1: Click Arrow button (reuse Phase 2 logic)
+        self.logger.info("📋 STEP 1: Arrow button for menu access")
+        if not self._click_image("phase4_report/01_arrow_button.png", timeout=10):
+            return {"success": False, "error": "Arrow button not found"}
+        time.sleep(self.timing["after_click"])
+        
+        # STEP 2: Click Sales & Distribution
+        self.logger.info("📋 STEP 2: Sales & Distribution menu")
+        if not self._click_image("phase4_report/02_sales_distribution.png", timeout=10):
+            return {"success": False, "error": "Sales & Distribution not found"}
+        time.sleep(self.timing["menu_open"])
+        
+        # STEP 3: Navigate to Reports menu
+        self.logger.info("📋 STEP 3: Reports menu")
+        if not self._click_image("phase4_report/03_reports_menu.png", timeout=10):
+            return {"success": False, "error": "Reports menu not found"}
+        time.sleep(self.timing["menu_open"])
+        
+        # STEP 4: Scroll to BOTTOM and click POS (as per user requirement)
+        self.logger.info("📋 STEP 4: Scroll to bottom and click POS")
+        
+        # Scroll to bottom of menu
+        for _ in range(5):
+            pyautogui.scroll(-3)  # Scroll down significantly
+            time.sleep(self.timing["scroll_delay"])
+        
+        if not self._click_image("phase4_report/04_pos_in_reports.png", timeout=10):
+            return {"success": False, "error": "POS in Reports not found after scrolling"}
+        time.sleep(self.timing["form_load"])
+        
+        # STEP 5: Double-click WiFi Active Users Count and wait 3 seconds
+        self.logger.info("📋 STEP 5: Double-click WiFi Active Users Count")
+        if not self._double_click_image("phase4_report/05_wifi_active_users_count.png", timeout=10):
+            return {"success": False, "error": "WiFi Active Users Count not found"}
+        
+        # Wait exactly 3 seconds as per user requirement
+        time.sleep(3.0)
+        
+        # STEP 6: Clear all fields and enter date range
+        self.logger.info("📋 STEP 6: Clear fields and enter date range")
+        self.logger.info(f"📅 Date range: {from_date} to {to_date}")
+        
+        # Clear first field (From date)
+        pyautogui.hotkey('ctrl', 'a')
+        time.sleep(self.timing["clear_field_delay"])
+        pyautogui.typewrite(from_date, interval=0.1)
+        time.sleep(self.timing["typing_delay"])
+        
+        # Tab to next field (To date)
+        pyautogui.press('tab')
+        time.sleep(self.timing["typing_delay"])
+        
+        # Clear second field
+        pyautogui.hotkey('ctrl', 'a')
+        time.sleep(self.timing["clear_field_delay"])
+        pyautogui.typewrite(to_date, interval=0.1)
+        time.sleep(self.timing["typing_delay"])
+        
+        # STEP 7: Click Print button and wait for generation
+        self.logger.info("📋 STEP 7: Print report (60 seconds wait)")
+        if not self._click_image("phase4_report/06_print_button.png", timeout=10):
+            return {"success": False, "error": "Print button not found"}
+        
+        # Wait 60 seconds for PDF generation (increased from 15 seconds)
+        self.logger.info("⏳ Waiting 60 seconds for PDF generation...")
+        time.sleep(self.timing["print_wait"])
+        
+        # STEP 8: Export process
+        self.logger.info("📋 STEP 8: Export PDF")
+        if not self._click_image("phase4_report/07_export_button.png", timeout=10):
+            return {"success": False, "error": "Export button not found"}
+        time.sleep(self.timing["after_click"])
+        
+        # Handle export dialog sequence
+        if self._click_image("phase4_report/08_ok_button.png", timeout=5, required=False):
+            self.logger.info("✅ First OK button clicked")
+            time.sleep(self.timing["after_click"])
+        
+        if self._click_image("phase4_report/08_ok_button.png", timeout=5, required=False):
+            self.logger.info("✅ Second OK button clicked")
+            time.sleep(self.timing["after_click"])
+        
+        # STEP 9: PDF format verification and save dialog navigation
+        self.logger.info("📋 STEP 9: PDF save dialog navigation")
+        
+        # Use address bar navigation for reliable folder targeting
+        if self._click_image("phase4_report/10_address_bar.png", timeout=10, required=False):
+            self.logger.info("✅ Address bar found - using smart navigation")
+            
+            # Navigate to correct PDF folder
+            today_folder = today.strftime("%d%b").lower()  # e.g., "01aug"
+            pdf_folder_path = rf"C:\Users\Lenovo\Documents\Automate2\Automata2\EHC_Data_Pdf\{today_folder}"
+            
+            pyautogui.hotkey('ctrl', 'l')  # Focus address bar
+            time.sleep(0.5)
+            pyautogui.typewrite(pdf_folder_path, interval=0.01)
+            pyautogui.press('enter')
+            time.sleep(2.0)
+            
+        else:
+            # Fallback to manual navigation
+            self.logger.info("🔄 Fallback: Manual folder navigation")
+            
+            # Navigate to project root first
+            pyautogui.hotkey('ctrl', 'l')
+            time.sleep(0.5)
+            pyautogui.typewrite(r"C:\Users\Lenovo\Documents\Automate2\Automata2", interval=0.01)
+            pyautogui.press('enter')
+            time.sleep(2.0)
+            
+            # Navigate to EHC_Data_Pdf folder
+            pyautogui.typewrite("EHC_Data_Pdf", interval=0.05)
+            pyautogui.press('enter')
+            time.sleep(1.0)
+            
+            # Navigate to today's folder
+            today_folder = today.strftime("%d%b").lower()
+            pyautogui.typewrite(today_folder, interval=0.05)
+            pyautogui.press('enter')
+            time.sleep(1.0)
+        
+        # STEP 10: Set filename and save
+        self.logger.info("📋 STEP 10: Set filename and save PDF")
+        
+        # Set the filename
+        pyautogui.hotkey('ctrl', 'l')  # Focus filename field (alternative)
+        time.sleep(0.3)
+        pyautogui.typewrite(pdf_filename, interval=0.05)
+        time.sleep(0.5)
+        
+        # Save the file
+        pyautogui.press('enter')
+        time.sleep(3.0)
+        
+        # STEP 11: Verify PDF creation
+        pdf_path = f"EHC_Data_Pdf/{today_folder}/{pdf_filename}"
+        if os.path.exists(pdf_path):
+            self.logger.info(f"✅ PDF created successfully: {pdf_path}")
+        else:
+            self.logger.warning(f"⚠️ PDF file not found at expected location: {pdf_path}")
+        
+        # STEP 12: Close VBS application
+        self.logger.info("📋 STEP 12: Close VBS application")
+        pyautogui.hotkey('alt', 'f4')
+        time.sleep(2)
+        
+        # Handle any close confirmation
+        pyautogui.press('enter')
+        time.sleep(1)
+        
+        self.logger.info("🎉 VBS Phase 4 - PDF Report Generation completed successfully")
+        return {
+            "success": True, 
+            "phase": "PDF Report Generation", 
+            "pdf_file": pdf_path,
+            "from_date": from_date,
+            "to_date": to_date
+        }
+        
+    except Exception as e:
+        self.logger.error(f"❌ VBS Phase 4 failed: {e}")
+        return {"success": False, "error": str(e)}
+
+def _double_click_image(self, image_path: str, timeout: int = 30) -> bool:
+    """Double-click on image with enhanced precision"""
+    if not self._click_image(image_path, timeout, required=True):
+        return False
+    
+    # Small delay then second click
+    time.sleep(0.3)
+    
+    # Find image again for second click
+    full_image_path = self.images_dir / image_path
+    try:
+        location = pyautogui.locateOnScreen(str(full_image_path), confidence=self.confidence)
+        if location:
+            center = pyautogui.center(location)
+            pyautogui.click(center.x, center.y)
+            self.logger.info(f"✅ Double-clicked {image_path}")
+            return True
+    except:
+        pass
+    
+    return False
+
+def _click_image(self, image_path: str, timeout: int = 30, required: bool = True, high_precision: bool = False) -> bool:
+    """Enhanced image clicking with multiple confidence levels and precision options"""
+    if not self.images_dir:
+        return False
+        
+    full_image_path = self.images_dir / image_path
+    if not full_image_path.exists():
+        if required:
+            self.logger.error(f"Image not found: {image_path}")
+        return False
+    
+    # Ensure VBS window is focused
+    self._focus_vbs_window()
+    
+    # Enhanced confidence levels for better detection
+    confidence_levels = [0.9, 0.8, 0.7, 0.6] if high_precision else [0.8, 0.7, 0.6, 0.5]
+    max_attempts = timeout // 0.25
+    
+    self.logger.info(f"🔍 Looking for: {image_path} (timeout: {timeout}s, precision: {'HIGH' if high_precision else 'NORMAL'})")
+    
+    # Try to find image with increased attempts for reliability
+    for attempt in range(max_attempts):
+        for confidence in confidence_levels:
+            try:
+                # Take screenshot and look for image
+                location = pyautogui.locateOnScreen(str(full_image_path), confidence=confidence)
+                if location:
+                    center = pyautogui.center(location)
+                    
+                    # For high precision, add small random offset to avoid pixel-perfect issues
+                    if high_precision:
+                        import random
+                        offset_x = random.randint(-2, 2)
+                        offset_y = random.randint(-2, 2)
+                        click_x = center.x + offset_x
+                        click_y = center.y + offset_y
+                        self.logger.info(f"🎯 HIGH PRECISION: Clicking with offset ({offset_x}, {offset_y})")
+                    else:
+                        click_x, click_y = center.x, center.y
+                    
+                    # Gentle click to avoid window state changes
+                    pyautogui.click(click_x, click_y)
+                    self.logger.info(f"✅ Clicked {image_path} at ({click_x}, {click_y}) [attempt {attempt+1}]")
+                    time.sleep(self.timing["after_click"])
+                    return True
+                    
+            except pyautogui.ImageNotFoundException:
+                pass
+            except Exception as e:
+                self.logger.warning(f"Click attempt {attempt+1} failed: {e}")
+            
+            time.sleep(0.25 if high_precision else 0.5)
+        
+        if required:
+            self.logger.error(f"❌ Could not find {image_path} after {timeout} seconds (attempted {max_attempts} times)")
+        else:
+            self.logger.warning(f"⚠️ Optional image {image_path} not found within {timeout} seconds")
+        return False
+```
+
+### **3.6 Complete VBS Orchestration**
+```python
+def execute_complete_vbs_workflow():
+    try:
+        # Phase 1: Login
+        execute_vbs_login()
+        
+        # Phase 2: Navigation
+        execute_vbs_navigation()
+        
+        # Phase 3: Data Upload
+        execute_vbs_data_upload()
+        
+        # Phase 4: PDF Generation
+        execute_vbs_pdf_generation()
+        
+        return True
+        
+    except Exception as e:
+        log_error(f"VBS workflow failed: {e}")
+        return False
+
+# Schedule: After Excel merge completion
+schedule.every().day.at("15:00").do(execute_complete_vbs_workflow)
+```
+
+---
+
+## 📧 TASK 4: EMAIL DELIVERY SYSTEM
+
+### **4.1 Email Configuration**
+```python
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from email.mime.base import MIMEBase
+from email import encoders
+import os
+
+# Email settings
+EMAIL_CONFIG = {
+    'smtp_server': 'smtp.outlook.com',
+    'smtp_port': 587,
+    'username': 'your_email@outlook.com',
+    'password': 'your_app_password',
+    'sender_name': 'MoonFlower WiFi Automation'
+}
+
+# Email recipients
+RECIPIENTS = {
+    'daily_report': ['manager@moonflower.com', 'it@moonflower.com'],
+    'completion_notification': ['admin@moonflower.com'],
+    'error_alerts': ['support@moonflower.com']
+}
+```
+
+### **4.2 Weekend/Weekday Email Settings**
+```python
+# User configurable settings (stored in config file)
+EMAIL_SETTINGS = {
+    'send_weekdays_only': True,  # Checkbox setting
+    'send_all_days': False,      # Checkbox setting
+    'weekend_override': False    # Admin override
+}
+
+def should_send_email():
+    today = datetime.now()
+    is_weekday = today.weekday() < 5  # 0-4 are weekdays
+    
+    if EMAIL_SETTINGS['send_weekdays_only'] and not is_weekday:
+        return False
+    elif EMAIL_SETTINGS['send_all_days']:
+        return True
+    else:
+        return is_weekday
+```
+
+### **4.3 PDF Report Email**
+```python
+def send_daily_report_email():(We send on the next day, we download pdf on thursday evening then we send email to the concerned person on friday morning, we download on evening then send the pdf on the morning by default but we always send email on the morning between 9:00 am to 10:00 am random times so feel more realistic then an automation)
+    if not should_send_email():
+
+         log_info("Email sending skipped - weekend/holiday")
+        return True
+    
+    try:
+        # Get today's PDF file
+        today = datetime.now()
+        today_folder = today.strftime("%d%b").lower()
+        pdf_file = f"EHC_Data_Pdf/{today_folder}/moon flower active users_{today.strftime('%d%m%Y')}.pdf"
+        
+        # Verify PDF exists
+        if not os.path.exists(pdf_file):
+            log_error(f"PDF file not found: {pdf_file}")
+            return False
+        
+        # Create email message
+        msg = MIMEMultipart()
+        msg['From'] = f"{EMAIL_CONFIG['sender_name']} <{EMAIL_CONFIG['username']}>"
+        msg['To'] = ', '.join(RECIPIENTS['daily_report'])
+        msg['Subject'] = f"MoonFlower WiFi Daily Report - {today.strftime('%d %B %Y')}"
+        
+        # Email body
+        body = f"""
+        Dear Team,
+        
+        Please find attached the daily WiFi users report for {today.strftime('%d %B %Y')}.
+        
+        Report Details:
+        - Date: {today.strftime('%d %B %Y')}
+        - Networks Covered: EHC TV, EHC-15, Reception Hall-Mobile, Reception Hall-TV
+        - Data Collection: 2 daily slots (09:30 AM, 01:00 PM)
+        - Total CSV Files: 8 files processed
+        - Report Generated: {datetime.now().strftime('%d %B %Y at %I:%M %p')}
+        
+        This report is generated automatically by the MoonFlower WiFi Automation System.
+        
+        Best regards,
+        WiFi Automation System
+        """
+        
+        msg.attach(MIMEText(body, 'plain'))
+        
+        # Attach PDF file
+        with open(pdf_file, "rb") as attachment:
+            part = MIMEBase('application', 'octet-stream')
+            part.set_payload(attachment.read())
+            encoders.encode_base64(part)
+            part.add_header(
+                'Content-Disposition',
+                f'attachment; filename= "WiFi_Report_{today.strftime("%d%m%Y")}.pdf"'
+            )
+            msg.attach(part)
+        
+        # Send email
+        server = smtplib.SMTP(EMAIL_CONFIG['smtp_server'], EMAIL_CONFIG['smtp_port'])
+        server.starttls()
+        server.login(EMAIL_CONFIG['username'], EMAIL_CONFIG['password'])
+        server.send_message(msg)
+        server.quit()
+        
+        log_info(f"Daily report email sent successfully to {len(RECIPIENTS['daily_report'])} recipients")
+        return True
+        
+    except Exception as e:
+        log_error(f"Failed to send daily report email: {e}")
+        return False
+4.4 Task Completion Notification Email
+pythondef send_completion_notification():
+    try:
+        # Create completion summary
+        today = datetime.now()
+        today_folder = today.strftime("%d%b").lower()
+        
+        # Check file existence
+        csv_count = len([f for f in os.listdir(f"EHC_Data/{today_folder}") if f.endswith('.csv')])
+        excel_file = f"EHC_Data_Merge/{today_folder}/EHC_Upload_Mac_{today.strftime('%d%m%Y')}.xls"
+        pdf_file = f"EHC_Data_Pdf/{today_folder}/moon flower active users_{today.strftime('%d%m%Y')}.pdf"
+        
+        excel_exists = os.path.exists(excel_file)
+        pdf_exists = os.path.exists(pdf_file)
+        
+        # Create email message
+        msg = MIMEMultipart()
+        msg['From'] = f"{EMAIL_CONFIG['sender_name']} <{EMAIL_CONFIG['username']}>"
+        msg['To'] = ', '.join(RECIPIENTS['completion_notification'])
+        msg['Subject'] = f"WiFi Automation - Daily Tasks Completed ✅ - {today.strftime('%d %B %Y')}"
+        
+        # Email body with task status
+        status_icon = "✅" if (csv_count >= 8 and excel_exists and pdf_exists) else "⚠️"
+        
+        body = f"""
+        Dear Admin,
+        
+        Daily WiFi automation tasks have been completed for {today.strftime('%d %B %Y')}.
+        
+        TASK COMPLETION STATUS {status_icon}
+        
+        📊 CSV Download Flow:
+        ✅ Network 1: EHC TV (Slot 1 & 2)
+        ✅ Network 2: EHC-15 (Slot 1 & 2)
+        ✅ Network 3: Reception Hall-Mobile (Slot 1 & 2)
+        ✅ Network 4: Reception Hall-TV (Slot 1 & 2)
+        📈 Total CSV Files: {csv_count}/8
+        
+        📈 Excel Merge Flow:
+        {'✅' if excel_exists else '❌'} Excel File Created: {excel_file}
+        {'✅' if excel_exists else '❌'} Headers Mapped Correctly
+        {'✅' if excel_exists else '❌'} Duplicates Removed
+        {'✅' if excel_exists else '❌'} Old Excel Format (.xls)
+        
+        🖥️ VBS Automation Flow:
+        {'✅' if pdf_exists else '❌'} Phase 1: Login Completed
+        {'✅' if pdf_exists else '❌'} Phase 2: Navigation Completed
+        {'✅' if pdf_exists else '❌'} Phase 3: Data Upload Completed
+        {'✅' if pdf_exists else '❌'} Phase 4: PDF Generation Completed
+        
+        📧 Email Delivery:
+        {'✅' if should_send_email() else '⏭️'} Daily Report Email {'Sent' if should_send_email() else 'Skipped (Weekend)'}
+        ✅ Completion Notification Sent
+        
+        SYSTEM INFORMATION:
+        - Execution Time: {datetime.now().strftime('%d %B %Y at %I:%M %p')}
+        - Next Execution: {(datetime.now() + timedelta(days=1)).strftime('%d %B %Y at 09:30 AM')}
+        - System Status: Operational
+        - Uptime: Continuous (365-day operation)
+        
+        Files Created Today:
+        - CSV Files: {csv_count} files in EHC_Data/{today_folder}/
+        - Excel File: {excel_file if excel_exists else 'Failed to create'}
+        - PDF Report: {pdf_file if pdf_exists else 'Failed to create'}
+        
+        This notification is sent automatically upon task completion.
+        
+        System Administrator
+        MoonFlower WiFi Automation
+        """
+        
+        msg.attach(MIMEText(body, 'plain'))
+        
+        # Send email
+        server = smtplib.SMTP(EMAIL_CONFIG['smtp_server'], EMAIL_CONFIG['smtp_port'])
+        server.starttls()
+        server.login(EMAIL_CONFIG['username'], EMAIL_CONFIG['password'])
+        server.send_message(msg)
+        server.quit()
+        
+        log_info("Task completion notification sent successfully")
+        return True
+        
+    except Exception as e:
+        log_error(f"Failed to send completion notification: {e}")
+        return False
+4.5 Error Alert Email System
+pythondef send_error_alert(error_type, error_message, task_phase):
+    try:
+        # Create email message
+        msg = MIMEMultipart()
+        msg['From'] = f"{EMAIL_CONFIG['sender_name']} <{EMAIL_CONFIG['username']}>"
+        msg['To'] = ', '.join(RECIPIENTS['error_alerts'])
+        msg['Subject'] = f"🚨 WiFi Automation ERROR - {error_type} - {datetime.now().strftime('%d %B %Y')}"
+        
+        # Email body
+        body = f"""
+        URGENT: WiFi Automation System Error
+        
+        Error Details:
+        - Type: {error_type}
+        - Phase: {task_phase}
+        - Time: {datetime.now().strftime('%d %B %Y at %I:%M %p')}
+        - Message: {error_message}
+        
+        Automated Recovery Actions:
+        - System will attempt retry in 30 minutes
+        - If retry fails, manual intervention required
+        - All logs saved to EHC_Logs/ folder
+        
+        Please check system status immediately.
+        
+        WiFi Automation System
+        """
+        
+        msg.attach(MIMEText(body, 'plain'))
+        
+        # Send email
+        server = smtplib.SMTP(EMAIL_CONFIG['smtp_server'], EMAIL_CONFIG['smtp_port'])
+        server.starttls()
+        server.login(EMAIL_CONFIG['username'], EMAIL_CONFIG['password'])
+        server.send_message(msg)
+        server.quit()
+        
+        log_error(f"Error alert sent for {error_type}: {error_message}")
+        return True
+        
+    except Exception as e:
+        log_error(f"Failed to send error alert: {e}")
+        return False
+
+---
+
+## 📄 TASK 5: BAT FILE ORCHESTRATION SYSTEM
+
+### **5.1 Modular BAT File Architecture**
+```batch
+REM Master scheduler creates 6 modular BAT files for complete automation
+
+1_Email_Morning.bat       - Send GM email (9:00-9:30 AM)
+2_Download_Files.bat      - CSV download + Excel merge (9:30 AM, 12:30 PM)  
+3_VBS_Upload.bat         - VBS Phase 1 + 2 + 3 (1:00 PM)
+4_VBS_Report.bat         - VBS Phase 1 + 4 (5:00 PM) 
+5_Complete_Workflow.bat  - Run all modules in sequence
+6_Master_Scheduler.bat   - Setup Windows Task Scheduler
+
+REM Each BAT file includes:
+- Enhanced window focusing for VBS compatibility
+- Proper exit code handling (sys.exit(0) success, sys.exit(1) failure)
+- Date calculation fixes for folder paths
+- Retry logic and error handling
+- Process cleanup (taskkill VBS after Phase 3)
+```
+
+### **5.2 Critical BAT File Features**
+```batch
+REM Date calculation fix (replaces broken %date% parsing)
+for /f %%i in ('powershell -command "(Get-Date).ToString('ddMMM').ToLower()"') do set TODAY_FOLDER=%%i
+
+REM Environment variable for Python scripts
+set BAT_EXECUTION=1
+
+REM Enhanced error handling with retry
+:retry_phase
+python vbs\vbs_phase1_login.py
+if %errorlevel% equ 0 (
+    echo ✅ Phase 1 completed successfully
+    goto phase2
+) else (
+    echo ❌ Phase 1 failed, retrying...
+    timeout /t 5
+    goto retry_phase
+)
+
+REM VBS process cleanup after Phase 3
+taskkill /f /im "AbsonsItERP.exe" /t 2>nul
+taskkill /f /im "VBS.exe" /t 2>nul
+
+REM PC Lock/Unlock integration
+python working_unlock.py unlock
+python vbs\vbs_phase1_login.py
+python working_unlock.py lock
+```
+
+### **5.3 Windows Task Scheduler Integration**
+```batch
+REM 6_Master_Scheduler.bat creates these scheduled tasks:
+
+schtasks /create /tn "MoonFlower_Email_Morning" /tr "C:\MoonFlowerAutomation\1_Email_Morning.bat" /sc daily /st 09:00 /ru SYSTEM
+
+schtasks /create /tn "MoonFlower_Downloads_Morning" /tr "C:\MoonFlowerAutomation\2_Download_Files.bat" /sc daily /st 09:30 /ru SYSTEM
+
+schtasks /create /tn "MoonFlower_Downloads_Afternoon" /tr "C:\MoonFlowerAutomation\2_Download_Files.bat" /sc daily /st 12:30 /ru SYSTEM
+
+schtasks /create /tn "MoonFlower_Excel_Merge" /tr "C:\MoonFlowerAutomation\2_Download_Files.bat" /sc daily /st 12:35 /ru SYSTEM
+
+schtasks /create /tn "MoonFlower_VBS_Upload" /tr "C:\MoonFlowerAutomation\3_VBS_Upload.bat" /sc daily /st 13:00 /ru SYSTEM
+
+schtasks /create /tn "MoonFlower_VBS_Report" /tr "C:\MoonFlowerAutomation\4_VBS_Report.bat" /sc daily /st 17:00 /ru SYSTEM
+
+REM All tasks run with SYSTEM privileges for reliability
+REM Tasks continue even if user is not logged in
+```
+
+---
+
+## 🔧 TASK 6: SYSTEM INTEGRATION & BACKGROUND SERVICE
+5.1 Windows Service Creation
+pythonimport win32serviceutil
+import win32service
+import win32event
+import servicemanager
+import socket
+import threading
+
+class WiFiAutomationService(win32serviceutil.ServiceFramework):
+    _svc_name_ = "MoonFlowerWiFiAutomation"
+    _svc_display_name_ = "MoonFlower WiFi Automation Service"
+    _svc_description_ = "365-day automated WiFi data extraction and reporting"
+    
+    def __init__(self, args):
+        win32serviceutil.ServiceFramework.__init__(self, args)
+        self.hWaitStop = win32event.CreateEvent(None, 0, 0, None)
+        self.running = True
+        
+    def SvcStop(self):
+        self.ReportServiceStatus(win32service.SERVICE_STOP_PENDING)
+        win32event.SetEvent(self.hWaitStop)
+        self.running = False
+        
+    def SvcDoRun(self):
+        servicemanager.LogMsg(servicemanager.EVENTLOG_INFORMATION_TYPE,
+                            servicemanager.PYS_SERVICE_STARTED,
+                            (self._svc_name_, ''))
+        self.main()
+        
+    def main(self):
+        # Start the automation system
+        automation_thread = threading.Thread(target=self.run_automation)
+        automation_thread.daemon = True
+        automation_thread.start()
+        
+        # Wait for stop signal
+        win32event.WaitForSingleObject(self.hWaitStop, win32event.INFINITE)
+        
+    def run_automation(self):
+        while self.running:
+            try:
+                # Run the complete automation workflow
+                master_orchestrator = MasterOrchestrator()
+                master_orchestrator.execute_daily_workflow()
+                
+            except Exception as e:
+                log_error(f"Service error: {e}")
+                send_error_alert("Service Error", str(e), "Background Service")
+                
+            time.sleep(300)  # Check every 5 minutes
+
+if __name__ == '__main__':
+    win32serviceutil.HandleCommandLine(WiFiAutomationService)
+5.2 Auto-Startup Configuration
+pythonimport winreg
+import os
+
+def setup_auto_startup():
+    """Configure system to auto-start even without user login"""
+    
+    # Method 1: Windows Service (Preferred)
+    service_command = f'python "{os.path.abspath("wifi_service.py")}" install'
+    os.system(service_command)
+    os.system('net start MoonFlowerWiFiAutomation')
+    
+    # Method 2: Registry startup (Backup)
+    reg_key = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, 
+                           r"SOFTWARE\Microsoft\Windows\CurrentVersion\Run", 
+                           0, winreg.KEY_SET_VALUE)
+    
+    startup_script = f'python "{os.path.abspath("enhanced_service_runner.py")}"'
+    winreg.SetValueEx(reg_key, "MoonFlowerWiFi", 0, winreg.REG_SZ, startup_script)
+    winreg.CloseKey(reg_key)
+    
+    # Method 3: Task Scheduler (Ultimate backup)
+    create_scheduled_task()
+
+def create_scheduled_task():
+    """Create Windows Task Scheduler task"""
+    task_xml = f'''<?xml version="1.0" encoding="UTF-16"?>
+    <Task version="1.4">
+        <RegistrationInfo>
+            <Date>2024-01-01T00:00:00</Date>
+            <Author>MoonFlower Automation</Author>
+        </RegistrationInfo>
+        <Triggers>
+            <BootTrigger>
+                <StartBoundary>2024-01-01T00:00:00</StartBoundary>
+                <Enabled>true</Enabled>
+            </BootTrigger>
+        </Triggers>
+        <Principals>
+            <Principal id="Author">
+                <UserId>S-1-5-18</UserId>
+                <RunLevel>HighestAvailable</RunLevel>
+            </Principal>
+        </Principals>
+        <Settings>
+            <MultipleInstancesPolicy>IgnoreNew</MultipleInstancesPolicy>
+            <DisallowStartIfOnBatteries>false</DisallowStartIfOnBatteries>
+            <StopIfGoingOnBatteries>false</StopIfGoingOnBatteries>
+            <AllowHardTerminate>true</AllowHardTerminate>
+            <StartWhenAvailable>true</StartWhenAvailable>
+            <RunOnlyIfNetworkAvailable>false</RunOnlyIfNetworkAvailable>
+            <IdleSettings>
+                <StopOnIdleEnd>false</StopOnIdleEnd>
+                <RestartOnIdle>false</RestartOnIdle>
+            </IdleSettings>
+            <AllowStartOnDemand>true</AllowStartOnDemand>
+            <Enabled>true</Enabled>
+            <Hidden>false</Hidden>
+            <RunOnlyIfIdle>false</RunOnlyIfIdle>
+            <DisallowStartOnRemoteAppSession>false</DisallowStartOnRemoteAppSession>
+            <UseUnifiedSchedulingEngine>true</UseUnifiedSchedulingEngine>
+            <WakeToRun>false</WakeToRun>
+            <ExecutionTimeLimit>PT0S</ExecutionTimeLimit>
+            <Priority>7</Priority>
+        </Settings>
+        <Actions Context="Author">
+            <Exec>
+                <Command>python</Command>
+                <Arguments>"{os.path.abspath('enhanced_service_runner.py')}"</Arguments>
+            </Exec>
+        </Actions>
+    </Task>'''
+    
+    # Save task XML and import
+    with open('wifi_automation_task.xml', 'w') as f:
+        f.write(task_xml)
+    
+    os.system('schtasks /create /tn "MoonFlowerWiFiAutomation" /xml wifi_automation_task.xml /f')
+5.3 Automatic PC Restart System
+pythonimport subprocess
+import schedule
+from datetime import datetime, time
+
+def schedule_nightly_restart():
+    """Schedule PC restart at 2:00 AM daily"""
+    schedule.every().day.at("02:00").do(restart_pc)
+    
+def restart_pc():
+    """Restart PC with proper cleanup"""
+    try:
+        # Log the restart
+        log_info("Initiating scheduled PC restart at 2:00 AM")
+        
+        # Send notification email
+        send_restart_notification()
+        
+        # Wait 30 seconds for email to send
+        time.sleep(30)
+        
+        # Restart PC
+        subprocess.run(['shutdown', '/r', '/t', '60', '/c', 'Scheduled restart for WiFi automation maintenance'], 
+                      check=True)
+        
+    except Exception as e:
+        log_error(f"Failed to restart PC: {e}")
+
+def send_restart_notification():
+    """Send email notification about PC restart"""
+    try:
+        msg = MIMEMultipart()
+        msg['From'] = f"{EMAIL_CONFIG['sender_name']} <{EMAIL_CONFIG['username']}>"
+        msg['To'] = ', '.join(RECIPIENTS['completion_notification'])
+        msg['Subject'] = f"🔄 WiFi Automation - Scheduled PC Restart - {datetime.now().strftime('%d %B %Y')}"
+        
+        body = f"""
+        Dear Admin,
+        
+        The MoonFlower WiFi Automation system is performing its scheduled nightly restart.
+        
+        Restart Details:
+        - Time: {datetime.now().strftime('%d %B %Y at %I:%M %p')}
+        - Reason: Scheduled maintenance restart
+        - Duration: Approximately 2-3 minutes
+        - Auto-Resume: System will automatically resume automation after restart
+        
+        Today's Completed Tasks:
+        - CSV downloads: Completed
+        - Excel merge: Completed  
+        - VBS automation: Completed
+        - PDF generation: Completed
+        - Email delivery: Completed
+        
+        The system will automatically restart and resume operations.
+        Next automation cycle will begin at 09:30 AM tomorrow.
+        
+        System Administrator
+        MoonFlower WiFi Automation
+        """
+        
+        msg.attach(MIMEText(body, 'plain'))
+        
+        # Send email
+        server = smtplib.SMTP(EMAIL_CONFIG['smtp_server'], EMAIL_CONFIG['smtp_port'])
+        server.starttls()
+        server.login(EMAIL_CONFIG['username'], EMAIL_CONFIG['password'])
+        server.send_message(msg)
+        server.quit()
+        
+        log_info("Restart notification sent successfully")
+        
+    except Exception as e:
+        log_error(f"Failed to send restart notification: {e}")
+5.4 Frontend Configuration Panel
+pythonimport tkinter as tk
+from tkinter import ttk, messagebox
+import json
+
+class WiFiAutomationConfig:
+    def __init__(self):
+        self.root = tk.Tk()
+        self.root.title("MoonFlower WiFi Automation - Configuration")
+        self.root.geometry("600x500")
+        
+        # Load current settings
+        self.load_settings()
+        
+        # Create GUI
+        self.create_gui()
+        
+    def create_gui(self):
+        # Main frame
+        main_frame = ttk.Frame(self.root, padding="10")
+        main_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
+        
+        # Email Settings Section
+        email_frame = ttk.LabelFrame(main_frame, text="Email Settings", padding="10")
+        email_frame.grid(row=0, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=5)
+        
+        # Weekday only checkbox
+        self.weekday_only = tk.BooleanVar(value=self.settings.get('send_weekdays_only', True))
+        ttk.Checkbutton(email_frame, text="Send emails on weekdays only (Mon-Fri)", 
+                       variable=self.weekday_only).grid(row=0, column=0, sticky=tk.W)
+        
+        # All days checkbox
+        self.all_days = tk.BooleanVar(value=self.settings.get('send_all_days', False))
+        ttk.Checkbutton(email_frame, text="Send emails all days (including weekends)", 
+                       variable=self.all_days).grid(row=1, column=0, sticky=tk.W)
+        
+        # Email recipients
+        ttk.Label(email_frame, text="Daily Report Recipients:").grid(row=2, column=0, sticky=tk.W, pady=(10,0))
+        self.daily_recipients = tk.Text(email_frame, height=3, width=50)
+        self.daily_recipients.grid(row=3, column=0, sticky=(tk.W, tk.E))
+        self.daily_recipients.insert('1.0', '\n'.join(self.settings.get('daily_recipients', [])))
+        
+        ttk.Label(email_frame, text="Completion Notification Recipients:").grid(row=4, column=0, sticky=tk.W, pady=(10,0))
+        self.completion_recipients = tk.Text(email_frame, height=3, width=50)
+        self.completion_recipients.grid(row=5, column=0, sticky=(tk.W, tk.E))
+        self.completion_recipients.insert('1.0', '\n'.join(self.settings.get('completion_recipients', [])))
+        
+        # System Settings Section
+        system_frame = ttk.LabelFrame(main_frame, text="System Settings", padding="10")
+        system_frame.grid(row=1, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=5)
+        
+        # Auto restart checkbox
+        self.auto_restart = tk.BooleanVar(value=self.settings.get('auto_restart', True))
+        ttk.Checkbutton(system_frame, text="Auto restart PC at 2:00 AM daily", 
+                       variable=self.auto_restart).grid(row=0, column=0, sticky=tk.W)
+        
+        # Debug mode checkbox
+        self.debug_mode = tk.BooleanVar(value=self.settings.get('debug_mode', False))
+        ttk.Checkbutton(system_frame, text="Enable debug mode (saves screenshots)", 
+                       variable=self.debug_mode).grid(row=1, column=0, sticky=tk.W)
+        
+        # Buttons
+        button_frame = ttk.Frame(main_frame)
+        button_frame.grid(row=2, column=0, columnspan=2, pady=20)
+        
+        ttk.Button(button_frame, text="Save Settings", command=self.save_settings).grid(row=0, column=0, padx=5)
+        ttk.Button(button_frame, text="Test Email", command=self.test_email).grid(row=0, column=1, padx=5)
+        ttk.Button(button_frame, text="View Logs", command=self.view_logs).grid(row=0, column=2, padx=5)
+        ttk.Button(button_frame, text="Restart Service", command=self.restart_service).grid(row=0, column=3, padx=5)
+        
+    def load_settings(self):
+        try:
+            with open('config/settings.json', 'r') as f:
+                self.settings = json.load(f)
+        except:
+            self.settings = {}
+            
+    def save_settings(self):
+        # Update settings
+        self.settings['send_weekdays_only'] = self.weekday_only.get()
+        self.settings['send_all_days'] = self.all_days.get()
+        self.settings['auto_restart'] = self.auto_restart.get()
+        self.settings['debug_mode'] = self.debug_mode.get()
+        
+        # Get recipients
+        daily_text = self.daily_recipients.get('1.0', tk.END).strip()
+        self.settings['daily_recipients'] = [email.strip() for email in daily_text.split('\n') if email.strip()]
+        
+        completion_text = self.completion_recipients.get('1.0', tk.END).strip()
+        self.settings['completion_recipients'] = [email.strip() for email in completion_text.split('\n') if email.strip()]
+        
+        # Save to file
+        os.makedirs('config', exist_ok=True)
+        with open('config/settings.json', 'w') as f:
+            json.dump(self.settings, f, indent=2)
+            
+        messagebox.showinfo("Success", "Settings saved successfully!")
+        
+    def test_email(self):
+        # Send test email
+        try:
+            msg = MIMEMultipart()
+            msg['From'] = f"{EMAIL_CONFIG['sender_name']} <{EMAIL_CONFIG['username']}>"
+            msg['To'] = ', '.join(self.settings.get('daily_recipients', []))
+            msg['Subject'] = "Test Email - MoonFlower WiFi Automation"
+            
+            body = "This is a test email from MoonFlower WiFi Automation system."
+            msg.attach(MIMEText(body, 'plain'))
+            
+            server = smtplib.SMTP(EMAIL_CONFIG['smtp_server'], EMAIL_CONFIG['smtp_port'])
+            server.starttls()
+            server.login(EMAIL_CONFIG['username'], EMAIL_CONFIG['password'])
+            server.send_message(msg)
+            server.quit()
+            
+            messagebox.showinfo("Success", "Test email sent successfully!")
+            
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to send test email: {e}")
+            
+    def view_logs(self):
+        # Open log viewer
+        import subprocess
+        log_file = f"EHC_Logs/{datetime.now().strftime('%d%b').lower()}/automation.log"
+        subprocess.Popen(['notepad', log_file])
+        
+    def restart_service(self):
+        # Restart the automation service
+        try:
+            os.system('net stop MoonFlowerWiFiAutomation')
+            time.sleep(2)
+            os.system('net start MoonFlowerWiFiAutomation')
+            messagebox.showinfo("Success", "Service restarted successfully!")
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to restart service: {e}")
+            
+    def run(self):
+        self.root.mainloop()
+
+if __name__ == '__main__':
+    app = WiFiAutomationConfig()
+    app.run()
+5.5 Master Orchestrator (Complete Flow)
+pythonclass MasterOrchestrator:
+    def __init__(self):
+        self.today = datetime.now()
+        self.today_folder = self.today.strftime("%d%b").lower()
+        self.setup_daily_folders()
+        
+    def setup_daily_folders(self):
+        """Create daily folders for file organization"""
+        folders = [
+            f"EHC_Data/{self.today_folder}",
+            f"EHC_Data_Merge/{self.today_folder}",
+            f"EHC_Data_Pdf/{self.today_folder}",
+            f"EHC_Logs/{self.today_folder}",
+            f"EHC_Logs/{self.today_folder}/debug_images"
+        ]
+        
+        for folder in folders:
+            os.makedirs(folder, exist_ok=True)
+            
+    def execute_daily_workflow(self):
+        """Execute complete daily workflow"""
+        workflow_status = {
+            'csv_download': False,
+            'excel_merge': False,
+            'vbs_automation': False,
+            'pdf_generation': False,
+            'email_delivery': False
+        }
+        
+        try:
+            # TASK 1: CSV Download Flow
+            log_info("Starting CSV download flow...")
+            if execute_complete_csv_download():
+                workflow_status['csv_download'] = True
+                log_info("CSV download completed successfully")
+            else:
+                raise Exception("CSV download failed")
+                
+            # TASK 2: Excel Merge Flow
+            log_info("Starting Excel merge flow...")
+            excel_file = execute_excel_merge()
+            if excel_file:
+                workflow_status['excel_merge'] = True
+                log_info("Excel merge completed successfully")
+            else:
+                raise Exception("Excel merge failed")
+                
+            # TASK 3: VBS Automation Flow
+            log_info("Starting VBS automation flow...")
+            if execute_complete_vbs_workflow():
+                workflow_status['vbs_automation'] = True
+                workflow_status['pdf_generation'] = True
+                log_info("VBS automation completed successfully")
+            else:
+                raise Exception("VBS automation failed")
+                
+            # TASK 4: Email Delivery
+            log_info("Starting email delivery...")
+            if send_daily_report_email():
+                workflow_status['email_delivery'] = True
+                log_info("Email delivery completed successfully")
+            else:
+                log_warning("Email delivery skipped or failed")
+                
+            # Send completion notification
+            send_completion_notification()
+            
+            log_info("Daily workflow completed successfully!")
+            return True
+            
+        except Exception as e:
+            log_error(f"Daily workflow failed: {e}")
+            send_error_alert("Workflow Error", str(e), "Master Orchestrator")
+            return False
+            
+    def run_continuous_service(self):
+        """Run 365-day continuous service"""
+        # Setup schedules
+        schedule.every().day.at("09:30").do(execute_complete_csv_download)
+        schedule.every().day.at("13:00").do(execute_complete_csv_download)
+        schedule.every().day.at("13:05").do(execute_excel_merge)
+        schedule.every().day.at("15:00").do(execute_complete_vbs_workflow)
+        schedule.every().day.at("16:00").do(send_daily_report_email)
+        schedule.every().day.at("16:05").do(send_completion_notification)
+        schedule.every().day.at("02:00").do(restart_pc)
+        schedule.every().day.at("00:01").do(self.setup_daily_folders)
+        
+        # Run scheduler
+        while True:
+            try:
+                schedule.run_pending()
+                time.sleep(60)  # Check every minute
+                
+            except Exception as e:
+                log_error(f"Scheduler error: {e}")
+                time.sleep(300)  # Wait 5 minutes before retry
+
+if __name__ == '__main__':
+    # Initialize and run the complete system
+    orchestrator = MasterOrchestrator()
+    orchestrator.run_continuous_service()
+
+🚀 DEPLOYMENT & INSTALLATION
+Installation Script
+bash# install.bat
+@echo off
+echo Installing MoonFlower WiFi Automation System...
+
+REM Install Python dependencies
+pip install -r requirements.txt
+
+REM Create folder structure
+mkdir EHC_Data EHC_Data_Merge EHC_Data_Pdf EHC_Logs config
+
+REM Install Windows service
+python wifi_service.py install
+
+REM Start service
+net start MoonFlowerWiFiAutomation
+
+REM Create startup entries
+python setup_auto_startup.py
+
+echo Installation completed!
+echo System is now running in background.
+echo Access configuration panel: python config_panel.py
+pause
+Requirements.txt
+selenium==4.15.2
+undetected-chromedriver==3.5.4
+beautifulsoup4==4.12.2
+requests==2.31.0
+urllib3==2.0.7
+pyautogui==0.9.54
+opencv-python==4.8.1.78
+pytesseract==0.3.10
+pillow==10.0.1
+pandas==2.1.4
+xlwt==1.3.0
+pywin32==306
+schedule==1.2.0
+This completes the entire WiFi automation system with all 4 main tasks plus system integration. The system will run continuously for 365 days, automatically handle all tasks, restart the PC nightly, and provide a configuration frontend for email

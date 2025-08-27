@@ -1,0 +1,3204 @@
+# Automated Data Processing Service - Product Requirements Document
+
+## 1. Executive Summary
+
+### 1.1 Project Overview
+The Automated Data Processing Service is a robust Windows service that automates daily CSV data collection, processing, upload, and reporting tasks. The system operates 365 days a year with minimal human intervention, ensuring continuous business operations even after system restarts or failures.
+
+### 1.2 Business Objectives
+- Eliminate manual data processing tasks
+- Ensure 100% uptime for critical business operations
+- Reduce human error in data handling
+- Provide automated reporting to management
+- Enable seamless operation across multiple machines
+
+### 1.3 Success Criteria
+- Zero missed data collection cycles
+- Automated recovery from system failures
+- Successful PDF report delivery within 24 hours
+- Cross-platform deployment capability
+- Self-healing system architecture
+
+## 2. Current System Analysis
+
+### 2.1 Existing Workflow
+The current process involves 10+ Python files executing in specific sequences:
+
+**Morning Cycle (9:00 AM):**
+- CSV data download (4 files)
+- Temporary storage in EHC_Data folder
+
+**Afternoon Cycle (12:30 PM):**
+- Second CSV download (4 files)
+- Excel file merging
+- VBS software automation
+- Data upload process
+
+**Evening Cycle (4:00 PM):**
+- Application closure
+- PDF report generation
+- File validation
+
+**Next Day:**
+- Email delivery to General Manager
+- Error reporting if applicable
+
+### 2.2 Current Pain Points
+- Manual execution required
+- No automatic recovery from failures
+- System dependency on single machine
+- Lack of file validation
+- No weekend handling logic
+- Missing robust error handling
+
+## 3. Technical Requirements
+
+### 3.1 Core Architecture
+
+#### 3.1.1 Windows Service Foundation
+```python
+# Service base structure
+class AutomationWindowsService:
+    - Service lifecycle management
+    - Automatic startup configuration
+    - System event logging
+    - Crash recovery mechanism
+```
+
+#### 3.1.2 Task Scheduler Integration
+- Windows Task Scheduler registration
+- Service persistence after reboot
+- Administrative privilege handling
+- Startup dependency management
+
+#### 3.1.3 Configuration Management
+```json
+{
+  "email_settings": {
+    "gm_recipient": "configurable@email.com",
+    "sender_account": "configurable@sender.com"
+  },
+  "schedule_settings": {
+    "morning_slot": "09:00",
+    "afternoon_slot": "12:30",
+    "report_time": "16:00"
+  },
+  "file_paths": {
+    "base_directory": "C:\\Users\\Lenovo\\Documents\\Automate2\\Automata2"
+  }
+}
+```
+
+### 3.2 File Organization Structure
+
+#### 3.2.1 Embedded Python Modules
+All existing Python files will be embedded within the executable:
+
+**Data Collection Module:**
+- `csv_downloader_resilient.py`
+
+**Data Processing Module:**
+- `excel_generator.py`
+
+**VBS Automation Modules:**
+- `vbs_phase1_login.py`
+- `vbs_phase2_navigation_fixed.py`
+- `vbs_phase3_upload_complete.py`
+- `vbs_phase4_report_fixed.py`
+
+**Communication Modules:**
+- `outlook_automation.py`
+- `email_delivery.py`
+
+**Utility Modules:**
+- `vbs_audio_detector.py`
+- `path_manager.py`
+- `log_manager.py`
+- `file_manager.py`
+- `daily_folder_creator.py`
+
+#### 3.2.2 New Support Modules
+
+**File Validator (file_checker.py):**
+```python
+class FileValidator:
+    def validate_csv_files(self, date, slot_number):
+        # Check if required CSV files exist
+        # Validate file integrity
+        # Report missing files
+        
+    def validate_excel_merge(self, date):
+        # Confirm merged Excel file exists
+        # Validate file format and content
+        
+    def validate_pdf_report(self, date):
+        # Check PDF generation success
+        # Validate file accessibility
+```
+
+**VBS Manager (close_vbs.py):**
+```python
+class VBSManager:
+    def close_vbs_application(self):
+        # Gracefully close VBS software
+        # Handle stuck processes
+        # Clean up resources
+        
+    def monitor_vbs_status(self):
+        # Check if VBS application is running
+        # Monitor upload progress
+        # Handle timeout scenarios
+```
+
+### 3.3 Scheduling Engine
+
+#### 3.3.1 Daily Schedule Manager
+```python
+class ScheduleManager:
+    def __init__(self):
+        self.daily_tasks = [
+            ("00:01", self.create_daily_folders),
+            ("09:00", self.morning_csv_download),
+            ("12:30", self.afternoon_processing),
+            ("16:00", self.report_generation),
+            ("09:00+1day", self.email_delivery)
+        ]
+    
+    def execute_daily_cycle(self):
+        # Monitor system time
+        # Execute tasks at scheduled intervals
+        # Handle missed executions
+        # Implement retry mechanisms
+```
+
+#### 3.3.2 Weekend Logic Handler
+```python
+class WeekendHandler:
+    def adjust_email_schedule(self, report_date):
+        # Sunday reports sent Monday
+        # Handle holiday schedules
+        # Manage business day calculations
+        
+    def queue_weekend_reports(self):
+        # Store weekend reports
+        # Schedule Monday delivery
+        # Maintain report history
+```
+
+### 3.4 Error Handling & Recovery
+
+#### 3.4.1 Failure Detection
+- File system monitoring
+- Process health checks
+- Network connectivity validation
+- Application response monitoring
+
+#### 3.4.2 Recovery Mechanisms
+```python
+class RecoveryManager:
+    def handle_csv_download_failure(self):
+        # Retry download with exponential backoff
+        # Use backup data sources if available
+        # Alert system administrators
+        
+    def handle_upload_failure(self):
+        # Retry upload process
+        # Validate file integrity
+        # Reschedule if necessary
+        
+    def handle_email_failure(self):
+        # Queue email for retry
+        # Use alternative email methods
+        # Generate failure reports
+```
+
+## 4. Implementation Strategy
+
+### 4.1 Development Phases
+
+#### Phase 1: Core Service Development (Week 1-2)
+- Windows service framework implementation
+- Basic scheduling engine
+- Configuration file handling
+- Logging system integration
+
+#### Phase 2: Module Integration (Week 3-4)
+- Embed existing Python files
+- Create wrapper functions
+- Implement inter-module communication
+- Add error handling layers
+
+#### Phase 3: File Management System (Week 5)
+- Implement file_checker.py
+- Create close_vbs.py
+- Add folder structure validation
+- Implement file integrity checks
+
+#### Phase 4: Advanced Features (Week 6)
+- Weekend handling logic
+- Recovery mechanisms
+- Performance optimization
+- Memory management
+
+#### Phase 5: Testing & Deployment (Week 7-8)
+- Unit testing all components
+- Integration testing
+- Load testing
+- Deployment package creation
+
+### 4.2 Executable Creation Strategy
+
+#### 4.2.1 PyInstaller Configuration
+```python
+# build_config.py
+import PyInstaller
+
+build_settings = {
+    'script': 'main_service.py',
+    'name': 'AutomationService',
+    'onefile': True,
+    'console': False,
+    'icon': 'automation_icon.ico',
+    'hidden_imports': [
+        'win32serviceutil',
+        'win32service',
+        'win32event',
+        'servicemanager'
+    ],
+    'add_data': [
+        ('config/*', 'config'),
+        ('templates/*', 'templates')
+    ],
+    'exclude_modules': [
+        'tkinter',
+        'matplotlib',
+        'scipy'
+    ]
+}
+```
+
+#### 4.2.2 Dependency Management
+- Automatic pip installation
+- Version compatibility checks
+- Required package bundling
+- Dynamic library handling
+
+### 4.3 Installation Package
+
+#### 4.3.1 Installer Script (install.bat)
+```batch
+@echo off
+echo Installing Automation Service...
+
+REM Check administrator privileges
+net session >nul 2>&1
+if %errorLevel% neq 0 (
+    echo Please run as Administrator
+    pause
+    exit
+)
+
+REM Install Python dependencies
+pip install -r requirements.txt
+
+REM Register Windows service
+AutomationService.exe --startup=auto install
+
+REM Create scheduled task
+schtasks /create /tn "AutomationService" /tr "%CD%\AutomationService.exe" /sc onstart /ru SYSTEM /f
+
+REM Start service
+net start AutomationService
+
+echo Installation complete!
+pause
+```
+
+#### 4.3.2 Uninstaller Script (uninstall.bat)
+```batch
+@echo off
+echo Uninstalling Automation Service...
+
+REM Stop service
+net stop AutomationService
+
+REM Remove scheduled task
+schtasks /delete /tn "AutomationService" /f
+
+REM Unregister service
+AutomationService.exe remove
+
+echo Uninstallation complete!
+pause
+```
+
+## 5. Configuration Management
+
+### 5.1 Settings File Structure
+```json
+{
+  "service_settings": {
+    "service_name": "AutomationService",
+    "display_name": "Automated Data Processing Service",
+    "description": "Handles daily CSV processing and reporting"
+  },
+  "schedule_configuration": {
+    "time_slots": [
+      {"name": "morning", "time": "09:00", "enabled": true},
+      {"name": "afternoon", "time": "12:30", "enabled": true},
+      {"name": "evening", "time": "16:00", "enabled": true}
+    ],
+    "weekend_handling": true,
+    "holiday_skip": false
+  },
+  "email_configuration": {
+    "smtp_settings": {
+      "server": "smtp.office365.com",
+      "port": 587,
+      "use_tls": true
+    },
+    "recipients": {
+      "gm_email": "ramon.logan@absons.ae",
+      "backup_email": "backup@company.com",
+      "error_notification": "admin@company.com"
+    },
+    "sender_details": {
+      "email": "mohamed.fasin@absons.ae",
+      "display_name": "Mohamed Fasin A F",
+      "signature_template": "email_signature.html"
+    }
+  },
+  "file_paths": {
+    "base_directory": "C:\\Users\\Lenovo\\Documents\\Automate2\\Automata2",
+    "data_folders": {
+      "csv_data": "EHC_Data",
+      "merged_data": "EHC_Data_Merge",
+      "pdf_reports": "EHC_Data_Pdf",
+      "log_files": "EHC_Logs"
+    }
+  },
+  "retry_settings": {
+    "max_retries": 3,
+    "retry_delay": 300,
+    "exponential_backoff": true
+  },
+  "monitoring": {
+    "health_check_interval": 60,
+    "log_level": "INFO",
+    "log_retention_days": 30
+  }
+}
+```
+
+### 5.2 Dynamic Configuration Updates
+- Hot-reload configuration changes
+- Validate configuration integrity
+- Backup configuration versions
+- Configuration change notifications
+
+## 6. Monitoring & Logging
+
+### 6.1 Logging Strategy
+```python
+class ComprehensiveLogger:
+    def __init__(self):
+        self.setup_rotating_logs()
+        self.configure_log_levels()
+        
+    def log_levels(self):
+        return {
+            'DEBUG': 'Detailed diagnostic information',
+            'INFO': 'Normal operation information',
+            'WARNING': 'Potential issues detected',
+            'ERROR': 'Error conditions encountered',
+            'CRITICAL': 'System failure conditions'
+        }
+```
+
+### 6.2 Performance Monitoring
+- CPU and memory usage tracking
+- File system space monitoring
+- Network connectivity checks
+- Application response times
+
+### 6.3 Health Checks
+```python
+class HealthMonitor:
+    def system_health_check(self):
+        checks = [
+            self.check_disk_space(),
+            self.check_memory_usage(),
+            self.check_network_connectivity(),
+            self.validate_file_permissions(),
+            self.verify_vbs_software_status()
+        ]
+        return all(checks)
+```
+
+## 7. Security Considerations
+
+### 7.1 Access Control
+- Service runs with minimal required privileges
+- File system permissions validation
+- Network access restrictions
+- Credential encryption
+
+### 7.2 Data Protection
+- Sensitive information encryption
+- Secure configuration storage
+- Audit trail maintenance
+- Data integrity verification
+
+## 8. Testing Strategy
+
+### 8.1 Unit Testing
+```python
+class TestAutomationService:
+    def test_csv_download_functionality(self):
+        # Test CSV download under normal conditions
+        # Test network failure scenarios
+        # Validate file integrity checks
+        
+    def test_excel_merge_process(self):
+        # Test merge functionality
+        # Validate output file format
+        # Test error handling
+        
+    def test_email_delivery_system(self):
+        # Test successful email delivery
+        # Test attachment handling
+        # Test failure recovery
+```
+
+### 8.2 Integration Testing
+- End-to-end workflow validation
+- Inter-module communication testing
+- External system integration verification
+- Performance under load testing
+
+### 8.3 Deployment Testing
+- Fresh system installation testing
+- Cross-platform compatibility verification
+- Service startup/shutdown testing
+- Recovery after system reboot testing
+
+## 9. Deployment Strategy
+
+### 9.1 Packaging Requirements
+```
+deployment_package/
+├── AutomationService.exe          # Main service executable
+├── install.bat                    # Installation script
+├── uninstall.bat                 # Uninstallation script
+├── requirements.txt              # Python dependencies
+├── config/
+│   ├── settings.json            # Default configuration
+│   └── email_signature.html     # Email template
+├── docs/
+│   ├── installation_guide.md    # Setup instructions
+│   ├── configuration_guide.md   # Configuration help
+│   └── troubleshooting.md       # Common issues
+└── logs/                        # Log file directory
+```
+
+### 9.2 Installation Process
+1. Administrator privilege verification
+2. Python runtime validation
+3. Dependency installation
+4. Service registration
+5. Configuration file creation
+6. Initial system validation
+7. Service startup
+8. Verification tests
+
+### 9.3 Post-Installation Validation
+```python
+def validate_installation():
+    checks = [
+        verify_service_registration(),
+        test_file_permissions(),
+        validate_configuration(),
+        check_scheduled_tasks(),
+        test_basic_functionality()
+    ]
+    return generate_validation_report(checks)
+```
+
+## 10. Maintenance & Support
+
+### 10.1 Automated Maintenance
+- Log file rotation and cleanup
+- Configuration backup creation
+- System health reports
+- Performance optimization
+
+### 10.2 Update Mechanism
+- Version checking capability
+- Automatic update downloads
+- Rollback functionality
+- Update notification system
+
+### 10.3 Support Tools
+```python
+class SupportTools:
+    def generate_diagnostic_report(self):
+        # System configuration summary
+        # Recent log entries
+        # Performance metrics
+        # Error history
+        
+    def export_configuration(self):
+        # Backup current settings
+        # Include custom modifications
+        # Version control information
+```
+
+## 11. Success Metrics
+
+### 11.1 Operational Metrics
+- Service uptime percentage (Target: 99.9%)
+- Successful task completion rate (Target: 100%)
+- Average response time for task execution
+- Mean time to recovery from failures
+
+### 11.2 Business Metrics
+- Reduction in manual intervention hours
+- Error rate in data processing
+- Report delivery timeliness
+- System reliability score
+
+### 11.3 Technical Metrics
+- Memory usage optimization
+- CPU utilization efficiency
+- Disk space management
+- Network bandwidth utilization
+
+## 12. Risk Management
+
+### 12.1 Identified Risks
+- System hardware failures
+- Network connectivity issues
+- Third-party software dependencies
+- Configuration corruption
+- Data integrity compromises
+
+### 12.2 Mitigation Strategies
+- Redundant backup systems
+- Automated failover mechanisms
+- Configuration validation
+- Regular system health checks
+- Comprehensive error logging
+
+### 12.3 Contingency Plans
+- Manual execution procedures
+- Alternative data sources
+- Emergency notification systems
+- Rollback procedures
+- Support escalation paths
+
+## 13. Future Enhancements
+
+### 13.1 Planned Features
+- Web-based configuration interface
+- Real-time monitoring dashboard
+- Mobile notification system
+- Cloud backup integration
+- Multi-tenant support
+
+### 13.2 Scalability Considerations
+- Multiple machine deployment
+- Load balancing capabilities
+- Horizontal scaling support
+- Database integration options
+- API development framework
+
+### 13.3 Technology Roadmap
+- Migration to modern frameworks
+- Cloud-native architecture
+- Container deployment options
+- Microservices architecture
+- Machine learning integration
+
+## 14. Conclusion
+
+This Product Requirements Document outlines a comprehensive approach to creating a robust, self-managing automation service that addresses all current pain points while providing a foundation for future growth. The solution ensures 365-day operation reliability while maintaining simplicity in deployment and management.
+
+The key to success lies in the combination of proper Windows service architecture, comprehensive error handling, intelligent scheduling, and thorough testing. This approach will deliver a production-ready system capable of operating independently across multiple environments with minimal maintenance requirements.
+//More
+# Enhanced Automated Data Processing Service - Product Requirements Document
+
+## 1. Executive Summary
+
+### 1.1 Project Overview
+The Enhanced Automated Data Processing Service is a zero-touch Windows service that wraps existing Python automation scripts without modifying their core logic. The system provides 365-day operation with automatic startup, scheduling, monitoring, and dynamic configuration management.
+
+### 1.2 Core Design Principles
+- **ZERO CODE CHANGES**: Existing Python files remain completely untouched
+- **WRAPPER ARCHITECTURE**: Service acts as intelligent orchestrator calling Python scripts
+- **BULLETPROOF STARTUP**: Survives reboots, crashes, and system failures
+- **DYNAMIC CONFIGURATION**: Change schedules and emails without service restart
+- **ZERO USER INTERVENTION**: Complete hands-off operation after installation
+
+### 1.3 Business Objectives
+- Eliminate all manual intervention in data processing
+- Ensure 100% uptime across system restarts and failures
+- Provide dynamic configuration without touching code
+- Enable immediate deployment across multiple machines
+- Guarantee 365-day autonomous operation
+
+## 2. Architecture Overview
+
+### 2.1 Wrapper Service Design
+
+```python
+# Core wrapper architecture - NO changes to existing Python files
+class PythonScriptOrchestrator:
+    """
+    Intelligent wrapper that executes existing Python files in correct sequence
+    WITHOUT modifying their source code or logic
+    """
+    
+    def __init__(self):
+        self.scripts = {
+            'csv_downloader_resilient.py': {'timeout': 300, 'retry': 3},
+            'excel_generator.py': {'timeout': 180, 'retry': 2},
+            'vbs_phase1_login.py': {'timeout': 120, 'retry': 3},
+            'vbs_phase2_navigation_fixed.py': {'timeout': 240, 'retry': 2},
+            'vbs_phase3_upload_complete.py': {'timeout': 300, 'retry': 3},
+            'vbs_phase4_report_fixed.py': {'timeout': 180, 'retry': 2},
+            'outlook_automation.py': {'timeout': 120, 'retry': 3},
+            # Add all existing scripts here
+        }
+    
+    def execute_script_safely(self, script_name, script_args=None):
+        """
+        Execute existing Python script without modification
+        Handle all errors, timeouts, and retries at wrapper level
+        """
+        pass
+```
+
+### 2.2 Service Architecture Layers
+
+```
+┌─────────────────────────────────────────────┐
+│            Windows Service Layer            │
+├─────────────────────────────────────────────┤
+│         Configuration Manager               │
+│    (Hot-reload settings without restart)    │
+├─────────────────────────────────────────────┤
+│           Scheduling Engine                 │
+│    (Windows Task Scheduler + Service)       │
+├─────────────────────────────────────────────┤
+│         Script Orchestrator                 │
+│     (Calls existing Python files)           │
+├─────────────────────────────────────────────┤
+│        Monitoring & Recovery                │
+│    (Health checks, auto-restart)            │
+├─────────────────────────────────────────────┤
+│         Existing Python Scripts            │
+│        (ZERO MODIFICATIONS)                 │
+└─────────────────────────────────────────────┘
+```
+
+## 3. Zero-Touch Installation & Startup
+
+### 3.1 Bulletproof Service Installation
+
+#### 3.1.1 Master Installation Script (install_automation.bat)
+```batch
+@echo off
+setlocal EnableDelayedExpansion
+
+echo ================================================================
+echo    AUTOMATED DATA PROCESSING SERVICE INSTALLER
+echo    Zero-Touch Installation for 365-Day Operation
+echo ================================================================
+
+REM Force administrator mode
+>nul 2>&1 "%SYSTEMROOT%\system32\cacls.exe" "%SYSTEMROOT%\system32\config\system"
+if '%errorlevel%' NEQ '0' (
+    echo Requesting administrator privileges...
+    goto UACPrompt
+) else (
+    goto gotAdmin
+)
+
+:UACPrompt
+    echo Set UAC = CreateObject^("Shell.Application"^) > "%temp%\getadmin.vbs"
+    echo UAC.ShellExecute "%~s0", "", "", "runas", 1 >> "%temp%\getadmin.vbs"
+    "%temp%\getadmin.vbs"
+    del "%temp%\getadmin.vbs"
+    exit /B
+
+:gotAdmin
+    pushd "%CD%"
+    CD /D "%~dp0"
+
+echo [1/8] Validating Python installation...
+python --version >nul 2>&1
+if %errorlevel% neq 0 (
+    echo ERROR: Python not found. Please install Python first.
+    pause
+    exit /b 1
+)
+
+echo [2/8] Installing Python dependencies...
+pip install --upgrade pip
+pip install -r requirements.txt
+if %errorlevel% neq 0 (
+    echo ERROR: Failed to install dependencies
+    pause
+    exit /b 1
+)
+
+echo [3/8] Creating service directories...
+if not exist "C:\AutomationService" mkdir "C:\AutomationService"
+if not exist "C:\AutomationService\logs" mkdir "C:\AutomationService\logs"
+if not exist "C:\AutomationService\config" mkdir "C:\AutomationService\config"
+if not exist "C:\AutomationService\scripts" mkdir "C:\AutomationService\scripts"
+
+echo [4/8] Copying service files...
+copy /Y "AutomationService.exe" "C:\AutomationService\"
+copy /Y "config\*" "C:\AutomationService\config\"
+copy /Y "*.py" "C:\AutomationService\scripts\"
+copy /Y "requirements.txt" "C:\AutomationService\"
+
+echo [5/8] Registering Windows Service...
+C:\AutomationService\AutomationService.exe --startup=auto install
+if %errorlevel% neq 0 (
+    echo ERROR: Service registration failed
+    pause
+    exit /b 1
+)
+
+echo [6/8] Creating startup task (backup method)...
+schtasks /create /tn "AutomationServiceGuardian" /tr "C:\AutomationService\AutomationService.exe" /sc onstart /delay 0000:30 /ru SYSTEM /rl HIGHEST /f
+
+echo [7/8] Setting service to auto-restart on failure...
+sc failure "AutomationService" reset= 86400 actions= restart/5000/restart/5000/restart/5000
+
+echo [8/8] Starting service...
+net start "AutomationService"
+if %errorlevel% neq 0 (
+    echo WARNING: Service start failed, attempting manual start...
+    C:\AutomationService\AutomationService.exe debug
+)
+
+echo ================================================================
+echo    INSTALLATION COMPLETE!
+echo    Service will start automatically on boot
+echo    Configuration file: C:\AutomationService\config\settings.json
+echo ================================================================
+pause
+```
+
+### 3.2 Multiple Startup Guarantees
+
+#### 3.2.1 Triple-Layer Startup Protection
+```python
+class StartupManager:
+    """
+    Ensures service starts through multiple mechanisms
+    """
+    
+    def configure_startup_methods(self):
+        methods = [
+            self.register_windows_service(),      # Primary: Windows Service
+            self.create_scheduled_task(),         # Secondary: Task Scheduler
+            self.create_registry_run_key(),       # Tertiary: Registry Run
+            self.create_startup_folder_link()     # Quaternary: Startup Folder
+        ]
+        return methods
+    
+    def register_windows_service(self):
+        """
+        Primary startup method - Windows Service with auto-restart
+        """
+        service_config = {
+            'startup_type': 'automatic',
+            'delayed_start': True,  # Start after system is fully loaded
+            'restart_on_failure': True,
+            'restart_delay': 5000,  # 5 seconds
+            'restart_count': 3,
+            'reset_period': 86400   # Reset failure count daily
+        }
+        
+    def create_scheduled_task(self):
+        """
+        Backup startup method - Task Scheduler
+        """
+        task_xml = '''<?xml version="1.0" encoding="UTF-16"?>
+        <Task version="1.2" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">
+          <Triggers>
+            <BootTrigger>
+              <Delay>PT30S</Delay>
+              <Enabled>true</Enabled>
+            </BootTrigger>
+          </Triggers>
+          <Principals>
+            <Principal id="Author">
+              <UserId>S-1-5-18</UserId>
+              <RunLevel>HighestAvailable</RunLevel>
+            </Principal>
+          </Principals>
+          <Actions>
+            <Exec>
+              <Command>C:\\AutomationService\\AutomationService.exe</Command>
+            </Exec>
+          </Actions>
+          <Settings>
+            <MultipleInstancesPolicy>IgnoreNew</MultipleInstancesPolicy>
+            <DisallowStartIfOnBatteries>false</DisallowStartIfOnBatteries>
+            <StopIfGoingOnBatteries>false</StopIfGoingOnBatteries>
+            <AllowHardTerminate>true</AllowHardTerminate>
+            <StartWhenAvailable>true</StartWhenAvailable>
+            <RunOnlyIfNetworkAvailable>false</RunOnlyIfNetworkAvailable>
+            <RestartOnFailure>
+              <Interval>PT1M</Interval>
+              <Count>3</Count>
+            </RestartOnFailure>
+          </Settings>
+        </Task>'''
+```
+
+## 4. Dynamic Configuration System
+
+### 4.1 Hot-Reload Configuration Manager
+
+#### 4.1.1 Live Configuration Updates
+```python
+class DynamicConfigManager:
+    """
+    Allows configuration changes without service restart
+    Monitors config file for changes and reloads automatically
+    """
+    
+    def __init__(self, config_path="C:\\AutomationService\\config\\settings.json"):
+        self.config_path = config_path
+        self.config_data = {}
+        self.file_watcher = None
+        self.load_configuration()
+        self.setup_file_watcher()
+    
+    def setup_file_watcher(self):
+        """
+        Monitor configuration file for changes
+        Reload configuration automatically when file is modified
+        """
+        from watchdog.observers import Observer
+        from watchdog.events import FileSystemEventHandler
+        
+        class ConfigChangeHandler(FileSystemEventHandler):
+            def __init__(self, config_manager):
+                self.config_manager = config_manager
+                
+            def on_modified(self, event):
+                if event.src_path.endswith('settings.json'):
+                    self.config_manager.reload_configuration()
+        
+        self.observer = Observer()
+        self.observer.schedule(
+            ConfigChangeHandler(self), 
+            os.path.dirname(self.config_path), 
+            recursive=False
+        )
+        self.observer.start()
+    
+    def reload_configuration(self):
+        """
+        Hot-reload configuration without service restart
+        """
+        try:
+            with open(self.config_path, 'r') as f:
+                new_config = json.load(f)
+            
+            # Validate new configuration
+            if self.validate_configuration(new_config):
+                old_config = self.config_data.copy()
+                self.config_data = new_config
+                
+                # Apply configuration changes
+                self.apply_configuration_changes(old_config, new_config)
+                
+                self.log_info("Configuration reloaded successfully")
+            else:
+                self.log_error("Invalid configuration detected, keeping current settings")
+                
+        except Exception as e:
+            self.log_error(f"Configuration reload failed: {e}")
+    
+    def apply_configuration_changes(self, old_config, new_config):
+        """
+        Apply specific configuration changes
+        """
+        # Update email settings
+        if old_config.get('email') != new_config.get('email'):
+            self.update_email_configuration(new_config['email'])
+        
+        # Update schedule settings
+        if old_config.get('schedule') != new_config.get('schedule'):
+            self.update_schedule_configuration(new_config['schedule'])
+        
+        # Update retry settings
+        if old_config.get('retry_settings') != new_config.get('retry_settings'):
+            self.update_retry_settings(new_config['retry_settings'])
+```
+
+#### 4.1.2 User-Friendly Configuration File
+```json
+{
+  "service_info": {
+    "name": "AutomationService",
+    "version": "1.0.0",
+    "last_updated": "auto-generated"
+  },
+  
+  "schedule": {
+    "timezone": "Asia/Dubai",
+    "daily_tasks": [
+      {
+        "name": "morning_csv_download",
+        "time": "09:00",
+        "enabled": true,
+        "scripts": ["csv_downloader_resilient.py"],
+        "description": "Download morning CSV files"
+      },
+      {
+        "name": "afternoon_processing",
+        "time": "12:30", 
+        "enabled": true,
+        "scripts": [
+          "csv_downloader_resilient.py",
+          "excel_generator.py",
+          "vbs_phase1_login.py",
+          "vbs_phase2_navigation_fixed.py",
+          "vbs_phase3_upload_complete.py"
+        ],
+        "description": "Afternoon data processing and upload"
+      },
+      {
+        "name": "evening_reports",
+        "time": "16:00",
+        "enabled": true,
+        "scripts": [
+          "vbs_phase4_report_fixed.py",
+          "close_vbs.py"
+        ],
+        "description": "Generate evening reports and cleanup"
+      },
+      {
+        "name": "next_day_email",
+        "time": "09:00",
+        "offset_days": 1,
+        "enabled": true,
+        "scripts": ["outlook_automation.py"],
+        "description": "Send reports via email next day"
+      }
+    ]
+  },
+  
+  "email": {
+    "enabled": true,
+    "smtp": {
+      "server": "smtp.office365.com",
+      "port": 587,
+      "use_tls": true,
+      "use_ssl": false
+    },
+    "sender": {
+      "email": "mohamed.fasin@absons.ae",
+      "password": "encrypted_password_here",
+      "display_name": "Mohamed Fasin A F"
+    },
+    "recipients": {
+      "primary": "ramon.logan@absons.ae",
+      "backup": ["backup1@absons.ae", "backup2@absons.ae"],
+      "error_notifications": "admin@absons.ae"
+    },
+    "templates": {
+      "subject_success": "Daily Report - {date}",
+      "subject_error": "URGENT: Automation Error - {date}",
+      "signature_file": "email_signature.html"
+    }
+  },
+  
+  "python_scripts": {
+    "base_directory": "C:\\Users\\Lenovo\\Documents\\Automate2\\Automata2",
+    "python_executable": "python",
+    "script_timeout": 600,
+    "scripts": {
+      "csv_downloader_resilient.py": {
+        "timeout": 300,
+        "max_retries": 3,
+        "retry_delay": 60,
+        "working_directory": null,
+        "arguments": [],
+        "environment_vars": {}
+      },
+      "excel_generator.py": {
+        "timeout": 180,
+        "max_retries": 2,
+        "retry_delay": 30,
+        "working_directory": null,
+        "arguments": [],
+        "environment_vars": {}
+      }
+    }
+  },
+  
+  "monitoring": {
+    "health_check_interval": 60,
+    "log_level": "INFO",
+    "log_rotation": {
+      "max_size_mb": 10,
+      "backup_count": 5
+    },
+    "disk_space_check": true,
+    "memory_usage_check": true,
+    "network_connectivity_check": true
+  },
+  
+  "recovery": {
+    "auto_restart_on_failure": true,
+    "max_restart_attempts": 5,
+    "restart_delay_seconds": 30,
+    "escalation_email_after_failures": 3,
+    "safe_mode_after_failures": 5
+  },
+  
+  "weekend_handling": {
+    "skip_weekends": false,
+    "delay_sunday_email_to_monday": true,
+    "holiday_calendar_file": "holidays.json"
+  }
+}
+```
+
+### 4.2 Configuration Management Tools
+
+#### 4.2.1 Configuration GUI (Optional)
+```python
+# Simple configuration editor GUI
+import tkinter as tk
+from tkinter import ttk, messagebox
+import json
+
+class ConfigurationGUI:
+    def __init__(self):
+        self.root = tk.Tk()
+        self.root.title("Automation Service Configuration")
+        self.root.geometry("800x600")
+        
+    def create_schedule_tab(self):
+        """
+        Easy-to-use interface for changing schedules and emails
+        """
+        schedule_frame = ttk.Frame(self.notebook)
+        self.notebook.add(schedule_frame, text="Schedule")
+        
+        # Time configuration
+        ttk.Label(schedule_frame, text="Morning CSV Download:").pack()
+        self.morning_time = tk.StringVar(value="09:00")
+        ttk.Entry(schedule_frame, textvariable=self.morning_time).pack()
+        
+        ttk.Label(schedule_frame, text="Afternoon Processing:").pack()
+        self.afternoon_time = tk.StringVar(value="12:30")
+        ttk.Entry(schedule_frame, textvariable=self.afternoon_time).pack()
+        
+        # Email configuration
+        ttk.Label(schedule_frame, text="Primary Recipient:").pack()
+        self.primary_email = tk.StringVar(value="ramon.logan@absons.ae")
+        ttk.Entry(schedule_frame, textvariable=self.primary_email, width=50).pack()
+        
+        ttk.Button(schedule_frame, text="Save Configuration", 
+                  command=self.save_configuration).pack(pady=20)
+```
+
+## 5. Script Orchestration Engine
+
+### 5.1 Python Script Wrapper
+
+#### 5.1.1 Intelligent Script Execution
+```python
+class ScriptOrchestrator:
+    """
+    Executes existing Python scripts without modifying them
+    Handles all error cases, timeouts, and dependencies
+    """
+    
+    def __init__(self, config_manager):
+        self.config = config_manager
+        self.script_results = {}
+        self.execution_history = []
+        
+    def execute_script_sequence(self, task_name):
+        """
+        Execute a sequence of Python scripts for a specific task
+        Each script runs in isolation with proper error handling
+        """
+        task_config = self.config.get_task_config(task_name)
+        scripts = task_config.get('scripts', [])
+        
+        sequence_success = True
+        sequence_results = []
+        
+        for script_name in scripts:
+            result = self.execute_single_script(script_name, task_name)
+            sequence_results.append(result)
+            
+            if not result['success']:
+                sequence_success = False
+                if task_config.get('stop_on_error', True):
+                    break
+        
+        # Log sequence completion
+        self.log_sequence_result(task_name, sequence_success, sequence_results)
+        return sequence_success, sequence_results
+    
+    def execute_single_script(self, script_name, context="unknown"):
+        """
+        Execute a single Python script with comprehensive error handling
+        NO MODIFICATIONS to the original script
+        """
+        script_config = self.config.get_script_config(script_name)
+        
+        execution_result = {
+            'script': script_name,
+            'context': context,
+            'start_time': datetime.now(),
+            'success': False,
+            'output': '',
+            'error': '',
+            'execution_time': 0,
+            'attempt': 1
+        }
+        
+        max_retries = script_config.get('max_retries', 3)
+        timeout = script_config.get('timeout', 300)
+        retry_delay = script_config.get('retry_delay', 60)
+        
+        for attempt in range(1, max_retries + 1):
+            execution_result['attempt'] = attempt
+            
+            try:
+                # Prepare execution environment
+                script_path = os.path.join(
+                    self.config.get('python_scripts', {}).get('base_directory', ''),
+                    script_name
+                )
+                
+                working_dir = script_config.get('working_directory') or os.path.dirname(script_path)
+                python_exe = self.config.get('python_scripts', {}).get('python_executable', 'python')
+                
+                # Build command
+                cmd = [python_exe, script_path]
+                cmd.extend(script_config.get('arguments', []))
+                
+                # Execute script
+                start_time = time.time()
+                
+                process = subprocess.Popen(
+                    cmd,
+                    cwd=working_dir,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    text=True,
+                    env=self.build_environment(script_config.get('environment_vars', {}))
+                )
+                
+                # Wait for completion with timeout
+                stdout, stderr = process.communicate(timeout=timeout)
+                
+                execution_time = time.time() - start_time
+                execution_result['execution_time'] = execution_time
+                execution_result['output'] = stdout
+                execution_result['error'] = stderr
+                
+                if process.returncode == 0:
+                    execution_result['success'] = True
+                    self.log_info(f"Script {script_name} completed successfully in {execution_time:.2f}s")
+                    break
+                else:
+                    raise subprocess.CalledProcessError(process.returncode, cmd, stdout, stderr)
+                    
+            except subprocess.TimeoutExpired:
+                process.kill()
+                execution_result['error'] = f"Script timeout after {timeout} seconds"
+                self.log_warning(f"Script {script_name} timed out (attempt {attempt})")
+                
+            except subprocess.CalledProcessError as e:
+                execution_result['error'] = f"Script failed with code {e.returncode}: {e.stderr}"
+                self.log_warning(f"Script {script_name} failed (attempt {attempt}): {e}")
+                
+            except Exception as e:
+                execution_result['error'] = f"Unexpected error: {str(e)}"
+                self.log_error(f"Unexpected error executing {script_name} (attempt {attempt}): {e}")
+            
+            # Wait before retry (except on last attempt)
+            if attempt < max_retries:
+                time.sleep(retry_delay)
+        
+        # Final logging
+        if execution_result['success']:
+            self.log_info(f"Script {script_name} successful after {execution_result['attempt']} attempts")
+        else:
+            self.log_error(f"Script {script_name} failed after {max_retries} attempts: {execution_result['error']}")
+        
+        # Store result for analysis
+        self.script_results[f"{script_name}_{context}_{datetime.now().isoformat()}"] = execution_result
+        
+        return execution_result
+    
+    def build_environment(self, custom_env_vars):
+        """
+        Build environment variables for script execution
+        """
+        env = os.environ.copy()
+        env.update(custom_env_vars)
+        return env
+```
+
+## 6. Advanced Scheduling Engine
+
+### 6.1 Bulletproof Scheduler
+
+#### 6.1.1 Multi-Layer Scheduling
+```python
+class AdvancedScheduler:
+    """
+    Combines multiple scheduling mechanisms for maximum reliability
+    """
+    
+    def __init__(self, config_manager, script_orchestrator):
+        self.config = config_manager
+        self.orchestrator = script_orchestrator
+        self.scheduler = BackgroundScheduler(timezone='Asia/Dubai')
+        self.task_queue = []
+        self.missed_tasks = []
+        self.running = False
+        
+    def initialize_scheduler(self):
+        """
+        Set up all scheduled tasks from configuration
+        """
+        self.scheduler.start()
+        
+        # Load tasks from configuration
+        daily_tasks = self.config.get('schedule', {}).get('daily_tasks', [])
+        
+        for task in daily_tasks:
+            if task.get('enabled', True):
+                self.schedule_daily_task(task)
+        
+        # Set up system monitoring
+        self.scheduler.add_job(
+            self.system_health_check,
+            'interval',
+            minutes=5,
+            id='health_check'
+        )
+        
+        # Set up missed task recovery
+        self.scheduler.add_job(
+            self.recover_missed_tasks,
+            'interval',
+            minutes=15,
+            id='missed_task_recovery'
+        )
+        
+        self.running = True
+        self.log_info("Advanced scheduler initialized successfully")
+    
+    def schedule_daily_task(self, task_config):
+        """
+        Schedule a task to run daily with all reliability features
+        """
+        task_name = task_config['name']
+        task_time = task_config['time']
+        offset_days = task_config.get('offset_days', 0)
+        
+        # Parse time
+        hour, minute = map(int, task_time.split(':'))
+        
+        if offset_days == 0:
+            # Same day execution
+            self.scheduler.add_job(
+                self.execute_scheduled_task,
+                'cron',
+                hour=hour,
+                minute=minute,
+                args=[task_name],
+                id=f'daily_{task_name}',
+                misfire_grace_time=300,  # Allow 5-minute delay
+                coalesce=True,  # Combine missed executions
+                max_instances=1  # Only one instance at a time
+            )
+        else:
+            # Next day execution (like email delivery)
+            self.scheduler.add_job(
+                self.execute_next_day_task,
+                'cron',
+                hour=hour,
+                minute=minute,
+                args=[task_name, offset_days],
+                id=f'nextday_{task_name}',
+                misfire_grace_time=300,
+                coalesce=True,
+                max_instances=1
+            )
+        
+        self.log_info(f"Scheduled task '{task_name}' at {task_time}")
+    
+    def execute_scheduled_task(self, task_name):
+        """
+        Execute a scheduled task with full error handling
+        """
+        task_start = datetime.now()
+        
+        try:
+            self.log_info(f"Starting scheduled task: {task_name}")
+            
+            # Check if task should run (weekend/holiday logic)
+            if not self.should_task_run(task_name, task_start):
+                self.log_info(f"Task {task_name} skipped due to weekend/holiday rules")
+                return
+            
+            # Execute the task
+            success, results = self.orchestrator.execute_script_sequence(task_name)
+            
+            execution_time = (datetime.now() - task_start).total_seconds()
+            
+            if success:
+                self.log_info(f"Task {task_name} completed successfully in {execution_time:.2f}s")
+            else:
+                self.log_error(f"Task {task_name} failed after {execution_time:.2f}s")
+                self.handle_task_failure(task_name, results)
+                
+        except Exception as e:
+            self.log_error(f"Critical error in scheduled task {task_name}: {e}")
+            self.handle_task_failure(task_name, [{'error': str(e)}])
+    
+    def should_task_run(self, task_name, execution_time):
+        """
+        Determine if task should run based on weekend/holiday rules
+        """
+        weekend_config = self.config.get('weekend_handling', {})
+        
+        if weekend_config.get('skip_weekends', False):
+            if execution_time.weekday() >= 5:  # Saturday = 5, Sunday = 6
+                return False
+        
+        # Check holiday calendar if available
+        holiday_file = weekend_config.get('holiday_calendar_file')
+        if holiday_file and os.path.exists(holiday_file):
+            with open(holiday_file, 'r') as f:
+                holidays = json.load(f)
+                current_date = execution_time.strftime('%Y-%m-%d')
+                if current_date in holidays:
+                    return False
+        
+        return True
+    
+    def recover_missed_tasks(self):
+        """
+        Check for and recover missed task executions
+        """
+        # Implementation for detecting and recovering missed tasks
+        pass
+```
+
+## 7. Zero-Intervention Monitoring
+
+### 7.1 Self-Healing System
+
+#### 7.1.1 Comprehensive Health Monitoring
+```python
+class SystemHealthMonitor:
+    """
+    Monitors system health and auto-recovers from issues
+    """
+    
+    def __init__(self, config_manager):
+        self.config = config_manager
+        self.health_status = {}
+        self.alerts_sent = []
+        
+    def perform_health_check(self):
+        """
+        Comprehensive system health check
+        """
+        health_results = {
+            'timestamp': datetime.now(),
+            'overall_status': 'HEALTHY',
+            'checks': {}
+        }
+        
+        # Check disk space
+        health_results['checks']['disk_space'] = self.check_disk_space()
+        
+        # Check memory usage
+        health_results['checks']['memory'] = self.check_memory_usage()
+        
+        # Check Python script directories
+        health_results['checks']['script_access'] = self.check_script_access()
+        
+        # Check network connectivity
+        health_results['checks']['network'] = self.check_network_connectivity()
+        
+        # Check VBS software availability
+        health_results['checks']['vbs_software'] = self.check_vbs_software()
+        
+        # Check email configuration
+        health_results['checks']['email_config'] = self.check_email_configuration()
+        
+        # Determine overall status
+        failed_checks = [k for k, v in health_results['checks'].items() if not v['status']]
+        if failed_checks:
+            health_results['overall_status'] = 'WARNING' if len(failed_checks) <= 2 else 'CRITICAL'
+        
+        # Auto-recovery actions
+        if health_results['overall_status'] in ['WARNING', 'CRITICAL']:
+            self.attempt_auto_recovery(health_results['checks'])
+        
+        return health_results
+    
+    def attempt_auto_recovery(self, failed_checks):
+        """
+        Attempt to automatically recover from detected issues
+        """
+        recovery_actions = {
+            'disk_space': self.cleanup_old_files,
+            'memory': self.restart_service_if_needed,
+            'script_access': self.fix_file_permissions,
+            'network': self.reset_network_components,
+            'vbs_software': self.restart_vbs_software,
+            'email_config': self.validate_and_fix_email_config
+        }
+        
+        for check_name, check_result in failed_checks.items():
+            if not check_result['status'] and check_name in recovery_actions:
+                try:
+                    recovery_actions[check_name]()
+                    self.log_info(f"Auto-recovery attempted for {check_name}")
+                except Exception as e:
+// More
+# Enhanced Automated Data Processing Service - Product Requirements Document
+
+## 1. Executive Summary
+
+### 1.1 Project Overview
+The Enhanced Automated Data Processing Service is a zero-touch Windows service that wraps existing Python automation scripts without modifying their core logic. The system provides 365-day operation with automatic startup, scheduling, monitoring, and dynamic configuration management.
+
+### 1.2 Core Design Principles
+- **ZERO CODE CHANGES**: Existing Python files remain completely untouched
+- **WRAPPER ARCHITECTURE**: Service acts as intelligent orchestrator calling Python scripts
+- **BULLETPROOF STARTUP**: Survives reboots, crashes, and system failures
+- **DYNAMIC CONFIGURATION**: Change schedules and emails without service restart
+- **ZERO USER INTERVENTION**: Complete hands-off operation after installation
+
+### 1.3 Business Objectives
+- Eliminate all manual intervention in data processing
+- Ensure 100% uptime across system restarts and failures
+- Provide dynamic configuration without touching code
+- Enable immediate deployment across multiple machines
+- Guarantee 365-day autonomous operation
+
+## 2. Architecture Overview
+
+### 2.1 Wrapper Service Design
+
+```python
+# Core wrapper architecture - NO changes to existing Python files
+class PythonScriptOrchestrator:
+    """
+    Intelligent wrapper that executes existing Python files in correct sequence
+    WITHOUT modifying their source code or logic
+    """
+    
+    def __init__(self):
+        self.scripts = {
+            'csv_downloader_resilient.py': {'timeout': 300, 'retry': 3},
+            'excel_generator.py': {'timeout': 180, 'retry': 2},
+            'vbs_phase1_login.py': {'timeout': 120, 'retry': 3},
+            'vbs_phase2_navigation_fixed.py': {'timeout': 240, 'retry': 2},
+            'vbs_phase3_upload_complete.py': {'timeout': 300, 'retry': 3},
+            'vbs_phase4_report_fixed.py': {'timeout': 180, 'retry': 2},
+            'outlook_automation.py': {'timeout': 120, 'retry': 3},
+            # Add all existing scripts here
+        }
+    
+    def execute_script_safely(self, script_name, script_args=None):
+        """
+        Execute existing Python script without modification
+        Handle all errors, timeouts, and retries at wrapper level
+        """
+        pass
+```
+
+### 2.2 Service Architecture Layers
+
+```
+┌─────────────────────────────────────────────┐
+│            Windows Service Layer            │
+├─────────────────────────────────────────────┤
+│         Configuration Manager               │
+│    (Hot-reload settings without restart)    │
+├─────────────────────────────────────────────┤
+│           Scheduling Engine                 │
+│    (Windows Task Scheduler + Service)       │
+├─────────────────────────────────────────────┤
+│         Script Orchestrator                 │
+│     (Calls existing Python files)           │
+├─────────────────────────────────────────────┤
+│        Monitoring & Recovery                │
+│    (Health checks, auto-restart)            │
+├─────────────────────────────────────────────┤
+│         Existing Python Scripts            │
+│        (ZERO MODIFICATIONS)                 │
+└─────────────────────────────────────────────┘
+```
+
+## 3. Zero-Touch Installation & Startup
+
+### 3.1 Bulletproof Service Installation
+
+#### 3.1.1 Master Installation Script (install_automation.bat)
+```batch
+@echo off
+setlocal EnableDelayedExpansion
+
+echo ================================================================
+echo    AUTOMATED DATA PROCESSING SERVICE INSTALLER
+echo    Zero-Touch Installation for 365-Day Operation
+echo ================================================================
+
+REM Force administrator mode
+>nul 2>&1 "%SYSTEMROOT%\system32\cacls.exe" "%SYSTEMROOT%\system32\config\system"
+if '%errorlevel%' NEQ '0' (
+    echo Requesting administrator privileges...
+    goto UACPrompt
+) else (
+    goto gotAdmin
+)
+
+:UACPrompt
+    echo Set UAC = CreateObject^("Shell.Application"^) > "%temp%\getadmin.vbs"
+    echo UAC.ShellExecute "%~s0", "", "", "runas", 1 >> "%temp%\getadmin.vbs"
+    "%temp%\getadmin.vbs"
+    del "%temp%\getadmin.vbs"
+    exit /B
+
+:gotAdmin
+    pushd "%CD%"
+    CD /D "%~dp0"
+
+echo [1/8] Validating Python installation...
+python --version >nul 2>&1
+if %errorlevel% neq 0 (
+    echo ERROR: Python not found. Please install Python first.
+    pause
+    exit /b 1
+)
+
+echo [2/8] Installing Python dependencies...
+pip install --upgrade pip
+pip install -r requirements.txt
+if %errorlevel% neq 0 (
+    echo ERROR: Failed to install dependencies
+    pause
+    exit /b 1
+)
+
+echo [3/8] Creating service directories...
+if not exist "C:\AutomationService" mkdir "C:\AutomationService"
+if not exist "C:\AutomationService\logs" mkdir "C:\AutomationService\logs"
+if not exist "C:\AutomationService\config" mkdir "C:\AutomationService\config"
+if not exist "C:\AutomationService\scripts" mkdir "C:\AutomationService\scripts"
+
+echo [4/8] Copying service files...
+copy /Y "AutomationService.exe" "C:\AutomationService\"
+copy /Y "config\*" "C:\AutomationService\config\"
+copy /Y "*.py" "C:\AutomationService\scripts\"
+copy /Y "requirements.txt" "C:\AutomationService\"
+
+echo [5/8] Registering Windows Service...
+C:\AutomationService\AutomationService.exe --startup=auto install
+if %errorlevel% neq 0 (
+    echo ERROR: Service registration failed
+    pause
+    exit /b 1
+)
+
+echo [6/8] Creating startup task (backup method)...
+schtasks /create /tn "AutomationServiceGuardian" /tr "C:\AutomationService\AutomationService.exe" /sc onstart /delay 0000:30 /ru SYSTEM /rl HIGHEST /f
+
+echo [7/8] Setting service to auto-restart on failure...
+sc failure "AutomationService" reset= 86400 actions= restart/5000/restart/5000/restart/5000
+
+echo [8/8] Starting service...
+net start "AutomationService"
+if %errorlevel% neq 0 (
+    echo WARNING: Service start failed, attempting manual start...
+    C:\AutomationService\AutomationService.exe debug
+)
+
+echo ================================================================
+echo    INSTALLATION COMPLETE!
+echo    Service will start automatically on boot
+echo    Configuration file: C:\AutomationService\config\settings.json
+echo ================================================================
+pause
+```
+
+### 3.2 Multiple Startup Guarantees
+
+#### 3.2.1 Triple-Layer Startup Protection
+```python
+class StartupManager:
+    """
+    Ensures service starts through multiple mechanisms
+    """
+    
+    def configure_startup_methods(self):
+        methods = [
+            self.register_windows_service(),      # Primary: Windows Service
+            self.create_scheduled_task(),         # Secondary: Task Scheduler
+            self.create_registry_run_key(),       # Tertiary: Registry Run
+            self.create_startup_folder_link()     # Quaternary: Startup Folder
+        ]
+        return methods
+    
+    def register_windows_service(self):
+        """
+        Primary startup method - Windows Service with auto-restart
+        """
+        service_config = {
+            'startup_type': 'automatic',
+            'delayed_start': True,  # Start after system is fully loaded
+            'restart_on_failure': True,
+            'restart_delay': 5000,  # 5 seconds
+            'restart_count': 3,
+            'reset_period': 86400   # Reset failure count daily
+        }
+        
+    def create_scheduled_task(self):
+        """
+        Backup startup method - Task Scheduler
+        """
+        task_xml = '''<?xml version="1.0" encoding="UTF-16"?>
+        <Task version="1.2" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">
+          <Triggers>
+            <BootTrigger>
+              <Delay>PT30S</Delay>
+              <Enabled>true</Enabled>
+            </BootTrigger>
+          </Triggers>
+          <Principals>
+            <Principal id="Author">
+              <UserId>S-1-5-18</UserId>
+              <RunLevel>HighestAvailable</RunLevel>
+            </Principal>
+          </Principals>
+          <Actions>
+            <Exec>
+              <Command>C:\\AutomationService\\AutomationService.exe</Command>
+            </Exec>
+          </Actions>
+          <Settings>
+            <MultipleInstancesPolicy>IgnoreNew</MultipleInstancesPolicy>
+            <DisallowStartIfOnBatteries>false</DisallowStartIfOnBatteries>
+            <StopIfGoingOnBatteries>false</StopIfGoingOnBatteries>
+            <AllowHardTerminate>true</AllowHardTerminate>
+            <StartWhenAvailable>true</StartWhenAvailable>
+            <RunOnlyIfNetworkAvailable>false</RunOnlyIfNetworkAvailable>
+            <RestartOnFailure>
+              <Interval>PT1M</Interval>
+              <Count>3</Count>
+            </RestartOnFailure>
+          </Settings>
+        </Task>'''
+```
+
+## 4. Dynamic Configuration System
+
+### 4.1 Hot-Reload Configuration Manager
+
+#### 4.1.1 Live Configuration Updates
+```python
+class DynamicConfigManager:
+    """
+    Allows configuration changes without service restart
+    Monitors config file for changes and reloads automatically
+    """
+    
+    def __init__(self, config_path="C:\\AutomationService\\config\\settings.json"):
+        self.config_path = config_path
+        self.config_data = {}
+        self.file_watcher = None
+        self.load_configuration()
+        self.setup_file_watcher()
+    
+    def setup_file_watcher(self):
+        """
+        Monitor configuration file for changes
+        Reload configuration automatically when file is modified
+        """
+        from watchdog.observers import Observer
+        from watchdog.events import FileSystemEventHandler
+        
+        class ConfigChangeHandler(FileSystemEventHandler):
+            def __init__(self, config_manager):
+                self.config_manager = config_manager
+                
+            def on_modified(self, event):
+                if event.src_path.endswith('settings.json'):
+                    self.config_manager.reload_configuration()
+        
+        self.observer = Observer()
+        self.observer.schedule(
+            ConfigChangeHandler(self), 
+            os.path.dirname(self.config_path), 
+            recursive=False
+        )
+        self.observer.start()
+    
+    def reload_configuration(self):
+        """
+        Hot-reload configuration without service restart
+        """
+        try:
+            with open(self.config_path, 'r') as f:
+                new_config = json.load(f)
+            
+            # Validate new configuration
+            if self.validate_configuration(new_config):
+                old_config = self.config_data.copy()
+                self.config_data = new_config
+                
+                # Apply configuration changes
+                self.apply_configuration_changes(old_config, new_config)
+                
+                self.log_info("Configuration reloaded successfully")
+            else:
+                self.log_error("Invalid configuration detected, keeping current settings")
+                
+        except Exception as e:
+            self.log_error(f"Configuration reload failed: {e}")
+    
+    def apply_configuration_changes(self, old_config, new_config):
+        """
+        Apply specific configuration changes
+        """
+        # Update email settings
+        if old_config.get('email') != new_config.get('email'):
+            self.update_email_configuration(new_config['email'])
+        
+        # Update schedule settings
+        if old_config.get('schedule') != new_config.get('schedule'):
+            self.update_schedule_configuration(new_config['schedule'])
+        
+        # Update retry settings
+        if old_config.get('retry_settings') != new_config.get('retry_settings'):
+            self.update_retry_settings(new_config['retry_settings'])
+```
+
+#### 4.1.2 User-Friendly Configuration File
+```json
+{
+  "service_info": {
+    "name": "AutomationService",
+    "version": "1.0.0",
+    "last_updated": "auto-generated"
+  },
+  
+  "schedule": {
+    "timezone": "Asia/Dubai",
+    "daily_tasks": [
+      {
+        "name": "morning_csv_download",
+        "time": "09:00",
+        "enabled": true,
+        "scripts": ["csv_downloader_resilient.py"],
+        "description": "Download morning CSV files"
+      },
+      {
+        "name": "afternoon_processing",
+        "time": "12:30", 
+        "enabled": true,
+        "scripts": [
+          "csv_downloader_resilient.py",
+          "excel_generator.py",
+          "vbs_phase1_login.py",
+          "vbs_phase2_navigation_fixed.py",
+          "vbs_phase3_upload_complete.py"
+        ],
+        "description": "Afternoon data processing and upload"
+      },
+      {
+        "name": "evening_reports",
+        "time": "16:00",
+        "enabled": true,
+        "scripts": [
+          "vbs_phase4_report_fixed.py",
+          "close_vbs.py"
+        ],
+        "description": "Generate evening reports and cleanup"
+      },
+      {
+        "name": "next_day_email",
+        "time": "09:00",
+        "offset_days": 1,
+        "enabled": true,
+        "scripts": ["outlook_automation.py"],
+        "description": "Send reports via email next day"
+      }
+    ]
+  },
+  
+  "email": {
+    "enabled": true,
+    "smtp": {
+      "server": "smtp.office365.com",
+      "port": 587,
+      "use_tls": true,
+      "use_ssl": false
+    },
+    "sender": {
+      "email": "mohamed.fasin@absons.ae",
+      "password": "encrypted_password_here",
+      "display_name": "Mohamed Fasin A F"
+    },
+    "recipients": {
+      "primary": "ramon.logan@absons.ae",
+      "backup": ["backup1@absons.ae", "backup2@absons.ae"],
+      "error_notifications": "admin@absons.ae"
+    },
+    "templates": {
+      "subject_success": "Daily Report - {date}",
+      "subject_error": "URGENT: Automation Error - {date}",
+      "signature_file": "email_signature.html"
+    }
+  },
+  
+  "python_scripts": {
+    "base_directory": "C:\\Users\\Lenovo\\Documents\\Automate2\\Automata2",
+    "python_executable": "python",
+    "script_timeout": 600,
+    "scripts": {
+      "csv_downloader_resilient.py": {
+        "timeout": 300,
+        "max_retries": 3,
+        "retry_delay": 60,
+        "working_directory": null,
+        "arguments": [],
+        "environment_vars": {}
+      },
+      "excel_generator.py": {
+        "timeout": 180,
+        "max_retries": 2,
+        "retry_delay": 30,
+        "working_directory": null,
+        "arguments": [],
+        "environment_vars": {}
+      }
+    }
+  },
+  
+  "monitoring": {
+    "health_check_interval": 60,
+    "log_level": "INFO",
+    "log_rotation": {
+      "max_size_mb": 10,
+      "backup_count": 5
+    },
+    "disk_space_check": true,
+    "memory_usage_check": true,
+    "network_connectivity_check": true
+  },
+  
+  "recovery": {
+    "auto_restart_on_failure": true,
+    "max_restart_attempts": 5,
+    "restart_delay_seconds": 30,
+    "escalation_email_after_failures": 3,
+    "safe_mode_after_failures": 5
+  },
+  
+  "weekend_handling": {
+    "skip_weekends": false,
+    "delay_sunday_email_to_monday": true,
+    "holiday_calendar_file": "holidays.json"
+  }
+}
+```
+
+### 4.2 Configuration Management Tools
+
+#### 4.2.1 Configuration GUI (Optional)
+```python
+# Simple configuration editor GUI
+import tkinter as tk
+from tkinter import ttk, messagebox
+import json
+
+class ConfigurationGUI:
+    def __init__(self):
+        self.root = tk.Tk()
+        self.root.title("Automation Service Configuration")
+        self.root.geometry("800x600")
+        
+    def create_schedule_tab(self):
+        """
+        Easy-to-use interface for changing schedules and emails
+        """
+        schedule_frame = ttk.Frame(self.notebook)
+        self.notebook.add(schedule_frame, text="Schedule")
+        
+        # Time configuration
+        ttk.Label(schedule_frame, text="Morning CSV Download:").pack()
+        self.morning_time = tk.StringVar(value="09:00")
+        ttk.Entry(schedule_frame, textvariable=self.morning_time).pack()
+        
+        ttk.Label(schedule_frame, text="Afternoon Processing:").pack()
+        self.afternoon_time = tk.StringVar(value="12:30")
+        ttk.Entry(schedule_frame, textvariable=self.afternoon_time).pack()
+        
+        # Email configuration
+        ttk.Label(schedule_frame, text="Primary Recipient:").pack()
+        self.primary_email = tk.StringVar(value="ramon.logan@absons.ae")
+        ttk.Entry(schedule_frame, textvariable=self.primary_email, width=50).pack()
+        
+        ttk.Button(schedule_frame, text="Save Configuration", 
+                  command=self.save_configuration).pack(pady=20)
+```
+
+## 5. Script Orchestration Engine
+
+### 5.1 Python Script Wrapper
+
+#### 5.1.1 Intelligent Script Execution
+```python
+class ScriptOrchestrator:
+    """
+    Executes existing Python scripts without modifying them
+    Handles all error cases, timeouts, and dependencies
+    """
+    
+    def __init__(self, config_manager):
+        self.config = config_manager
+        self.script_results = {}
+        self.execution_history = []
+        
+    def execute_script_sequence(self, task_name):
+        """
+        Execute a sequence of Python scripts for a specific task
+        Each script runs in isolation with proper error handling
+        """
+        task_config = self.config.get_task_config(task_name)
+        scripts = task_config.get('scripts', [])
+        
+        sequence_success = True
+        sequence_results = []
+        
+        for script_name in scripts:
+            result = self.execute_single_script(script_name, task_name)
+            sequence_results.append(result)
+            
+            if not result['success']:
+                sequence_success = False
+                if task_config.get('stop_on_error', True):
+                    break
+        
+        # Log sequence completion
+        self.log_sequence_result(task_name, sequence_success, sequence_results)
+        return sequence_success, sequence_results
+    
+    def execute_single_script(self, script_name, context="unknown"):
+        """
+        Execute a single Python script with comprehensive error handling
+        NO MODIFICATIONS to the original script
+        """
+        script_config = self.config.get_script_config(script_name)
+        
+        execution_result = {
+            'script': script_name,
+            'context': context,
+            'start_time': datetime.now(),
+            'success': False,
+            'output': '',
+            'error': '',
+            'execution_time': 0,
+            'attempt': 1
+        }
+        
+        max_retries = script_config.get('max_retries', 3)
+        timeout = script_config.get('timeout', 300)
+        retry_delay = script_config.get('retry_delay', 60)
+        
+        for attempt in range(1, max_retries + 1):
+            execution_result['attempt'] = attempt
+            
+            try:
+                # Prepare execution environment
+                script_path = os.path.join(
+                    self.config.get('python_scripts', {}).get('base_directory', ''),
+                    script_name
+                )
+                
+                working_dir = script_config.get('working_directory') or os.path.dirname(script_path)
+                python_exe = self.config.get('python_scripts', {}).get('python_executable', 'python')
+                
+                # Build command
+                cmd = [python_exe, script_path]
+                cmd.extend(script_config.get('arguments', []))
+                
+                # Execute script
+                start_time = time.time()
+                
+                process = subprocess.Popen(
+                    cmd,
+                    cwd=working_dir,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    text=True,
+                    env=self.build_environment(script_config.get('environment_vars', {}))
+                )
+                
+                # Wait for completion with timeout
+                stdout, stderr = process.communicate(timeout=timeout)
+                
+                execution_time = time.time() - start_time
+                execution_result['execution_time'] = execution_time
+                execution_result['output'] = stdout
+                execution_result['error'] = stderr
+                
+                if process.returncode == 0:
+                    execution_result['success'] = True
+                    self.log_info(f"Script {script_name} completed successfully in {execution_time:.2f}s")
+                    break
+                else:
+                    raise subprocess.CalledProcessError(process.returncode, cmd, stdout, stderr)
+                    
+            except subprocess.TimeoutExpired:
+                process.kill()
+                execution_result['error'] = f"Script timeout after {timeout} seconds"
+                self.log_warning(f"Script {script_name} timed out (attempt {attempt})")
+                
+            except subprocess.CalledProcessError as e:
+                execution_result['error'] = f"Script failed with code {e.returncode}: {e.stderr}"
+                self.log_warning(f"Script {script_name} failed (attempt {attempt}): {e}")
+                
+            except Exception as e:
+                execution_result['error'] = f"Unexpected error: {str(e)}"
+                self.log_error(f"Unexpected error executing {script_name} (attempt {attempt}): {e}")
+            
+            # Wait before retry (except on last attempt)
+            if attempt < max_retries:
+                time.sleep(retry_delay)
+        
+        # Final logging
+        if execution_result['success']:
+            self.log_info(f"Script {script_name} successful after {execution_result['attempt']} attempts")
+        else:
+            self.log_error(f"Script {script_name} failed after {max_retries} attempts: {execution_result['error']}")
+        
+        # Store result for analysis
+        self.script_results[f"{script_name}_{context}_{datetime.now().isoformat()}"] = execution_result
+        
+        return execution_result
+    
+    def build_environment(self, custom_env_vars):
+        """
+        Build environment variables for script execution
+        """
+        env = os.environ.copy()
+        env.update(custom_env_vars)
+        return env
+```
+
+## 6. Advanced Scheduling Engine
+
+### 6.1 Bulletproof Scheduler
+
+#### 6.1.1 Multi-Layer Scheduling
+```python
+class AdvancedScheduler:
+    """
+    Combines multiple scheduling mechanisms for maximum reliability
+    """
+    
+    def __init__(self, config_manager, script_orchestrator):
+        self.config = config_manager
+        self.orchestrator = script_orchestrator
+        self.scheduler = BackgroundScheduler(timezone='Asia/Dubai')
+        self.task_queue = []
+        self.missed_tasks = []
+        self.running = False
+        
+    def initialize_scheduler(self):
+        """
+        Set up all scheduled tasks from configuration
+        """
+        self.scheduler.start()
+        
+        # Load tasks from configuration
+        daily_tasks = self.config.get('schedule', {}).get('daily_tasks', [])
+        
+        for task in daily_tasks:
+            if task.get('enabled', True):
+                self.schedule_daily_task(task)
+        
+        # Set up system monitoring
+        self.scheduler.add_job(
+            self.system_health_check,
+            'interval',
+            minutes=5,
+            id='health_check'
+        )
+        
+        # Set up missed task recovery
+        self.scheduler.add_job(
+            self.recover_missed_tasks,
+            'interval',
+            minutes=15,
+            id='missed_task_recovery'
+        )
+        
+        self.running = True
+        self.log_info("Advanced scheduler initialized successfully")
+    
+    def schedule_daily_task(self, task_config):
+        """
+        Schedule a task to run daily with all reliability features
+        """
+        task_name = task_config['name']
+        task_time = task_config['time']
+        offset_days = task_config.get('offset_days', 0)
+        
+        # Parse time
+        hour, minute = map(int, task_time.split(':'))
+        
+        if offset_days == 0:
+            # Same day execution
+            self.scheduler.add_job(
+                self.execute_scheduled_task,
+                'cron',
+                hour=hour,
+                minute=minute,
+                args=[task_name],
+                id=f'daily_{task_name}',
+                misfire_grace_time=300,  # Allow 5-minute delay
+                coalesce=True,  # Combine missed executions
+                max_instances=1  # Only one instance at a time
+            )
+        else:
+            # Next day execution (like email delivery)
+            self.scheduler.add_job(
+                self.execute_next_day_task,
+                'cron',
+                hour=hour,
+                minute=minute,
+                args=[task_name, offset_days],
+                id=f'nextday_{task_name}',
+                misfire_grace_time=300,
+                coalesce=True,
+                max_instances=1
+            )
+        
+        self.log_info(f"Scheduled task '{task_name}' at {task_time}")
+    
+    def execute_scheduled_task(self, task_name):
+        """
+        Execute a scheduled task with full error handling
+        """
+        task_start = datetime.now()
+        
+        try:
+            self.log_info(f"Starting scheduled task: {task_name}")
+            
+            # Check if task should run (weekend/holiday logic)
+            if not self.should_task_run(task_name, task_start):
+                self.log_info(f"Task {task_name} skipped due to weekend/holiday rules")
+                return
+            
+            # Execute the task
+            success, results = self.orchestrator.execute_script_sequence(task_name)
+            
+            execution_time = (datetime.now() - task_start).total_seconds()
+            
+            if success:
+                self.log_info(f"Task {task_name} completed successfully in {execution_time:.2f}s")
+            else:
+                self.log_error(f"Task {task_name} failed after {execution_time:.2f}s")
+                self.handle_task_failure(task_name, results)
+                
+        except Exception as e:
+            self.log_error(f"Critical error in scheduled task {task_name}: {e}")
+            self.handle_task_failure(task_name, [{'error': str(e)}])
+    
+    def should_task_run(self, task_name, execution_time):
+        """
+        Determine if task should run based on weekend/holiday rules
+        """
+        weekend_config = self.config.get('weekend_handling', {})
+        
+        if weekend_config.get('skip_weekends', False):
+            if execution_time.weekday() >= 5:  # Saturday = 5, Sunday = 6
+                return False
+        
+        # Check holiday calendar if available
+        holiday_file = weekend_config.get('holiday_calendar_file')
+        if holiday_file and os.path.exists(holiday_file):
+            with open(holiday_file, 'r') as f:
+                holidays = json.load(f)
+                current_date = execution_time.strftime('%Y-%m-%d')
+                if current_date in holidays:
+                    return False
+        
+        return True
+    
+    def recover_missed_tasks(self):
+        """
+        Check for and recover missed task executions
+        """
+        # Implementation for detecting and recovering missed tasks
+        pass
+```
+
+## 7. Zero-Intervention Monitoring
+
+### 7.1 Self-Healing System
+
+#### 7.1.1 Comprehensive Health Monitoring
+```python
+class SystemHealthMonitor:
+    """
+    Monitors system health and auto-recovers from issues
+    """
+    
+    def __init__(self, config_manager):
+        self.config = config_manager
+        self.health_status = {}
+        self.alerts_sent = []
+        
+    def perform_health_check(self):
+        """
+        Comprehensive system health check
+        """
+        health_results = {
+            'timestamp': datetime.now(),
+            'overall_status': 'HEALTHY',
+            'checks': {}
+        }
+        
+        # Check disk space
+        health_results['checks']['disk_space'] = self.check_disk_space()
+        
+        # Check memory usage
+        health_results['checks']['memory'] = self.check_memory_usage()
+        
+        # Check Python script directories
+        health_results['checks']['script_access'] = self.check_script_access()
+        
+        # Check network connectivity
+        health_results['checks']['network'] = self.check_network_connectivity()
+        
+        # Check VBS software availability
+        health_results['checks']['vbs_software'] = self.check_vbs_software()
+        
+        # Check email configuration
+        health_results['checks']['email_config'] = self.check_email_configuration()
+        
+        # Determine overall status
+        failed_checks = [k for k, v in health_results['checks'].items() if not v['status']]
+        if failed_checks:
+            health_results['overall_status'] = 'WARNING' if len(failed_checks) <= 2 else 'CRITICAL'
+        
+        # Auto-recovery actions
+        if health_results['overall_status'] in ['WARNING', 'CRITICAL']:
+            self.attempt_auto_recovery(health_results['checks'])
+        
+        return health_results
+    
+    def attempt_auto_recovery(self, failed_checks):
+        """
+        Attempt to automatically recover from detected issues
+        """
+        recovery_actions = {
+            'disk_space': self.cleanup_old_files,
+            'memory': self.restart_service_if_needed,
+            'script_access': self.fix_file_permissions,
+            'network': self.reset_network_components,
+            'vbs_software': self.restart_vbs_software,
+            'email_config': self.validate_and_fix_email_config
+        }
+        
+        for check_name, check_result in failed_checks.items():
+            if not check_result['status'] and check_name in recovery_actions:
+                try:
+                    recovery_actions[check_name]()
+                    self.log_info(f"Auto-recovery attempted for {check_name}")
+                except Exception as e:
+                    self.log_error(f"Auto-recovery failed for {check_name}: {e}")
+
+## 8. Bulletproof File Management
+
+### 8.1 Intelligent File Validation
+```python
+class FileIntegrityManager:
+    """
+    Validates files without modifying Python script logic
+    """
+    
+    def __init__(self, config_manager):
+        self.config = config_manager
+        self.expected_files = self.load_file_expectations()
+    
+    def validate_daily_files(self, date_str, slot_name):
+        """
+        Validate expected files exist and are accessible
+        """
+        validation_results = {
+            'date': date_str,
+            'slot': slot_name,
+            'validations': [],
+            'all_valid': True
+        }
+        
+        # CSV file validation
+        csv_validation = self.validate_csv_files(date_str, slot_name)
+        validation_results['validations'].append(csv_validation)
+        
+        # Excel merge validation (if applicable)
+        if slot_name in ['afternoon', 'evening']:
+            excel_validation = self.validate_excel_merge(date_str)
+            validation_results['validations'].append(excel_validation)
+        
+        # PDF report validation (evening only)
+        if slot_name == 'evening':
+            pdf_validation = self.validate_pdf_reports(date_str)
+            validation_results['validations'].append(pdf_validation)
+        
+        validation_results['all_valid'] = all(v['valid'] for v in validation_results['validations'])
+        return validation_results
+    
+    def validate_csv_files(self, date_str, slot_name):
+        """
+        Check CSV files without opening or modifying them
+        """
+        expected_csvs = self.expected_files.get('csv', {}).get(slot_name, [])
+        base_path = self.config.get('python_scripts', {}).get('base_directory', '')
+        csv_folder = os.path.join(base_path, 'EHC_Data', date_str)
+        
+        validation = {
+            'type': 'csv_files',
+            'expected_count': len(expected_csvs),
+            'found_files': [],
+            'missing_files': [],
+            'valid': True
+        }
+        
+        for expected_csv in expected_csvs:
+            csv_path = os.path.join(csv_folder, expected_csv)
+            if os.path.exists(csv_path) and os.path.getsize(csv_path) > 0:
+                validation['found_files'].append(expected_csv)
+            else:
+                validation['missing_files'].append(expected_csv)
+                validation['valid'] = False
+        
+        return validation
+    
+    def create_missing_file_alert(self, validation_results):
+        """
+        Create alerts for missing files without stopping the process
+        """
+        if not validation_results['all_valid']:
+            alert = {
+                'timestamp': datetime.now(),
+                'type': 'missing_files',
+                'date': validation_results['date'],
+                'slot': validation_results['slot'],
+                'missing_items': []
+            }
+            
+            for validation in validation_results['validations']:
+                if not validation['valid']:
+                    alert['missing_items'].extend(validation.get('missing_files', []))
+            
+            # Queue alert for notification
+            self.queue_alert_notification(alert)
+            return alert
+        return None
+```
+
+### 8.2 Automatic Folder Structure Management
+```python
+class FolderStructureManager:
+    """
+    Ensures proper folder structure exists before scripts run
+    """
+    
+    def __init__(self, base_directory):
+        self.base_dir = base_directory
+        self.required_folders = [
+            'EHC_Data',
+            'EHC_Data_Merge', 
+            'EHC_Data_Pdf',
+            'EHC_Logs'
+        ]
+    
+    def ensure_daily_structure(self, date_str):
+        """
+        Create all required folders for the specified date
+        """
+        created_folders = []
+        
+        for folder_name in self.required_folders:
+            daily_folder = os.path.join(self.base_dir, folder_name, date_str)
+            
+            if not os.path.exists(daily_folder):
+                try:
+                    os.makedirs(daily_folder, exist_ok=True)
+                    created_folders.append(daily_folder)
+                except Exception as e:
+                    raise Exception(f"Failed to create folder {daily_folder}: {e}")
+        
+        return created_folders
+    
+    def cleanup_old_folders(self, retention_days=30):
+        """
+        Clean up old folders to maintain disk space
+        """
+        cutoff_date = datetime.now() - timedelta(days=retention_days)
+        cleaned_folders = []
+        
+        for folder_name in self.required_folders:
+            folder_path = os.path.join(self.base_dir, folder_name)
+            
+            if os.path.exists(folder_path):
+                for date_folder in os.listdir(folder_path):
+                    try:
+                        folder_date = datetime.strptime(date_folder, '%Y-%m-%d')
+                        if folder_date < cutoff_date:
+                            folder_to_remove = os.path.join(folder_path, date_folder)
+                            shutil.rmtree(folder_to_remove)
+                            cleaned_folders.append(folder_to_remove)
+                    except ValueError:
+                        # Skip non-date folders
+                        continue
+        
+        return cleaned_folders
+```
+
+## 9. Advanced Error Recovery System
+
+### 9.1 Multi-Level Recovery Strategy
+```python
+class RecoveryManager:
+    """
+    Handles failures at multiple levels without user intervention
+    """
+    
+    def __init__(self, config_manager, orchestrator):
+        self.config = config_manager
+        self.orchestrator = orchestrator
+        self.recovery_history = []
+        self.escalation_levels = {
+            1: self.level1_automatic_retry,
+            2: self.level2_alternative_approach,
+            3: self.level3_safe_mode,
+            4: self.level4_emergency_notification
+        }
+    
+    def handle_script_failure(self, script_name, error_details, context):
+        """
+        Progressive recovery strategy
+        """
+        failure_record = {
+            'timestamp': datetime.now(),
+            'script': script_name,
+            'context': context,
+            'error': error_details,
+            'recovery_level': 1,
+            'recovery_successful': False
+        }
+        
+        # Determine appropriate recovery level
+        recent_failures = self.get_recent_failures(script_name, hours=24)
+        recovery_level = min(len(recent_failures) + 1, 4)
+        
+        failure_record['recovery_level'] = recovery_level
+        
+        # Attempt recovery
+        recovery_success = self.escalation_levels[recovery_level](
+            script_name, error_details, context
+        )
+        
+        failure_record['recovery_successful'] = recovery_success
+        self.recovery_history.append(failure_record)
+        
+        return recovery_success
+    
+    def level1_automatic_retry(self, script_name, error_details, context):
+        """
+        Simple retry with exponential backoff
+        """
+        max_retries = 3
+        base_delay = 30  # seconds
+        
+        for attempt in range(1, max_retries + 1):
+            delay = base_delay * (2 ** (attempt - 1))
+            time.sleep(delay)
+            
+            result = self.orchestrator.execute_single_script(script_name, f"{context}_retry_{attempt}")
+            
+            if result['success']:
+                self.log_info(f"Level 1 recovery successful for {script_name} after {attempt} retries")
+                return True
+        
+        self.log_warning(f"Level 1 recovery failed for {script_name}")
+        return False
+    
+    def level2_alternative_approach(self, script_name, error_details, context):
+        """
+        Try alternative execution methods
+        """
+        alternatives = [
+            self.try_different_python_interpreter,
+            self.try_with_elevated_privileges,
+            self.try_with_clean_environment,
+            self.try_with_compatibility_mode
+        ]
+        
+        for alternative in alternatives:
+            if alternative(script_name, context):
+                self.log_info(f"Level 2 recovery successful for {script_name}")
+                return True
+        
+        self.log_warning(f"Level 2 recovery failed for {script_name}")
+        return False
+    
+    def level3_safe_mode(self, script_name, error_details, context):
+        """
+        Safe mode execution with minimal dependencies
+        """
+        # Create isolated execution environment
+        safe_env = self.create_safe_environment()
+        
+        # Execute with minimal system resources
+        result = self.orchestrator.execute_script_with_custom_env(
+            script_name, 
+            context + "_safe_mode",
+            environment=safe_env,
+            timeout=1200,  # Extended timeout
+            priority='low'
+        )
+        
+        if result['success']:
+            self.log_info(f"Level 3 recovery successful for {script_name}")
+            return True
+        
+        self.log_error(f"Level 3 recovery failed for {script_name}")
+        return False
+    
+    def level4_emergency_notification(self, script_name, error_details, context):
+        """
+        Send emergency notifications and create manual intervention plan
+        """
+        emergency_report = {
+            'timestamp': datetime.now(),
+            'critical_script': script_name,
+            'context': context,
+            'error_details': error_details,
+            'recovery_attempts': self.get_recovery_attempts(script_name),
+            'system_status': self.get_current_system_status(),
+            'recommended_actions': self.get_manual_recovery_steps(script_name)
+        }
+        
+        # Send emergency email
+        self.send_emergency_notification(emergency_report)
+        
+        # Create recovery instructions file
+        self.create_manual_recovery_guide(emergency_report)
+        
+        self.log_critical(f"Level 4 emergency notification sent for {script_name}")
+        return False  # Manual intervention required
+```
+
+## 10. Communication & Notification System
+
+### 10.1 Multi-Channel Notification
+```python
+class NotificationManager:
+    """
+    Handles all notifications without requiring script modifications
+    """
+    
+    def __init__(self, config_manager):
+        self.config = config_manager
+        self.notification_queue = []
+        self.email_client = self.setup_email_client()
+        self.notification_history = []
+    
+    def send_daily_report_email(self, report_date, attachments=None):
+        """
+        Send daily report using existing email configuration
+        """
+        email_config = self.config.get('email', {})
+        
+        if not email_config.get('enabled', True):
+            self.log_info("Email notifications disabled")
+            return False
+        
+        # Prepare email content
+        email_data = {
+            'to': email_config['recipients']['primary'],
+            'cc': email_config['recipients'].get('backup', []),
+            'subject': email_config['templates']['subject_success'].format(date=report_date),
+            'body': self.generate_daily_report_body(report_date),
+            'attachments': attachments or [],
+            'signature': self.load_email_signature()
+        }
+        
+        return self.send_email_with_retry(email_data)
+    
+    def send_error_notification(self, error_details):
+        """
+        Send immediate error notification
+        """
+        email_config = self.config.get('email', {})
+        
+        email_data = {
+            'to': email_config['recipients']['error_notifications'],
+            'subject': email_config['templates']['subject_error'].format(date=datetime.now().strftime('%Y-%m-%d')),
+            'body': self.generate_error_report_body(error_details),
+            'priority': 'high',
+            'signature': self.load_email_signature()
+        }
+        
+        return self.send_email_with_retry(email_data)
+    
+    def send_email_with_retry(self, email_data):
+        """
+        Send email with automatic retry logic
+        """
+        max_retries = 3
+        retry_delays = [30, 120, 300]  # 30s, 2min, 5min
+        
+        for attempt in range(max_retries):
+            try:
+                # Use existing email automation without modification
+                success = self.execute_email_script_wrapper(email_data)
+                
+                if success:
+                    self.log_info("Email sent successfully")
+                    return True
+                    
+            except Exception as e:
+                self.log_warning(f"Email attempt {attempt + 1} failed: {e}")
+                
+                if attempt < max_retries - 1:
+                    time.sleep(retry_delays[attempt])
+        
+        self.log_error("All email attempts failed")
+        return False
+    
+    def execute_email_script_wrapper(self, email_data):
+        """
+        Execute existing email scripts without modifying them
+        Temporarily set environment variables for the scripts to use
+        """
+        # Set temporary environment variables that existing scripts can read
+        temp_env_vars = {
+            'TEMP_EMAIL_TO': email_data['to'],
+            'TEMP_EMAIL_SUBJECT': email_data['subject'],
+            'TEMP_EMAIL_BODY': email_data['body'],
+            'TEMP_EMAIL_ATTACHMENTS': ','.join(email_data.get('attachments', []))
+        }
+        
+        # Execute existing email script with environment variables
+        with self.temporary_environment(temp_env_vars):
+            result = self.orchestrator.execute_single_script('outlook_automation.py', 'notification')
+            return result['success']
+    
+    @contextmanager
+    def temporary_environment(self, env_vars):
+        """
+        Temporarily set environment variables
+        """
+        old_env = {}
+        for key, value in env_vars.items():
+            old_env[key] = os.environ.get(key)
+            os.environ[key] = value
+        
+        try:
+            yield
+        finally:
+            for key, old_value in old_env.items():
+                if old_value is None:
+                    os.environ.pop(key, None)
+                else:
+                    os.environ[key] = old_value
+```
+
+## 11. Weekend & Holiday Management
+
+### 11.1 Smart Business Logic
+```python
+class BusinessCalendarManager:
+    """
+    Handles weekend and holiday logic automatically
+    """
+    
+    def __init__(self, config_manager):
+        self.config = config_manager
+        self.holiday_calendar = self.load_holiday_calendar()
+        self.business_rules = self.config.get('weekend_handling', {})
+    
+    def should_execute_task(self, task_name, scheduled_time):
+        """
+        Determine if task should execute based on business rules
+        """
+        # Check if it's a weekend
+        if self.is_weekend(scheduled_time) and self.business_rules.get('skip_weekends', False):
+            return False, "Weekend execution disabled"
+        
+        # Check if it's a holiday
+        if self.is_holiday(scheduled_time):
+            return False, f"Holiday: {self.get_holiday_name(scheduled_time)}"
+        
+        return True, "Normal execution"
+    
+    def get_next_business_day(self, date):
+        """
+        Calculate next business day for email delivery
+        """
+        next_day = date + timedelta(days=1)
+        
+        while self.is_weekend(next_day) or self.is_holiday(next_day):
+            next_day += timedelta(days=1)
+        
+        return next_day
+    
+    def queue_weekend_reports(self, reports):
+        """
+        Queue weekend reports for Monday delivery
+        """
+        weekend_queue_file = os.path.join(
+            self.config.get('service_paths', {}).get('data_directory', ''),
+            'weekend_report_queue.json'
+        )
+        
+        queued_reports = []
+        if os.path.exists(weekend_queue_file):
+            with open(weekend_queue_file, 'r') as f:
+                queued_reports = json.load(f)
+        
+        queued_reports.extend(reports)
+        
+        with open(weekend_queue_file, 'w') as f:
+            json.dump(queued_reports, f, indent=2, default=str)
+        
+        return len(queued_reports)
+    
+    def process_queued_reports(self):
+        """
+        Process all queued weekend reports on Monday
+        """
+        weekend_queue_file = os.path.join(
+            self.config.get('service_paths', {}).get('data_directory', ''),
+            'weekend_report_queue.json'
+        )
+        
+        if not os.path.exists(weekend_queue_file):
+            return []
+        
+        with open(weekend_queue_file, 'r') as f:
+            queued_reports = json.load(f)
+        
+        processed_reports = []
+        for report in queued_reports:
+            try:
+                # Process queued report
+                success = self.notification_manager.send_daily_report_email(
+                    report['date'], 
+                    report.get('attachments')
+                )
+                
+                if success:
+                    processed_reports.append(report)
+                    
+            except Exception as e:
+                self.log_error(f"Failed to process queued report for {report['date']}: {e}")
+        
+        # Update queue file (remove processed reports)
+        remaining_reports = [r for r in queued_reports if r not in processed_reports]
+        with open(weekend_queue_file, 'w') as f:
+            json.dump(remaining_reports, f, indent=2, default=str)
+        
+        return processed_reports
+```
+
+## 12. Performance Optimization & Resource Management
+
+### 12.1 Intelligent Resource Management
+```python
+class ResourceManager:
+    """
+    Manages system resources to prevent conflicts and optimize performance
+    """
+    
+    def __init__(self):
+        self.resource_locks = {}
+        self.performance_metrics = {}
+        self.optimization_rules = self.load_optimization_rules()
+    
+    def optimize_script_execution(self, script_name, context):
+        """
+        Optimize execution based on system resources and script requirements
+        """
+        # Check system resources
+        cpu_usage = psutil.cpu_percent(interval=1)
+        memory_usage = psutil.virtual_memory().percent
+        disk_io = psutil.disk_io_counters()
+        
+        # Determine optimal execution parameters
+        optimization = {
+            'priority': 'normal',
+            'max_memory': None,
+            'timeout_multiplier': 1.0,
+            'retry_delay_multiplier': 1.0
+        }
+        
+        # High CPU usage - reduce priority
+        if cpu_usage > 80:
+            optimization['priority'] = 'low'
+            optimization['timeout_multiplier'] = 1.5
+        
+        # High memory usage - limit memory for script
+        if memory_usage > 85:
+            optimization['max_memory'] = '512MB'
+            optimization['timeout_multiplier'] = 1.3
+        
+        # High disk I/O - increase timeouts
+        if self.is_high_disk_io():
+            optimization['timeout_multiplier'] = 2.0
+            optimization['retry_delay_multiplier'] = 1.5
+        
+        return optimization
+    
+    def acquire_resource_lock(self, resource_name, timeout=300):
+        """
+        Prevent resource conflicts between scripts
+        """
+        lock_file = f"C:\\AutomationService\\locks\\{resource_name}.lock"
+        
+        start_time = time.time()
+        while time.time() - start_time < timeout:
+            try:
+                if not os.path.exists(lock_file):
+                    # Create lock file
+                    os.makedirs(os.path.dirname(lock_file), exist_ok=True)
+                    with open(lock_file, 'w') as f:
+                        json.dump({
+                            'acquired_at': datetime.now().isoformat(),
+                            'process_id': os.getpid(),
+                            'resource': resource_name
+                        }, f)
+                    
+                    self.resource_locks[resource_name] = lock_file
+                    return True
+                else:
+                    # Check if lock is stale
+                    with open(lock_file, 'r') as f:
+                        lock_data = json.load(f)
+                    
+                    acquired_time = datetime.fromisoformat(lock_data['acquired_at'])
+                    if datetime.now() - acquired_time > timedelta(hours=2):  # Stale lock
+                        os.remove(lock_file)
+                        continue
+                    
+                time.sleep(5)  # Wait before retry
+                
+            except Exception as e:
+                self.log_warning(f"Error acquiring resource lock {resource_name}: {e}")
+                time.sleep(5)
+        
+        return False  # Timeout
+    
+    def release_resource_lock(self, resource_name):
+        """
+        Release resource lock
+        """
+        lock_file = self.resource_locks.get(resource_name)
+        if lock_file and os.path.exists(lock_file):
+            try:
+                os.remove(lock_file)
+                del self.resource_locks[resource_name]
+            except Exception as e:
+                self.log_warning(f"Error releasing resource lock {resource_name}: {e}")
+```
+
+## 13. Advanced Deployment Package
+
+### 13.1 Complete Installation Package Structure
+```
+AutomationServiceInstaller/
+├── AutomationService.exe              # Main service executable
+├── install_automation.bat             # Master installer
+├── uninstall_automation.bat           # Complete uninstaller
+├── config/
+│   ├── settings.json                  # Default configuration
+│   ├── holidays.json                  # Holiday calendar
+│   └── email_signature.html           # Email template
+├── scripts/
+│   ├── validate_installation.py       # Post-install validation
+│   ├── configuration_wizard.py        # Initial setup wizard
+│   └── service_monitor.py             # Health monitoring
+├── docs/
+│   ├── Installation_Guide.pdf         # Step-by-step guide
+│   ├── Configuration_Manual.pdf       # Configuration options
+│   ├── Troubleshooting_Guide.pdf      # Common issues
+│   └── API_Reference.pdf              # Technical documentation
+├── tools/
+│   ├── config_editor.exe              # GUI configuration tool
+│   ├── log_viewer.exe                 # Log analysis tool
+│   └── health_checker.exe             # System diagnostics
+├── requirements.txt                   # Python dependencies
+├── LICENSE.txt                        # Software license
+└── README.txt                         # Quick start guide
+```
+
+### 13.2 Advanced Installation Script
+```batch
+@echo off
+setlocal EnableDelayedExpansion
+
+echo ================================================================
+echo    ENHANCED AUTOMATION SERVICE INSTALLER v2.0
+echo    Zero-Touch Installation with Complete System Integration
+echo ================================================================
+
+REM Set installation directory
+set INSTALL_DIR=C:\AutomationService
+set SCRIPTS_DIR=%INSTALL_DIR%\scripts
+set CONFIG_DIR=%INSTALL_DIR%\config
+set LOGS_DIR=%INSTALL_DIR%\logs
+
+echo [1/12] Checking system requirements...
+call :check_requirements
+if %ERRORLEVEL% neq 0 goto :installation_failed
+
+echo [2/12] Creating service directories...
+call :create_directories
+
+echo [3/12] Installing Python dependencies...
+call :install_dependencies
+
+echo [4/12] Copying service files...
+call :copy_service_files
+
+echo [5/12] Configuring Windows Service...
+call :register_service
+
+echo [6/12] Setting up Task Scheduler backup...
+call :create_scheduled_tasks
+
+echo [7/12] Configuring auto-restart policies...
+call :configure_restart_policies
+
+echo [8/12] Setting up file permissions...
+call :set_file_permissions
+
+echo [9/12] Creating startup scripts...
+call :create_startup_scripts
+
+echo [10/12] Installing monitoring tools...
+call :install_monitoring_tools
+
+echo [11/12] Running post-installation validation...
+call :validate_installation
+
+echo [12/12] Starting service...
+call :start_service
+
+echo ================================================================
+echo    INSTALLATION COMPLETED SUCCESSFULLY!
+echo.
+echo    Service Status: Running
+echo    Configuration: %CONFIG_DIR%\settings.json
+echo    Logs: %LOGS_DIR%
+echo    
+echo    The service will automatically start on system boot.
+echo    No further action required.
+echo ================================================================
+pause
+goto :eof
+
+:check_requirements
+python --version >nul 2>&1
+if %ERRORLEVEL% neq 0 (
+    echo ERROR: Python 3.7+ required but not found
+    echo Please install Python from https://python.org
+    exit /b 1
+)
+exit /b 0
+
+:installation_failed
+echo ================================================================
+echo    INSTALLATION FAILED!
+echo    Please check the error messages above and try again.
+echo    For support, contact: support@company.com
+echo ================================================================
+pause
+exit /b 1
+```
+
+## 14. Success Metrics & Validation
+
+### 14.1 Automated Success Validation
+```python
+class InstallationValidator:
+    """
+    Comprehensive validation after installation
+    """
+    
+    def run_complete_validation(self):
+        """
+        Run all validation tests
+        """
+        validation_results = {
+            'timestamp': datetime.now(),
+            'overall_success': True,
+            'tests': []
+        }
+        
+        tests = [
+            ('Service Registration', self.test_service_registration),
+            ('Configuration Loading', self.test_configuration_loading),
+            ('File Permissions', self.test_file_permissions),
+            ('Python Script Access', self.test_script_access),
+            ('Email Configuration', self.test_email_configuration),
+            ('Scheduling System', self.test_scheduling_system),
+            ('Recovery Mechanisms', self.test_recovery_mechanisms),
+            ('Resource Management', self.test_resource_management),
+            ('Monitoring System', self.test_monitoring_system),
+            ('Startup Reliability', self.test_startup_reliability)
+        ]
+        
+        for test_name, test_function in tests:
+            try:
+                result = test_function()
+                validation_results['tests'].append({
+                    'name': test_name,
+                    'success': result['success'],
+                    'details': result.get('details', ''),
+                    'recommendations': result.get('recommendations', [])
+                })
+                
+                if not result['success']:
+                    validation_results['overall_success'] = False
+                    
+            except Exception as e:
+                validation_results['tests'].append({
+                    'name': test_name,
+                    'success': False,
+                    'details': f'Test execution failed: {e}',
+                    'recommendations': ['Contact technical support']
+                })
+                validation_results['overall_success'] = False
+        
+        # Generate validation report
+        self.generate_validation_report(validation_results)
+        return validation_results
+    
+    def generate_validation_report(self, results):
+        """
+        Generate comprehensive validation report
+        """
+        report_content = f"""
+# Automation Service Installation Validation Report
+
+**Date:** {results['timestamp']}
+**Overall Status:** {'✅ PASSED' if results['overall_success'] else '❌ FAILED'}
+
+## Test Results
+
+"""
+        
+        for test in results['tests']:
+            status = '✅ PASS' if test['success'] else '❌ FAIL'
+            report_content += f"### {test['name']}: {status}\n"
+            
+            if test['details']:
+                report_content += f"**Details:** {test['details']}\n"
+            
+            if test.get('recommendations'):
+                report_content += "**Recommendations:**\n"
+                for rec in test['recommendations']:
+                    report_content += f"- {rec}\n"
+            
+            report_content += "\n"
+        
+        # Save report
+        report_path = "C:\\AutomationService\\validation_report.md"
+        with open(report_path, 'w') as f:
+            f.write(report_content)
+        
+        print(f"Validation report saved to: {report_path}")
+```
+
+## 15. Zero-Configuration Operation Goals
+
+### 15.1 Fully Autonomous Operation Checklist
+
+#### ✅ **Installation Requirements**
+- [ ] Single-click installation (.bat file)
+- [ ] No manual configuration needed
+- [ ] Automatic dependency installation
+- [ ] Service registration with Windows
+- [ ] Task Scheduler backup configuration
+- [ ] File permission setup
+
+#### ✅ **Startup & Recovery Requirements**
+- [ ] Automatic startup on system boot
+- [ ] Survives system restarts/crashes
+- [ ] Self-recovery from script failures
+- [ ] Automatic retry mechanisms
+- [ ] Resource conflict resolution
+- [ ] Network connectivity recovery
+
+#### ✅ **Configuration Management Requirements**
+- [ ] Hot-reload configuration changes
+- [ ] Email addresses changeable without restart
+- [ ] Schedule times adjustable without restart
+- [ ] Validation of configuration changes
+- [ ] Rollback for invalid configurations
+- [ ] Configuration backup and restore
+
+#### ✅ **Script Execution Requirements**
+- [ ] Zero modifications to existing Python files
+- [ ] Intelligent script orchestration
+- [ ] Dependency management between scripts
+- [ ] Timeout handling for each script
+- [ ] Resource lock management
+- [ ] Performance optimization
+
+#### ✅ **Monitoring & Maintenance Requirements**
+- [ ] Automated health checks
+- [ ] Log rotation and cleanup
+- [ ] Disk space management
+- [ ] Memory usage optimization
+- [ ] Performance monitoring
+- [ ] Automated maintenance tasks
+
+#### ✅ **Business Logic Requirements**
+- [ ] Weekend handling logic
+- [ ] Holiday calendar integration
+- [ ] Business day calculations
+- [ ] Report queuing for weekends
+- [ ] Multi-timezone support
+- [ ] Daylight saving time handling
+
+This enhanced PRD ensures complete autonomous operation with zero user intervention after installation, while preserving all existing Python script functionality without any code modifications.

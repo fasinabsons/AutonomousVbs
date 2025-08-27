@@ -1,0 +1,393 @@
+===============================================================================
+🌙 MOONFLOWER AUTOMATION ENHANCED - COMPLETE INSTALLATION GUIDE
+365-Day Robust Operation for Any Windows PC
+===============================================================================
+
+📋 OVERVIEW:
+This guide installs the MoonFlower AutomationMaster Enhanced system on any Windows PC.
+After installation, the system will run continuously for 365 days with automatic restart,
+error recovery, catch-up logic, and complete monitoring.
+
+🆕 ENHANCED FEATURES:
+✅ Single instance protection with lock files
+✅ Task Scheduler auto-start integration (boot, login, daily)
+✅ Dynamic CSV slot management (easily extensible) 
+✅ Enhanced catch-up logic for missed tasks
+✅ Configuration validation and dependency checking
+✅ Network connectivity validation before operations
+✅ Performance metrics and status monitoring
+✅ Advanced error handling with retry mechanisms
+✅ File integrity validation (size, age, completion)
+✅ Login-triggered catch-up execution
+
+===============================================================================
+🛠️ STEP 1: PYTHON INSTALLATION (REQUIRED)
+===============================================================================
+
+1.1 Download Python:
+   • Go to: https://python.org
+   • Click "Download Python" (latest version)
+   • Download the Windows installer (.exe file)
+
+1.2 Install Python:
+   • Run the downloaded .exe file
+   • ⚠️ IMPORTANT: Check "Add Python to PATH" checkbox
+   • Choose "Install Now"
+   • Wait for installation to complete
+   • Click "Close"
+
+1.3 Verify Python Installation:
+   • Open Command Prompt (cmd)
+   • Type: python --version
+   • You should see: Python 3.x.x
+   • If error, restart computer and try again
+
+===============================================================================
+🌐 STEP 2: CHROME BROWSER CONFIGURATION (CRITICAL FOR AUTOMATION)
+===============================================================================
+
+2.1 Download and Install Chrome:
+   • Go to: https://google.com/chrome
+   • Download and install the latest version
+
+2.2 CRITICAL Chrome Settings for Automation:
+   Open Chrome and configure these settings:
+
+   Downloads (chrome://settings/downloads):
+   • Set download location to: C:\Users\[YourName]\Downloads
+   • Turn OFF "Ask where to save each file before downloading"
+   • Turn ON "Always show downloads when they're done"
+
+   Site Permissions (chrome://settings/content):
+   • Automatic downloads: "Sites can download multiple files"
+   • Pop-ups and redirects: "Sites can send pop-ups and use redirects"
+   • JavaScript: "Sites can use JavaScript" (enabled)
+
+   Display Settings (CRITICAL):
+   • Keep Windows Display Scale at 100% (Settings > Display)
+   • Keep Chrome zoom at 100% (Ctrl+0 to reset)
+   • Keep Chrome UI language in English
+   • Disable Chrome updates during automation hours (optional)
+
+   Advanced Settings:
+   • Privacy and security > Site Settings > Additional permissions
+   • Allow sites to access USB devices (for hardware interactions)
+   • Clear browsing data regularly (cache, not passwords)
+
+===============================================================================
+📁 STEP 3: PROJECT FILES SETUP
+===============================================================================
+
+3.1 Copy Project Files:
+   • Copy the entire MoonFlower Enhanced project folder to:
+     C:\MoonFlower (recommended)
+   • Or any location you prefer (system is portable)
+
+3.2 Verify Enhanced File Structure:
+   Your folder should contain:
+   ✅ AutomationMaster_Enhanced.ps1 (main orchestrator)
+   ✅ Install_Enhanced.ps1 (installation script)
+   ✅ Configuration_Manager.ps1 (GUI config tool)
+   ✅ Test_Enhanced_System.ps1 (comprehensive testing)
+   ✅ daily_folder_creator.py
+   ✅ email\ folder (outlook_automation.py, email_delivery.py)
+   ✅ wifi\ folder (csv_downloader_resilient.py)
+   ✅ excel\ folder (excel_generator.py)
+   ✅ vbs\ folder (all phase files)
+   ✅ utils\ folder (file_checker.py, close_vbs.py)
+   ✅ Images\ folder (VBS automation images)
+
+===============================================================================
+📦 STEP 4: PYTHON PACKAGES INSTALLATION
+===============================================================================
+
+4.1 Open Command Prompt as Administrator:
+   • Press Windows + X
+   • Select "Command Prompt (Admin)" or "PowerShell (Admin)"
+
+4.2 Navigate to Project Folder:
+   • Type: cd C:\MoonFlower
+   • Press Enter
+
+4.3 Install Required Packages (Enhanced System):
+   Copy and paste these commands one by one:
+
+   pip install --upgrade pip
+   pip install selenium
+   pip install pyautogui
+   pip install opencv-python
+   pip install pandas
+   pip install xlwt
+   pip install openpyxl
+   pip install pywin32
+   pip install psutil
+   pip install requests
+   pip install chromedriver-autoinstaller
+   pip install Pillow
+   pip install numpy
+   pip install webdriver-manager
+   pip install pyinstaller
+
+4.4 Verify Installation:
+   • Type: python -c "import selenium, pyautogui, cv2, pandas, psutil; print('✅ All packages installed successfully!')"
+   • You should see: "✅ All packages installed successfully!"
+
+===============================================================================
+🧪 STEP 5: SYSTEM VALIDATION
+===============================================================================
+
+5.1 Run Comprehensive Test:
+   • Open PowerShell as Administrator
+   • Navigate to: cd C:\MoonFlower
+   • Run: powershell -ExecutionPolicy Bypass -File "Test_Enhanced_System.ps1"
+   • Should show: "🎉 ALL TESTS PASSED! System is ready for production use."
+
+5.2 Test Individual Components:
+   • Python Environment: ✅ Should be detected
+   • Python Scripts: ✅ All should be found
+   • Network Connectivity: ✅ Should reach internet
+   • File Permissions: ✅ Should have write access
+
+===============================================================================
+🏢 STEP 6: VBS SOFTWARE SETUP
+===============================================================================
+
+6.1 Install VBS Software:
+   • Install your organization's VBS software
+   • Make sure it opens and logs in correctly
+   • Test all required navigation paths
+   • Note any security prompts or login requirements
+
+6.2 VBS Configuration:
+   • Ensure VBS login credentials are saved
+   • Test that VBS opens without security warnings
+   • Verify file upload and report generation features
+   • Close VBS after testing
+
+===============================================================================
+📧 STEP 7: OUTLOOK CONFIGURATION
+===============================================================================
+
+7.1 Setup Organizational Outlook:
+   • Install Microsoft Outlook (part of Office)
+   • Configure with your organizational email account
+   • Login and ensure it works normally
+   • Test sending an email manually
+
+7.2 Outlook Automation Setup:
+   • Open Outlook at least once
+   • Go to File > Options > Trust Center > Trust Center Settings
+   • Select "Macro Settings"
+   • Choose "Enable all macros" (for automation)
+   • Click OK and restart Outlook
+
+7.3 Configure Email Addresses:
+   Edit these files to set your email addresses:
+   • email\outlook_automation.py (for GM emails)
+   • email\email_delivery.py (for error notifications)
+
+===============================================================================
+🚀 STEP 8: INSTALL ENHANCED AUTOMATION SYSTEM
+===============================================================================
+
+8.1 Install as Windows Scheduled Task (RECOMMENDED):
+   • Open PowerShell as Administrator
+   • Navigate to: cd C:\MoonFlower
+   • Run: powershell -ExecutionPolicy Bypass -File "Install_Enhanced.ps1"
+   • Should show: "🚀 MoonFlower AutomationMaster Enhanced is now installed!"
+
+8.2 Verify Installation:
+   • Check Task Scheduler (taskschd.msc)
+   • Look for: "MoonFlower_AutomationMaster"
+   • Task should be "Ready" state
+   • Triggers: At startup, At logon, Daily at 00:01
+
+8.3 Manual Configuration (Optional):
+   • Run: powershell -ExecutionPolicy Bypass -File "Configuration_Manager.ps1"
+   • Configure custom timings, CSV slots, email settings
+   • Generate custom configuration if needed
+
+===============================================================================
+⚙️ STEP 9: 365-DAY OPERATION FEATURES
+===============================================================================
+
+9.1 Automatic Operation Schedule:
+   📧 08:30-09:30: GM Email (weekdays only, business day logic)
+   📄 09:00-09:10: CSV Slot 1 (4 files minimum)
+   📄 12:30-12:40: CSV Slot 2 (8 files total)
+   📊 12:35-12:45: Excel merge (immediate after CSV)
+   🔧 12:40-16:00: VBS upload (3+ hour process)
+   🚫 16:00: VBS force closure (daily cleanup)
+   📑 17:01-18:00: VBS report generation (fresh session)
+   🔄 All day: Catch-up monitoring
+
+9.2 Error Recovery Features:
+   • Network failures: Pre-operation connectivity checks
+   • Missing files: File count validation with retries
+   • Python errors: Timeout protection with process cleanup
+   • VBS crashes: Force termination and fresh session restart
+   • Email failures: Multiple notification attempts
+   • State corruption: Automatic state file recovery
+
+9.3 Advanced Monitoring:
+   • Performance metrics: Task duration, memory usage, disk space
+   • Alert thresholds: Configurable limits with email notifications
+   • File reports: Daily integrity reports with JSON output
+   • Status dashboard: Real-time system health display
+
+===============================================================================
+🧪 STEP 10: TESTING AND VERIFICATION
+===============================================================================
+
+10.1 View System Status:
+   • Run: powershell -ExecutionPolicy Bypass -File "AutomationMaster_Enhanced.ps1" -Status
+   • Should show current system health, daily progress, and file counts
+
+10.2 Test Catch-up Logic:
+   • Stop automation if running
+   • Wait until after 10:00 AM
+   • Start automation manually
+   • Should detect missing files and download/process them
+
+10.3 Monitor Log Files:
+   • Location: EHC_Logs\automation_master_YYYYMMDD.log
+   • Performance metrics: EHC_Logs\performance_metrics.json
+   • File reports: EHC_Logs\file_report.json
+
+===============================================================================
+🔧 STEP 11: CHROME AUTOMATION SETTINGS (DETAILED)
+===============================================================================
+
+11.1 Chrome Flags for Automation (Optional):
+   Create a desktop shortcut with these flags:
+   Target: "C:\Program Files\Google\Chrome\Application\chrome.exe" --disable-web-security --disable-features=VizDisplayCompositor --user-data-dir="C:\ChromeAutomation"
+
+11.2 Registry Settings (Advanced):
+   If needed, disable Chrome security prompts:
+   • Open Registry Editor (regedit)
+   • Navigate to: HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Google\Chrome
+   • Create DWORD: DefaultDownloadSecurityLevel = 0
+   • Create DWORD: DownloadDirPolicy = 1
+
+11.3 Group Policy (Enterprise):
+   For enterprise environments:
+   • Allow automation sites in managed bookmarks
+   • Disable password manager prompts during automation
+   • Set consistent download folder across all users
+
+===============================================================================
+🧰 STEP 12: MAINTENANCE AND MONITORING
+===============================================================================
+
+12.1 Daily Monitoring:
+   • Check EHC_Logs for any errors
+   • Verify file counts in daily folders
+   • Monitor system performance metrics
+   • Review email delivery status
+
+12.2 Weekly Maintenance:
+   • Clean up old log files (>30 days)
+   • Check disk space availability
+   • Update Chrome browser if needed
+   • Verify VBS software functionality
+
+12.3 Configuration Changes:
+   • Use Configuration_Manager.ps1 for GUI changes
+   • Edit AutomationMaster_Enhanced.ps1 parameters directly
+   • Reinstall scheduled task after major changes
+
+===============================================================================
+🆘 STEP 13: TROUBLESHOOTING ENHANCED SYSTEM
+===============================================================================
+
+13.1 Installation Issues:
+   • "Cannot be loaded because running scripts is disabled":
+     Solution: powershell -ExecutionPolicy Bypass -File "script.ps1"
+   
+   • "Access denied" installing scheduled task:
+     Solution: Run PowerShell as Administrator
+
+13.2 Operation Issues:
+   • Automation not starting after reboot:
+     Check: Task Scheduler > MoonFlower_AutomationMaster > Properties > Conditions
+   
+   • Files not downloading:
+     Check: Chrome settings, network connectivity, CSV downloader script
+
+13.3 Performance Issues:
+   • High memory usage:
+     Check: Performance metrics file, consider restarting automation
+   
+   • Slow execution:
+     Check: Network speed, disk space, background processes
+
+===============================================================================
+🎯 ENHANCED SYSTEM CHECKLIST
+===============================================================================
+
+Installation:
+□ Python installed with PATH
+□ Chrome configured for automation  
+□ Enhanced project files in place
+□ Python packages installed
+□ System validation tests passed
+□ VBS software installed and tested
+□ Outlook configured
+□ Scheduled task installed successfully
+
+Operation:
+□ System status shows healthy
+□ Daily folders being created automatically
+□ CSV downloads working
+□ Excel merge functioning
+□ VBS phases executing properly
+□ PDF reports generating
+□ Email delivery working
+□ Performance metrics collecting
+□ Error notifications functioning
+
+Monitoring:
+□ Log files being generated
+□ File integrity reports available
+□ Performance metrics tracking
+□ Alert thresholds configured
+□ Status monitoring setup
+
+===============================================================================
+📞 SUPPORT COMMANDS
+===============================================================================
+
+Quick Commands:
+• System Status: powershell -ExecutionPolicy Bypass -File "AutomationMaster_Enhanced.ps1" -Status
+• Run Test: powershell -ExecutionPolicy Bypass -File "Test_Enhanced_System.ps1" -Quick
+• Configure: powershell -ExecutionPolicy Bypass -File "Configuration_Manager.ps1"
+• Install: powershell -ExecutionPolicy Bypass -File "Install_Enhanced.ps1"
+• Uninstall: powershell -ExecutionPolicy Bypass -File "Install_Enhanced.ps1" -Uninstall
+
+File Locations:
+• System Scripts: C:\MoonFlower\*.ps1
+• Python Scripts: C:\MoonFlower\[folders]\*.py
+• Daily Data: C:\MoonFlower\EHC_Data\[date]\
+• Excel Files: C:\MoonFlower\EHC_Data_Merge\[date]\
+• PDF Reports: C:\MoonFlower\EHC_Data_Pdf\[date]\
+• Logs: C:\MoonFlower\EHC_Logs\
+
+===============================================================================
+🎉 INSTALLATION COMPLETE!
+===============================================================================
+
+Your MoonFlower AutomationMaster Enhanced system is now ready for 365-day
+continuous operation with:
+
+✅ Automatic restart after PC reboot
+✅ Self-healing error recovery
+✅ Performance monitoring and alerting
+✅ File integrity validation
+✅ Catch-up logic for missed tasks
+✅ Network connectivity validation
+✅ Advanced configuration management
+
+The system will now run automatically and handle all daily tasks with
+minimal intervention required!
+
+===============================================================================

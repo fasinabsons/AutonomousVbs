@@ -1,0 +1,79 @@
+this is a diagnose script
+def diagnose_sender_accounts(self):
+    """Diagnostic tool to identify sender account issues"""
+    if not self.connect_outlook():
+        return False
+    
+    try:
+        print("\n" + "="*60)
+        print("OUTLOOK SENDER ACCOUNT DIAGNOSTIC")
+        print("="*60)
+        
+        accounts = self.outlook.Session.Accounts
+        print(f"Total accounts found: {accounts.Count}")
+        
+        for i, account in enumerate(accounts, 1):
+            print(f"\nAccount {i}:")
+            print(f"  Display Name: {account.DisplayName}")
+            print(f"  SMTP Address: {account.SmtpAddress}")
+            print(f"  User Name: {getattr(account, 'UserName', 'N/A')}")
+            
+            # Check if this is likely your account
+            smtp_lower = account.SmtpAddress.lower()
+            is_target = any(name in smtp_lower for name in ["mohamed", "fasin"])
+            is_absons = "@absons.ae" in smtp_lower
+            not_software = "software" not in smtp_lower
+            
+            print(f"  Match Score: Target={is_target}, Absons={is_absons}, NotSoftware={not_software}")
+            
+            if is_target and is_absons:
+                print("  >>> THIS SHOULD BE YOUR SENDER ACCOUNT <<<")
+        
+        # Test creating an email to see default behavior
+        print(f"\n{'-'*40}")
+        print("TESTING EMAIL CREATION:")
+        
+        test_mail = self.outlook.CreateItem(0)
+        test_mail.Subject = "Test - Checking Default Sender"
+        test_mail.Body = "This is a test email to check sender account"
+        
+        # Check default sender before setting
+        try:
+            default_sender = test_mail.SendUsingAccount
+            if default_sender:
+                print(f"Default sender before setting: {default_sender.SmtpAddress}")
+            else:
+                print("No default sender account detected")
+        except:
+            print("Could not detect default sender")
+        
+        # Try to set your preferred sender
+        if self.set_sender_account(test_mail):
+            try:
+                final_sender = test_mail.SendUsingAccount
+                if final_sender:
+                    print(f"Sender after setting: {final_sender.SmtpAddress}")
+                else:
+                    print("WARNING: No sender account set after configuration")
+            except:
+                print("Could not verify final sender")
+        
+        print("="*60)
+        return True
+        
+    except Exception as e:
+        print(f"Diagnostic failed: {e}")
+        return False
+
+# Add this to your main() function for testing:
+def main():
+    """Main function with diagnostic option"""
+    import sys
+    
+    outlook_auto = OutlookAutomation()
+    
+    if len(sys.argv) > 1 and sys.argv[1] == "--diagnose":
+        outlook_auto.diagnose_sender_accounts()
+        return
+    
+    # ... rest of your existing main code

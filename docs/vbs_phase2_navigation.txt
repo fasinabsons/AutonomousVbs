@@ -1,0 +1,93 @@
+VBS Phase 2: Navigation Process Documentation
+===============================================
+
+PURPOSE:
+Navigate through VBS application menus to reach WiFi User Registration form for data entry.
+
+TECHNOLOGY USED:
+- PyAutoGUI for image recognition and clicking
+- OpenCV (cv2) for template matching and image processing
+- Win32API for window focus management
+- Anti-minimize protection to maintain window state
+
+PROCESS FLOW:
+1. Window Focus Management
+   - Ensure VBS window is active and focused
+   - Prevent window minimization during automation
+   - Maintain consistent window state
+
+2. Menu Navigation Sequence
+   Step 1: Click Arrow Button
+   - Locate arrow button image (01_arrow_button.png)
+   - Click to expand main menu
+   - Wait for menu animation to complete
+   
+   Step 2: Click Sales & Distribution
+   - Locate "Sales & Distribution" menu item (02_sales_distribution_menu.png)
+   - Click to open submenu
+   - Wait for submenu expansion
+   
+   Step 3: Click POS Submenu
+   - Locate "POS" submenu item (03_pos_menu.png)
+   - Click to access POS functions
+   - Wait for POS menu to load
+   
+   Step 4: Click WiFi User Registration
+   - Locate "WiFi User Registration" option (04_wifi_user_registration.png)
+   - Click to open registration form
+   - Wait for form to load completely
+   
+   Step 5: Click New Button
+   - Locate "New" button (05_new_button.png)
+   - Click to create new registration entry
+   - Wait for form fields to become active
+   
+   Step 6: Select Credit Radio Button
+   - Locate Credit radio button (06_credit_radio_button.png)
+   - Click to select Credit option
+   - Verify selection is active
+
+3. Form Readiness Verification
+   - Confirm all form elements are loaded
+   - Verify form is ready for data entry
+   - Log successful navigation completion
+
+CRITICAL FEATURES:
+- Image-based navigation for reliability
+- 0.8 confidence threshold for image detection
+- Anti-minimize protection prevents window state issues
+- Comprehensive error handling and fallback mechanisms
+- Step-by-step validation ensures process integrity
+
+TIMING REQUIREMENTS:
+- 1.5 seconds after each click for UI response
+- 2.5 seconds for menu opening animations
+- 3.0 seconds for form loading completion
+- Total execution time: ~15-20 seconds
+
+IMAGE REQUIREMENTS:
+All images must be captured at native VBS application resolution:
+- 01_arrow_button.png - Main menu expansion arrow
+- 02_sales_distribution_menu.png - Sales & Distribution menu item
+- 03_pos_menu.png - POS submenu item
+- 04_wifi_user_registration.png - WiFi User Registration option
+- 05_new_button.png - New entry creation button
+- 06_credit_radio_button.png - Credit selection radio button
+
+ERROR HANDLING:
+- Image not found: Retry with lower confidence threshold
+- Window minimized: Restore and refocus window
+- Menu timeout: Wait additional time and retry
+- Navigation failure: Log error and attempt recovery
+
+ANTI-MINIMIZE PROTECTION:
+- Gentle window focus without aggressive operations
+- Prevents VBS window from minimizing during automation
+- Maintains consistent interaction state
+- Uses SetForegroundWindow with timing controls
+
+INTEGRATION:
+- Called after: vbs_phase1_login.py (1 minute wait)
+- Calls next: vbs_phase3_upload_fixed.py
+- Required state: VBS application logged in and ready
+- Exit state: WiFi User Registration form open and ready for data entry 

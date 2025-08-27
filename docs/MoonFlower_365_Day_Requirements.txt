@@ -1,0 +1,303 @@
+MOONFLOWER 365-DAY AUTOMATION SYSTEM REQUIREMENTS
+=================================================
+
+This document outlines all requirements and adjustments needed for continuous 365-day operation
+of the MoonFlower WiFi automation system with auto-login, scheduled tasks, and zero intervention.
+
+SYSTEM OVERVIEW
+===============
+
+The system must handle:
+1. CSV downloads at 9:30 AM and 12:30 PM (works while PC is locked)
+2. Excel merge at 12:35 PM (works while PC is locked)
+3. VBS automation phases 1-4 requiring screen unlock for OpenCV
+4. Email delivery to GM (works while PC is locked)
+5. Personal notifications for monitoring
+6. Automatic PC restart and recovery
+7. Weekend/holiday email handling
+
+DAILY SCHEDULE
+==============
+
+09:30 AM - CSV Download #1 (Morning)
+- Script: wifi\csv_downloader_resilient.py
+- Requires: Unlocked screen = NO (Selenium works in background)
+- Validation: Files saved to EHC_Data\{date_folder}\
+- Retry: 3 attempts with 5-minute delays
+
+12:30 PM - CSV Download #2 (Afternoon)  
+- Script: wifi\csv_downloader_resilient.py
+- Requires: Unlocked screen = NO
+- Validation: Minimum 4 files total (2 from morning + 2 from afternoon)
+- Trigger: Excel merge if validation passes
+
+12:35 PM - Excel Merge
+- Script: excel\excel_generator.py
+- Requires: Unlocked screen = NO
+- Prerequisites: CSV validation must pass (4+ files)
+- Validation: Excel file created in EHC_Data_Merge\{date_folder}\
+- Min size: 10KB, estimated 6000+ records
+
+13:00 PM - VBS Phase 1 (Login)
+- Script: vbs\vbs_phase1_login.py
+- Requires: Unlocked screen = YES (OpenCV + PyAutoGUI)
+- Prerequisites: Excel file must exist
+- Action: Auto-unlock screen → Run script → Keep unlocked for Phase 2
+
+13:05 PM - VBS Phase 2 (Navigation)
+- Script: vbs\vbs_phase2_navigation_fixed.py
+- Requires: Unlocked screen = YES (continues from Phase 1)
+- Prerequisites: Phase 1 completed successfully
+- Action: Continue automation → Keep unlocked for Phase 3
+
+13:10 PM - VBS Phase 3 (Upload) - LONG RUNNING TASK
+- Script: vbs\vbs_phase3_upload_fixed.py
+- Requires: Unlocked screen = YES (OpenCV required)
+- Prerequisites: Phase 2 completed successfully
+- Duration: 30 minutes to 3 hours (variable upload time)
+- Monitoring: Check every 10 minutes, send progress notifications
+- Completion: VBS software auto-closes (built into Phase 3)
+- Action: Lock screen after completion
+
+17:30 PM - VBS Phase 4 (Reports)
+- Script: vbs\vbs_phase4_report_fixed.py
+- Requires: Unlocked screen = YES (OpenCV required)
+- Prerequisites: Phase 1 must be run again (Phase 3 closed VBS)
+- Validation: PDF file created in EHC_Data_Pdf\{date_folder}\
+- Retry: If no PDF found, retry Phase 1 → Phase 4 sequence
+- Action: Auto-unlock → Run Phase 1 → Run Phase 4 → Lock screen
+
+08:00 AM (Next Day) - Email to General Manager
+- Script: email\outlook_automation.py
+- Requires: Unlocked screen = NO (Outlook COM works in background)
+- Prerequisites: PDF file from yesterday must exist
+- Schedule: Monday-Friday only (Sunday files sent on Monday)
+- Content: Professional email with PDF attachment, signature
+
+CRITICAL SYSTEM REQUIREMENTS
+=============================
+
+1. AUTO-LOGIN CONFIGURATION
+----------------------------
+- Enable Windows auto-login for target user account
+- Disable lock screen timeout during VBS phases
+- Configure screen saver to not activate during work hours (9 AM - 6 PM)
+- Set power plan to never sleep during work hours
+
+Registry Settings Required:
+HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon
+- AutoAdminLogon = "1"
+- DefaultUserName = "Lenovo"
+- DefaultDomainName = {computer_name}
+- DefaultPassword = {if_needed}
+
+HKLM\SOFTWARE\Policies\Microsoft\Windows\Personalization
+- NoLockScreen = 1
+
+2. SCREEN UNLOCK/LOCK AUTOMATION
+--------------------------------
+- PowerShell script must detect VBS automation phases
+- Auto-unlock: Send space key + Enter to dismiss lock screen
+- Timing: Unlock 30 seconds before VBS phase starts
+- Auto-lock: Lock screen immediately after VBS phase completes
+- Verification: Ensure screen state before critical operations
+
+3. SELENIUM VS OPENCV REQUIREMENTS
+-----------------------------------
+CSV Downloads (Selenium):
+- Works in background/locked screen ✓
+- Uses Chrome headless mode
+- No display interaction required
+- Network connectivity only
+
+Excel Generation (Pandas):
+- Pure Python processing ✓
+- Works in background/locked screen ✓
+- File system operations only
+
+VBS Automation (OpenCV + PyAutoGUI):
+- Requires active desktop session ✗
+- Needs visible screen for image recognition
+- Must interact with GUI elements
+- Solution: Auto-unlock during VBS phases only
+
+Email Delivery (Outlook COM):
+- Works in background ✓
+- Uses Outlook application if running
+- Can work without GUI interaction
+- Fallback: Selenium for web Outlook
+
+4. OUTLOOK EMAIL REQUIREMENTS
+------------------------------
+Outlook Application:
+- Must be installed and configured with both accounts:
+  * software@absons.ae (primary)
+  * mohamed.fasin@absons.ae (sender for GM emails)
+- Auto-start with Windows (optional)
+- Background operation capability
+
+Email Sending Without Open Outlook:
+- COM interface works even if Outlook UI is closed
+- Requires Outlook service running in background
+- Account credentials must be saved/cached
+- Test: Send email with Outlook UI completely closed
+
+Alternative (Edge Selenium):
+- Login to outlook.com in Edge browser
+- Use saved credentials for automatic login
+- Navigate to compose → attach PDF → send
+- Headless mode possible for background operation
+
+5. FILE SYSTEM MONITORING
+--------------------------
+Date Folder Structure:
+EHC_Data\{ddMMM}\          (01jan, 15mar, 28jul, etc.)
+EHC_Data_Merge\{ddMMM}\
+EHC_Data_Pdf\{ddMMM}\
+EHC_Logs\{ddMMM}\
+
+File Validation:
+- CSV: Minimum 4 files, each > 1KB
+- Excel: Minimum 1 file, > 10KB, estimated 6000+ records
+- PDF: Minimum 1 file, > 10KB, valid PDF format
+
+Backup Strategy:
+- Keep 30 days of data folders
+- Archive older data to separate location
+- Daily cleanup of log files > 7 days old
+
+6. ERROR HANDLING & RECOVERY
+-----------------------------
+Retry Logic:
+- Maximum 3 attempts per task
+- 5-minute delay between retries
+- Exponential backoff for critical failures
+
+Task Dependencies:
+- Excel requires CSV validation
+- VBS Phase 2 requires Phase 1 completion
+- VBS Phase 3 requires Phase 2 completion
+- VBS Phase 4 requires fresh Phase 1 (after Phase 3 VBS closure)
+- GM Email requires PDF file existence
+
+Critical Failure Recovery:
+- VBS process hanging: Force terminate after 4-hour timeout
+- Screen lock during VBS: Auto-unlock and retry
+- File corruption: Re-run dependent tasks
+- Network failure: Wait and retry with exponential backoff
+
+7. WEEKLY/MONTHLY MAINTENANCE
+-----------------------------
+Weekly Schedule:
+- Sunday 2:00 AM: Automatic PC restart
+- Clear temp files and browser cache
+- Update Windows if needed (postpone during work hours)
+- Verify all scheduled tasks are active
+
+Monthly Tasks:
+- Archive old data folders (keep 30 days)
+- Disk space cleanup if usage > 80%
+- Check Python package updates
+- Verify automation accuracy with manual spot checks
+
+Holiday/Weekend Handling:
+- Saturday: No email sending, continue data collection
+- Sunday: No email sending, continue data collection  
+- Monday: Send weekend files (Sunday's PDF on Monday)
+- Holidays: Continue automation, queue emails for next business day
+
+8. MONITORING & NOTIFICATIONS
+------------------------------
+Personal Notifications (faseenm@gmail.com):
+- Task completion confirmations
+- Error alerts with details
+- Weekly status summary
+- System restart notifications
+- File validation failures
+
+Notification Content:
+- Subject: "MoonFlower {Task} - {Status}"
+- Body: Task name, timestamp, status, file counts
+- Error details for failures
+- Next action recommendations
+
+GM Email Format:
+- From: mohamed.fasin@absons.ae
+- To: ramon.logan@absons.ae
+- Subject: "MoonFlower Active Users Count {Month} {Year}"
+- Body: Professional greeting, PDF attachment note
+- Signature: Full contact details with blue styling
+- Attachment: Yesterday's PDF report
+
+9. SYSTEM PERSISTENCE
+----------------------
+Windows Service Installation:
+- Registry entry in HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Run
+- Scheduled Task as backup trigger
+- Auto-start on user login
+- Highest privileges for screen unlock operations
+
+Service Recovery:
+- Restart service on failure
+- Maximum restart attempts: 3 per day
+- If service fails repeatedly: Email alert + manual intervention flag
+
+Process Monitoring:
+- Check Python processes every 5 minutes
+- Terminate hung processes after timeout
+- Log all process starts/stops
+- Monitor memory usage and cleanup if needed
+
+10. TESTING & VALIDATION
+-------------------------
+Pre-Deployment Tests:
+1. Run complete cycle manually in test environment
+2. Verify screen lock/unlock automation
+3. Test CSV downloads with network simulation
+4. Validate Excel generation with various file counts
+5. Test VBS automation with screen locked initially
+6. Verify email delivery to all recipients
+7. Test recovery after simulated failures
+
+Production Monitoring:
+- Daily verification of all task completions
+- Weekly file count analysis
+- Monthly accuracy spot checks
+- Quarterly system performance review
+
+DEPLOYMENT CHECKLIST
+====================
+
+✓ Install Python 3.9+ with all required packages
+✓ Configure Windows auto-login
+✓ Disable Windows lock screen policies
+✓ Set power plan to prevent sleep during work hours
+✓ Install and configure Outlook with both email accounts
+✓ Test Outlook COM automation without GUI
+✓ Verify Chrome browser installation for Selenium
+✓ Set up project directory structure
+✓ Configure Windows firewall for Python/Chrome network access
+✓ Test VBS application paths and launching
+✓ Verify all image files for OpenCV recognition
+✓ Install PowerShell script as Windows service
+✓ Configure scheduled task backup triggers
+✓ Test complete automation cycle end-to-end
+✓ Set up monitoring and notification email
+✓ Document emergency contact and recovery procedures
+
+SUCCESS CRITERIA
+=================
+
+✓ System runs continuously for 30+ days without manual intervention
+✓ CSV files collected daily with 95%+ success rate
+✓ Excel files generated daily with correct record counts
+✓ VBS automation completes with 90%+ success rate
+✓ PDF reports generated and delivered on schedule
+✓ GM emails sent on all business days
+✓ Personal notifications received for all events
+✓ System recovers automatically from common failures
+✓ PC restarts weekly without disrupting schedule
+✓ All file validations pass daily checks
+
+This system is designed for true 365-day autonomous operation with minimal 
+manual intervention required only for extraordinary circumstances. 

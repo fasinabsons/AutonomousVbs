@@ -1,0 +1,19 @@
+{
+  "project_root": "C:/Users/user/Documents/Automata2",
+  "base_folders": {
+    "csv_data": "EHC_Data",
+    "excel_merge": "EHC_Data_Merge",
+    "pdf_reports": "EHC_Data_Pdf", 
+    "logs": "EHC_Logs"
+  },
+  "date_format": "%d%b",
+  "date_format_description": "DDmmm format (e.g., 24jul, 25jul)",
+  "absolute_paths": {
+    "csv_data": "C:/Users/user/Documents/Automata2/EHC_Data",
+    "excel_merge": "C:/Users/user/Documents/Automata2/EHC_Data_Merge",
+    "pdf_reports": "C:/Users/user/Documents/Automata2/EHC_Data_Pdf",
+    "logs": "C:/Users/user/Documents/Automata2/EHC_Logs"
+  },
+  "description": "Centralized path configuration for MoonFlower Automation System",
+  "last_updated": "2025-01-19"
+} 

@@ -1,0 +1,326 @@
+MOONFLOWER AUTOMATION - COMPLETE BAT FILE PLAN
+===============================================
+
+OVERVIEW:
+This BAT file will orchestrate the complete MoonFlower workflow from CSV download to email delivery,
+designed to work even when PC is locked using Windows Task Scheduler.
+
+WORKFLOW SEQUENCE:
+==================
+
+1. MORNING SLOT - 9:30 AM
+   ├── CSV Download (1st attempt)
+   ├── Validation (4 files expected)
+   └── Log status
+
+2. MIDDAY SLOT - 12:30 PM  
+   ├── CSV Download (2nd attempt if needed)
+   ├── Validation (total 8 files expected)
+   └── Proceed to Excel merge
+
+3. EXCEL MERGE - 12:35 PM
+   ├── Run excel_generator.py
+   ├── Validate 6000+ rows
+   └── Confirm Excel file created
+
+4. VBS PHASE 1 - 1:00 PM
+   ├── Launch VBS application
+   ├── Login sequence
+   └── Verify login success
+
+5. VBS PHASE 2 - After Phase 1
+   ├── Navigation sequence
+   ├── Menu interactions
+   └── Prepare for import
+
+6. VBS PHASE 3 - After Phase 2
+   ├── Excel import process
+   ├── EHC User Detail navigation (Tab + Right arrow)
+   ├── Update button click (multiple PNG support)
+   ├── 3-hour upload monitoring
+   └── Upload successful popup detection
+
+7. VBS CLOSE - After Upload
+   ├── Detect "Upload Successful" popup
+   ├── Close VBS application
+   └── Cleanup processes
+
+8. VBS PHASE 4 - 5:30 PM
+   ├── Restart VBS for report generation
+   ├── Generate PDF report
+   └── Save to EHC_Data_Pdf folder
+
+9. EMAIL DELIVERY - Next Morning
+   ├── Find latest PDF report
+   ├── Send to GM (ramon.logan@absons.ae)
+   ├── Professional email format
+   └── Backup confirmation
+
+10. MILESTONE NOTIFICATIONS
+    ├── Email updates to faseenm@gmail.com
+    ├── Status: "done, done, done" for each step
+    └── Error notifications if failures
+
+TECHNICAL REQUIREMENTS:
+======================
+
+A. LOCKED PC COMPATIBILITY
+   ├── Windows Task Scheduler integration
+   ├── "Run whether user is logged on or not"
+   ├── Highest privileges
+   ├── Battery power support
+   └── Background execution
+
+B. TIMING PRECISION
+   ├── PowerShell time detection (24-hour format)
+   ├── Past-due task execution
+   ├── Retry logic with timeouts
+   └── Real-time progress logging
+
+C. VALIDATION & ERROR HANDLING
+   ├── File count validation (CSV files)
+   ├── Row count validation (Excel 6000+)
+   ├── Process monitoring (VBS states)
+   ├── Popup detection (Upload successful)
+   └── Automatic recovery mechanisms
+
+D. LOGGING SYSTEM
+   ├── Centralized logs in EHC_Logs/[date]
+   ├── Daily log cleanup (3 days retention)
+   ├── Separate logs per component
+   └── Error tracking and reporting
+
+E. MULTIPLE UPDATE BUTTON SUPPORT
+   ├── 09_update_button.png (current)
+   ├── 09_update_button_variant1.png (to be added)
+   ├── 09_update_button_variant2.png (to be added)
+   ├── Dynamic confidence levels (0.9 to 0.4)
+   └── Keyboard fallback (Alt+U)
+
+IMPLEMENTATION STRUCTURE:
+========================
+
+MAIN BAT FILE: moonflower_complete.bat
+├── Functions:
+│   ├── :GetCurrentTime (PowerShell-based)
+│   ├── :RunCSVDownload
+│   ├── :ValidateCSVFiles  
+│   ├── :RunExcelMerge
+│   ├── :ValidateExcelRows
+│   ├── :RunVBSPhase1
+│   ├── :RunVBSPhase2  
+│   ├── :RunVBSPhase3
+│   ├── :MonitorUpload
+│   ├── :RunVBSPhase4
+│   ├── :SendGMEmail
+│   ├── :SendMilestoneEmail
+│   ├── :CleanupLogs
+│   └── :ShowStatus
+
+├── Components Called:
+│   ├── wifi/csv_downloader_simple.py
+│   ├── excel/excel_generator.py
+│   ├── vbs/vbs_phase1_login.py
+│   ├── vbs/vbs_phase2_navigation_fixed.py
+│   ├── vbs/vbs_phase3_upload_fixed.py
+│   ├── vbs/vbs_phase4_report_fixed.py
+│   ├── email/outlook_automation.py
+│   └── utils/log_cleanup.py
+
+├── Schedule Integration:
+│   ├── Task Name: "MoonFlower_Complete_Automation"
+│   ├── Trigger: Daily at specified times
+│   ├── Settings: Run with highest privileges
+│   ├── Conditions: Start when available
+│   └── Actions: Execute moonflower_complete.bat
+
+PHASE-BY-PHASE BREAKDOWN:
+=========================
+
+PHASE 1: CSV COLLECTION (9:30 AM & 12:30 PM)
+├── Check current time using PowerShell
+├── Execute csv_downloader_simple.py
+├── Validate file count in EHC_Data/[date]
+├── Expected: 4 files per slot (total 8)
+├── Retry if files missing
+└── Log success/failure
+
+PHASE 2: EXCEL PROCESSING (12:35 PM)
+├── Run excel_generator.py
+├── Check EHC_Data_Merge/[date] for .xls file
+├── Validate row count >= 6000
+├── Confirm file size reasonable
+└── Proceed only if validation passes
+
+PHASE 3: VBS AUTOMATION (1:00 PM)
+├── Phase 1: VBS Login
+│   ├── Launch VBS application
+│   ├── Execute login sequence
+│   └── Verify login success
+├── Phase 2: Navigation  
+│   ├── Menu navigation
+│   ├── Form interactions
+│   └── Prepare import interface
+├── Phase 3: Data Upload
+│   ├── Import EHC checkbox
+│   ├── File selection (Excel)
+│   ├── Sheet selection (EHC_Data)
+│   ├── Import execution
+│   ├── Tab + Right arrow for EHC section
+│   ├── Update button (multiple PNG support)
+│   ├── 3-hour upload monitoring
+│   └── Upload completion detection
+└── VBS Close after upload
+
+PHASE 4: REPORT GENERATION (5:30 PM)
+├── Restart VBS application
+├── Navigate to report section
+├── Generate PDF report
+├── Save to EHC_Data_Pdf/[date]
+├── Verify PDF creation
+└── Close VBS
+
+PHASE 5: EMAIL DELIVERY (Next Morning)
+├── Find latest PDF in EHC_Data_Pdf
+├── Professional email composition
+├── Attachment verification
+├── Send to GM (ramon.logan@absons.ae)
+├── Backup email details
+└── Confirmation logging
+
+ERROR HANDLING STRATEGY:
+=======================
+
+A. CSV DOWNLOAD FAILURES
+├── Retry up to 3 times
+├── Check network connectivity
+├── Validate website accessibility
+├── Log specific error details
+└── Email failure notification
+
+B. EXCEL GENERATION ISSUES
+├── Verify CSV file availability
+├── Check disk space
+├── Validate input data quality
+├── Retry with different parameters
+└── Manual intervention alert
+
+C. VBS AUTOMATION PROBLEMS
+├── Process monitoring (responsive/not responding)
+├── Window detection and focus
+├── Image recognition fallbacks
+├── Keyboard navigation alternatives
+└── Timeout handling with recovery
+
+D. EMAIL DELIVERY FAILURES
+├── Outlook connectivity check
+├── Account authentication verification
+├── PDF attachment validation
+├── Network connection testing
+└── Alternative delivery methods
+
+LOCKED PC EXECUTION:
+===================
+
+TASK SCHEDULER CONFIGURATION:
+├── Task Name: MoonFlower_Complete_Automation
+├── Security Options:
+│   ├── Run whether user is logged on or not: ✓
+│   ├── Run with highest privileges: ✓
+│   ├── Hidden: ✓
+│   └── Configure for Windows 10: ✓
+├── Triggers:
+│   ├── Daily at 9:30 AM (CSV slot 1)
+│   ├── Daily at 12:30 PM (CSV slot 2 + workflow)
+│   ├── Daily at 5:30 PM (Report generation)
+│   └── Daily at 8:00 AM (Email delivery)
+├── Actions:
+│   ├── Program: cmd.exe
+│   ├── Arguments: /c "C:\Path\To\moonflower_complete.bat"
+│   └── Start in: C:\Users\Lenovo\Documents\Automate2\Automata2
+├── Conditions:
+│   ├── Start only if on AC power: ✗
+│   ├── Stop if computer switches to battery: ✗
+│   ├── Wake computer to run: ✓
+│   └── Start when available: ✓
+└── Settings:
+    ├── Allow task to be run on demand: ✓
+    ├── Run as soon as possible if missed: ✓
+    ├── If task fails, restart every: 1 hour
+    └── Stop task if runs longer than: 6 hours
+
+MONITORING & MAINTENANCE:
+========================
+
+A. LOG MANAGEMENT
+├── Daily logs in EHC_Logs/[date]/
+├── Component-specific log files
+├── 3-day automatic cleanup
+├── Error aggregation and reporting
+└── Performance metrics tracking
+
+B. HEALTH CHECKS
+├── Daily system status validation
+├── Component connectivity testing
+├── File system health monitoring
+├── Process performance analysis
+└── Automated recovery triggers
+
+C. NOTIFICATION SYSTEM
+├── Success confirmations to faseenm@gmail.com
+├── Error alerts with details
+├── Daily status summaries
+├── Weekly performance reports
+└── Critical failure escalations
+
+TESTING STRATEGY:
+================
+
+A. COMPONENT TESTING
+├── Individual Python script validation
+├── BAT file function testing
+├── Task Scheduler dry runs
+├── Locked PC simulation
+└── Error scenario testing
+
+B. INTEGRATION TESTING
+├── End-to-end workflow validation
+├── Timing accuracy verification
+├── Resource usage monitoring
+├── Multi-day execution testing
+└── Recovery mechanism validation
+
+C. PRODUCTION DEPLOYMENT
+├── Staged rollout approach
+├── Parallel system monitoring
+├── Rollback procedures
+├── Performance baseline establishment
+└── User acceptance testing
+
+SUCCESS CRITERIA:
+================
+
+A. RELIABILITY
+├── 99%+ successful execution rate
+├── Automatic recovery from failures
+├── Consistent timing accuracy
+├── Locked PC compatibility
+└── Zero manual intervention required
+
+B. PERFORMANCE
+├── CSV download: <5 minutes per slot
+├── Excel generation: <10 minutes
+├── VBS automation: <4 hours total
+├── Report generation: <30 minutes
+└── Email delivery: <2 minutes
+
+C. MONITORING
+├── Real-time status visibility
+├── Error detection within 5 minutes
+├── Comprehensive audit trail
+├── Automated reporting
+└── Proactive maintenance alerts
+
+This plan ensures a robust, automated, and maintainable MoonFlower workflow 
+that operates reliably even on locked PCs with comprehensive error handling 
+and monitoring capabilities. 

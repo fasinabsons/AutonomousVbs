@@ -1,0 +1,213 @@
+================================================================================
+🌙 MOONFLOWERBOT 365 - INSTALLATION GUIDE FOR WINDOWS PCs
+================================================================================
+
+📋 QUICK INSTALLATION (For Resource-Limited PCs)
+================================================================================
+
+SYSTEM REQUIREMENTS:
+✅ Windows 10/11 (any edition)
+✅ 2GB RAM minimum (4GB recommended)
+✅ 500MB free disk space
+✅ Internet connection for email/downloads
+✅ Chrome browser (for CSV downloads)
+✅ Microsoft Outlook (for email automation)
+
+INSTALLATION STEPS:
+================================================================================
+
+STEP 1: DOWNLOAD FILES
+----------------------
+Copy these files to your target PC:
+📁 MoonFlowerBot_365.exe (269MB) - Main application
+📁 automation_config.json - Configuration file
+📁 icons/moonflower.ico - Application icon
+
+STEP 2: CREATE INSTALLATION FOLDER
+----------------------------------
+1. Create folder: C:\MoonFlowerBot\
+2. Copy MoonFlowerBot_365.exe to C:\MoonFlowerBot\
+3. Copy automation_config.json to C:\MoonFlowerBot\
+4. Create subfolder: C:\MoonFlowerBot\icons\
+5. Copy moonflower.ico to C:\MoonFlowerBot\icons\
+
+STEP 3: FIRST RUN SETUP
+-----------------------
+1. Double-click MoonFlowerBot_365.exe
+2. Windows may show "Windows protected your PC" - Click "More info" → "Run anyway"
+3. Application will start with green "Background Active" indicator
+4. Go to "⚙️ Configuration" tab
+5. Configure paths:
+   - VBS Software: Browse to your VBS/MoonFlower software location
+   - Chrome Downloads: Usually C:\Users\[Username]\Downloads
+   - Data Parent Directory: Leave empty for current directory
+
+STEP 4: CONFIGURE AUTOMATION TIMES
+----------------------------------
+1. Go to "⏰ Timing & Schedule" tab
+2. Set your preferred times:
+   - Email time: Random between 8:30-9:00 AM
+   - Data slots: 9:00 AM, 12:30 PM (add more if needed)
+   - Upload delay: 10 minutes (after Excel merge)
+   - Report delay: 30 minutes (after upload)
+
+STEP 5: ENABLE 365-DAY OPERATION
+--------------------------------
+1. Go to main "🏠 365-Day Automation" tab
+2. Click "START 365-DAY AUTOMATION" button
+3. Application will:
+   ✅ Set up Windows Task Scheduler
+   ✅ Enable startup on boot
+   ✅ Start crash monitoring
+   ✅ Begin background operation
+
+================================================================================
+🛠️ TROUBLESHOOTING FOR LOW-RESOURCE PCs
+================================================================================
+
+PERFORMANCE OPTIMIZATION:
+-------------------------
+1. Close unnecessary programs before running automation
+2. Set Windows power plan to "High Performance"
+3. Disable Windows Defender real-time scanning for C:\MoonFlowerBot\ folder
+4. Run Windows Disk Cleanup to free space
+
+MEMORY MANAGEMENT:
+-----------------
+If you get "Out of Memory" errors:
+1. Restart PC before running automation
+2. Close Chrome tabs and other browsers
+3. Use Task Manager to end unnecessary processes
+4. Increase virtual memory (Page File) size
+
+AUDIO DETECTION ISSUES:
+----------------------
+If audio detection fails:
+1. Go to Configuration tab
+2. Disable "Enable Audio Detection"
+3. Use visual-only detection (still works perfectly)
+
+VBS SOFTWARE NOT FOUND:
+----------------------
+1. Make sure VBS software is installed
+2. In Configuration tab, browse to exact .exe location
+3. Test by clicking "🧪 Test Components" → "⬆️ Test VBS Upload"
+
+================================================================================
+📧 NETWORK SETUP (For Office PCs)
+================================================================================
+
+OUTLOOK CONFIGURATION:
+---------------------
+1. Ensure Outlook is configured with your email account
+2. Test by sending a manual email first
+3. MoonFlowerBot will use your existing Outlook profile
+
+CHROME SETUP:
+------------
+1. Set Chrome as default browser
+2. Configure download location in Chrome settings
+3. Ensure no download blocking/antivirus interference
+
+FIREWALL/ANTIVIRUS:
+------------------
+1. Add MoonFlowerBot_365.exe to antivirus exclusions
+2. Allow through Windows Firewall
+3. For corporate networks, request IT to whitelist the application
+
+================================================================================
+🔧 DAILY OPERATION
+================================================================================
+
+AUTO-START:
+----------
+✅ Application starts automatically on Windows boot
+✅ Runs in background (see green "Background Active" indicator)
+✅ Continues running even if minimized/computer locked
+
+MONITORING:
+----------
+- 🟢 Background Active = Automation running
+- 🔊 Audio Monitoring = VBS popup detection enabled
+- ⏰ Uptime = Shows how long system has been running
+
+LOG FILES:
+---------
+Check logs in: C:\MoonFlowerBot\EHC_Logs\[today's date]\
+- email_delivery_[date].log = Email automation logs
+- csv_download_[date].log = Data download logs
+- vbs_phase[X]_[date].log = VBS automation logs
+
+MANUAL TESTING:
+--------------
+Go to "🧪 Test Components" tab to test individual functions:
+- 📧 Test Email Only
+- 📥 Test CSV Download
+- 📊 Test Excel Merge
+- ⬆️ Test VBS Upload
+- 📊 Test VBS Report
+
+================================================================================
+⚠️ EMERGENCY PROCEDURES
+================================================================================
+
+IF AUTOMATION FAILS:
+-------------------
+1. Check "📊 System Monitor" tab for errors
+2. Restart MoonFlowerBot (close and reopen)
+3. Test individual components in "🧪 Test Components"
+4. Check log files for specific error messages
+
+IF PC CRASHES:
+-------------
+✅ MoonFlowerBot automatically detects crashes
+✅ Restarts automation when PC reboots
+✅ Continues 365-day operation seamlessly
+
+MANUAL STOP/START:
+-----------------
+- To STOP: Close MoonFlowerBot application
+- To START: Double-click MoonFlowerBot_365.exe
+- To RESTART: Close and reopen application
+
+UNINSTALL:
+---------
+1. Close MoonFlowerBot application
+2. Delete C:\MoonFlowerBot\ folder
+3. Remove from Windows startup (automatic)
+4. Delete any scheduled tasks (automatic cleanup)
+
+================================================================================
+📞 SUCCESS INDICATORS
+================================================================================
+
+✅ GREEN "Background Active" indicator in title bar
+✅ Uptime counter showing days/hours/minutes
+✅ Email notifications received as scheduled
+✅ CSV files appearing in Downloads folder
+✅ Excel files created in EHC_Data_Merge folders
+✅ VBS reports generated in EHC_Data_Pdf folders
+✅ No error messages in System Monitor
+
+================================================================================
+💡 TIPS FOR 365-DAY OPERATION
+================================================================================
+
+1. 🔄 RESTART PC WEEKLY: Keep PC running but restart once per week for optimal performance
+2. 🗂️ DISK CLEANUP: Run monthly to prevent disk space issues
+3. 📋 CHECK LOGS: Review logs monthly to ensure everything is working
+4. ⚙️ UPDATE TIMES: Use Configuration tab to adjust times as needed
+5. 🧪 MONTHLY TEST: Run individual component tests monthly to verify functionality
+
+EXPECTED BEHAVIOR:
+-----------------
+- Emails sent: Every weekday between 8:30-9:00 AM
+- CSV downloads: Daily at configured times (e.g., 9:00 AM, 12:30 PM)
+- Excel merge: Automatically after CSV downloads complete
+- VBS upload: Automatically 10 minutes after Excel merge
+- VBS report: Automatically 30 minutes after upload starts
+
+================================================================================
+🌙 MoonFlowerBot - Perfect 365-Day Automation
+Version: Production Ready | Build: 2025.08.05
+================================================================================

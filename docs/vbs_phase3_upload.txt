@@ -1,0 +1,159 @@
+VBS Phase 3: Data Upload Process Documentation
+================================================
+
+PURPOSE:
+Upload Excel data to VBS application with comprehensive popup handling and audio detection for completion monitoring.
+
+TECHNOLOGY USED:
+- PyAutoGUI for UI automation and file dialog navigation
+- Win32API for instant ENTER key pressing and window management
+- Address bar optimization for efficient folder navigation
+- Audio detection system (vbs_audio_detector.py) for popup monitoring
+- PathManager for consistent directory handling
+
+PROCESS FLOW:
+1. Import EHC Checkbox Selection
+   - Locate Import EHC checkbox (01_import_ehc_checkbox.png)
+   - Click on right side of checkbox to ensure selection
+   - Wait 2 seconds for checkbox response
+   - Verify checkbox is selected
+
+2. File Browser Activation + Critical Popup Handling
+   - Click Three Dots button (02_three_dots_button.png)
+   - IMMEDIATELY press ENTER (CRITICAL TIMING)
+   - This catches the popup while "Yes" is pre-selected
+   - No delays between click and ENTER - must be instant
+   - Wait 1 second after ENTER for popup to clear
+
+3. Address Bar Navigation (User Optimization)
+   - Press Ctrl+L to focus address bar
+   - Clear existing path with Ctrl+A
+   - Type Excel merge folder path:
+     C:/Users/Lenovo/Documents/Automate2/Automata2/EHC_Data_Merge/24jul
+   - Press ENTER to navigate
+   - Wait 3 seconds for folder to load
+   - This skips 6 manual folder navigation steps
+
+4. Excel File Selection
+   - Locate Excel file (09_DateExcel.png) - format: EHC_Upload_Mac_DDMMYYYY.xls
+   - Click on Excel file to select
+   - Wait 1.5 seconds for selection
+   - Click Open button (10_Open.png)
+   - Wait 3 seconds for file dialog processing
+
+5. Date Selection Sequence (Steps 11-16)
+   - Handle dynamic date field inputs using TAB navigation
+   - For each of 6 date steps (11,12,13,14,15,16):
+     * Press TAB to navigate to next field
+     * Wait 0.5 seconds
+     * Press ENTER to select/confirm
+     * Wait 0.5 seconds
+   - This handles date-specific requirements
+
+6. Final OK Button and Popup Sound Detection
+   - Press ENTER for final OK confirmation
+   - Wait for popup sound using vbs_audio_detector.py
+   - Monitor for click/popup sound indicating completion
+   - Close any remaining dialogs
+   - Continue only after sound detection
+
+7. Sheet Selection (If Required)
+   - Click dropdown arrow (11_dropdown_arrow.png) if visible
+   - Wait 1 second for dropdown to open
+   - Click Sheet1 selector (12_sheet_selector_unselected.png)
+   - Wait 0.5 seconds for sheet selection
+   - If no dropdown found, Excel file opens directly
+
+8. Import Process Initiation
+   - Click Import button (13_import_button.png)
+   - IMMEDIATELY press ENTER to skip import popup
+   - This prevents user interaction requirement
+   - Wait for import to begin
+
+9. Import Completion Monitoring (5 Minutes)
+   - Monitor for Import OK button (14_import_ok_button.png)
+   - Check every 5 seconds for up to 5 minutes (300 seconds)
+   - Log progress every 30 seconds
+   - When Import OK button appears, click it
+   - This indicates import has completed successfully
+
+10. EHC Header Selection
+    - Click EHC User Detail header (15_ehc_user_detail_header.png)
+    - Wait 1.5 seconds for header selection
+    - This prepares for update process
+
+11. Update Process (Double-Click Method)
+    - Click Update button (16_update_button.png)
+    - Wait EXACTLY 2 seconds (user requirement)
+    - Click Update button again (double-click effect)
+    - This initiates the upload process
+
+12. Upload Completion Monitoring (30min - 2 hours)
+    - Use vbs_audio_detector.py for popup sound detection
+    - Monitor every 5 seconds for popup sound
+    - Log progress every 5 minutes
+    - Normal operation: 30 minutes to 2 hours
+    - Continue until popup sound indicates completion
+    - Ignore "not responding" application states (normal behavior)
+
+CRITICAL TIMING REQUIREMENTS:
+- INSTANT ENTER after Three Dots: No delay allowed
+- Import completion wait: Maximum 5 minutes
+- Update double-click: Exactly 2 seconds between clicks
+- Upload completion: 30 minutes to 2 hours (user specified)
+- Popup detection interval: Every 5 seconds
+- Audio monitoring: Continuous background process
+
+POPUP HANDLING STRATEGY:
+- All popups use INSTANT ENTER technique
+- Win32API keybd_event for maximum speed
+- No focus checks or delays before pressing ENTER
+- Assumes "Yes" is pre-selected in popups
+- Essential for automation success
+
+ADDRESS BAR OPTIMIZATION BENEFITS:
+- Skips 6 manual folder navigation steps:
+  * Documents folder click
+  * Automate2 folder click
+  * Automata2 subfolder click
+  * EHC_Data_Merge folder click
+  * Date folder click
+  * File selection
+- Reduces execution time by ~30 seconds
+- More reliable than multiple image clicks
+
+AUDIO DETECTION INTEGRATION:
+- vbs_audio_detector.py monitors system audio
+- Detects specific VBS popup sounds
+- Background process with 5-second intervals
+- Used for both import and upload completion
+- Essential for hands-free operation
+
+ERROR HANDLING:
+- Image not found: Log warning and continue with next step
+- File not found: Report error and abort process
+- Popup timeout: Continue after maximum wait time
+- Audio detection failure: Fall back to time-based monitoring
+- Upload timeout: Log completion status and proceed
+
+INTEGRATION WITH PATH MANAGER:
+- Uses centralized PathManager for folder paths
+- Automatically handles date-specific directories
+- Consistent with main automation system
+- Today's folder format: DDmmm (e.g., 24jul)
+
+REQUIREMENTS FULFILLMENT:
+- 5 minute wait after import (step 9)
+- 2 hour upload monitoring (step 12)
+- Audio popup detection throughout
+- Double-click update method
+- Instant popup handling
+- Address bar optimization
+- Date selection automation
+
+INTEGRATION:
+- Called after: vbs_phase2_navigation_fixed.py
+- Requires: WiFi User Registration form open
+- Excel file: EHC_Upload_Mac_DDMMYYYY.xls in EHC_Data_Merge/24jul/
+- Next phase: Application should be closed for Phase 4
+- Completion indicator: Upload popup sound detected 

@@ -1,0 +1,176 @@
+//Bat file creation steps
+requirements
+1. we should run the csv_downloader_resilient.py according to slots at 9:30 am and then 12:30 pm for now and later user should be able to add more slots.
+2. then after all slots are clear we should run the excel_generator.py to merge the excel file and then store the excel file correct folder.
+3. then run the vbs_phase1_login.py
+4. after vbs_phase1_login.py is over (takes around 1 minute) we run the vbs_phase2_navigation_fixed.py
+5. then after it is over we run vbs_phase3_upload_fixed.py we have to wait for 5 minutes to complete import.
+6. wait till upload complete around 2 hours and then after that we should close the vbs software and we have extra popup click yes after trying to close ensure we got the upload popup then only we will close.
+since sometimes it may take more than 2 hours so it is safe to monitor to hear that popup(we have vbs_audio_detector.py to hear the popup sound) . we get popup for both import and upload, after import we get popup then we press enter or click ok then we have upload click then we have the upload okk popup even if the vbs software shows not responding don't close it is the normal one.
+7. after upload we need to fetch the updated report pdf and rename it, so we run the phase 4 vbs_phase4_report_fixed,  
+here also the closing should be there after the closing is tried we get popup and we should say yes then the app is almost complete.
+8. then we send the renamed pdf as an email to the General manager on outlook, this is very crucial step so we need to be careful before implementing this we can't email to whoever we want and test it.
+for testing purpose i created the sending email we need to add the gmail correctly.
+we already have an email notification we should send that once we completed the task correctly if there is any issues, any errors and everything the email is send to faseenm@gmail.com
+so how do we make the outlook correct and working to see the mail on outlook how to ensure the first email itself is a success.
+
+we should email the pdf to the gm in the morning at 9am to 9:30 am a random time chosen everyday and send it.
+the pdf of the current day will be send tommorow and for default we don't send email everyday, we skip the friday's and saturday's mail since the saturday and sunday are holidays but the rest of the app should do the tasks like downloading csv files at time.
+then merge it and then upload it and also export the report that means except email everything is running 365 days  and also the slots, date sub folder creation at 12:00 am .
+then also the app must be able to restart and update itself, restarting every 3 days or if has issues at night only we restart during the day we have to download the files, merge, then get pdf and email it day after the report fetched.
+
+sunday's pdf will be send on monday morning, simailarly monday's will be send on the tuesday and so on but not on saturday and sunday and if general manager asks also i should be able to send that as well adding slots should be there so just add comment.
+we should create the outlookemail.py where we create this automated email and then also we add  images and start doing it.
+
+the restart we don't need now cause sometimes  only we need it since we can restart only our app itself not the pc instead to keep app fresh. 
+Below is a revised task list for creating two BAT files (`automation_workflow.bat` and `send_email.bat`) for the automation workflow, ensuring accuracy with the provided environment configuration and folder structure (`24jul`, `25jul`, etc., as per `date_format: %d%b`). The list incorporates all requirements, including precise script paths, wait times (5 minutes after import, 2 hours for upload), email notifications to `faseenm@gmail.com`, and manual email sending. The environment variables are kept accurate, and the focus is on clarity for efficient BAT file creation.
+
+### Task List for `automation_workflow.bat`
+
+1. **Set Environment Variables**:
+   - Read `C:/Users/Lenovo/Documents/Automate2/Automata2/config.json`.
+   - Set:
+     - `PROJECT_ROOT`: `C:/Users/Lenovo/Documents/Automate2/Automata2`.
+     - `CSV_DIR`: `C:/Users/Lenovo/Documents/Automate2/Automata2/EHC_Data/%d%b` (e.g., `24jul`).
+     - `EXCEL_DIR`: `C:/Users/Lenovo/Documents/Automate2/Automata2/EHC_Data_Merge/%d%b`.
+     - `PDF_DIR`: `C:/Users/Lenovo/Documents/Automate2/Automata2/EHC_Data_Pdf/%d%b`.
+     - `LOG_DIR`: `C:/Users/Lenovo/Documents/Automate2/Automata2/EHC_Logs/%d%b`.
+     - `LOG_FILE`: `%LOG_DIR%/automation_log_%date:~-4,4%%date:~-10,2%%date:~-7,2%.txt`.
+     - `ERROR_EMAIL`: `faseenm@gmail.com`.
+     - `PYTHON`: `python`.
+
+2. **Create Daily Folders**:
+   - At 12:00 AM, run `C:/Users/Lenovo/Documents/Automate2/Automata2/daily_folder_creator.py` to create:
+     - `C:/Users/Lenovo/Documents/Automate2/Automata2/EHC_Data/%d%b`
+     - `C:/Users/Lenovo/Documents/Automate2/Automata2/EHC_Data_Merge/%d%b`
+     - `C:/Users/Lenovo/Documents/Automate2/Automata2/EHC_Data_Pdf/%d%b`
+     - `C:/Users/Lenovo/Documents/Automate2/Automata2/EHC_Logs/%d%b`
+   - Log to `%LOG_FILE%`.
+   - If error, run `C:/Users/Lenovo/Documents/Automate2/Automata2/email/email_delivery.py` to email `faseenm@gmail.com`.
+
+3. **Handle System Restarts**:
+   - At 2:00 AM, run `C:/Users/Lenovo/Documents/Automate2/Automata2/pc_restart_manager.py`.
+   - Check if 3+ days since last restart (`%PROJECT_ROOT%/restart.txt`).
+   - If needed, schedule restart (`shutdown /r /t 60`), update file, log to `%LOG_FILE%`, and exit.
+   - If error, email `faseenm@gmail.com` via `email_delivery.py`.
+
+4. **Download CSV Files**:
+   - Slots: 9:30 AM, 12:30 PM (`set "SLOTS=09:30 12:30"`).
+   - Comment: “TODO: Allow slots via config file”.
+   - For each slot, run `C:/Users/Lenovo/Documents/Automate2/Automata2/wifi/csv_downloader_resilient.py --output "%CSV_DIR%"`.
+   - Log to `%LOG_FILE%`.
+   - If error, email `faseenm@gmail.com` via `email_delivery.py`.
+   - Set `ALL_SLOTS_DONE=0` when a slot runs, reset to 1 after checks.
+
+5. **Merge Excel Files**:
+   - At 1:00 PM (`ALL_SLOTS_DONE==1`), run `C:/Users/Lenovo/Documents/Automate2/Automata2/excel/excel_generator.py --input "%CSV_DIR%" --output "%EXCEL_DIR%/merged_excel.xlsx"`.
+   - Log to `%LOG_FILE%`.
+   - If error, email `faseenm@gmail.com` via `email_delivery.py`.
+
+6. **Run VBS Scripts**:
+   - Run `C:/Users/Lenovo/Documents/Automate2/Automata2/vbs/vbs_phase1_login.py`.
+     - Log to `%LOG_FILE%`.
+     - If error, email `faseenm@gmail.com`.
+     - Wait 60 seconds.
+   - Run `C:/Users/Lenovo/Documents/Automate2/Automata2/vbs/vbs_phase2_navigation_fixed.py`.
+     - Log to `%LOG_FILE%`.
+     - If error, email `faseenm@gmail.com`.
+   - Run `C:/Users/Lenovo/Documents/Automate2/Automata2/vbs/vbs_phase3_upload_fixed.py --input "%EXCEL_DIR%/merged_excel.xlsx"`.
+     - Log to `%LOG_FILE%`.
+     - If error, email `faseenm@gmail.com`.
+     - Wait 5 minutes (`timeout /t 300 /nobreak`).
+
+7. **Monitor Import/Upload Popups**:
+   - Run `C:/Users/Lenovo/Documents/Automate2/Automata2/vbs/vbs_audio_detector.py`.
+   - If popup detected:
+     - Increment counter.
+     - Create `%PROJECT_ROOT%/press_enter.vbs`:
+       ```vbs
+       set WShell = CreateObject("WScript.Shell")
+       WShell.SendKeys "{ENTER}"
+       ```
+     - Run with `cscript`.
+     - Log to `%LOG_FILE%`.
+     - If <2 popups, wait 60 seconds, repeat.
+   - For upload, wait 2 hours (7200 seconds), check every 5 minutes:
+     - If popup, run `press_enter.vbs`, proceed.
+     - If timeout, log and email `faseenm@gmail.com` via `email_delivery.py`.
+   - Ignore “not responding” states.
+
+8. **Close VBS Software**:
+   - Run `taskkill /IM vbs_software.exe /F`.
+   - Wait 5 seconds.
+   - Run `vbs_audio_detector.py`.
+   - If popup, create `%PROJECT_ROOT%/click_yes.vbs`:
+     ```vbs
+     set WShell = CreateObject("WScript.Shell")
+     WShell.SendKeys "{TAB}"
+     WShell.SendKeys "{ENTER}"
+     ```
+   - Run with `cscript`, log to `%LOG_FILE%`.
+
+9. **Fetch PDF Report**:
+   - Run `C:/Users/Lenovo/Documents/Automate2/Automata2/vbs/vbs_phase4_report_fixed.py --output "%PDF_DIR%/report_%date:~-4,4%%date:~-10,2%%date:~-7,2%.pdf"`.
+   - Log to `%LOG_FILE%`.
+   - If error, email `faseenm@gmail.com` via `email_delivery.py`.
+   - If success, email `faseenm@gmail.com` via `email_delivery.py` with “Automation Completed”.
+
+10. **Loop**:
+    - Wait 60 seconds (`timeout /t 60 /nobreak`).
+    - Return to folder creation.
+
+### Task List for `send_email.bat`
+
+1. **Set Environment Variables**:
+   - Read `C:/Users/Lenovo/Documents/Automate2/Automata2/config.json`.
+   - Set:
+     - `PROJECT_ROOT`: `C:/Users/Lenovo/Documents/Automate2/Automata2`.
+     - `PDF_DIR`: `C:/Users/Lenovo/Documents/Automate2/Automata2/EHC_Data_Pdf/%d%b`.
+     - `LOG_DIR`: `C:/Users/Lenovo/Documents/Automate2/Automata2/EHC_Logs/%d%b`.
+     - `LOG_FILE`: `%LOG_DIR%/email_log_%date:~-4,4%%date:~-10,2%%date:~-7,2%.txt`.
+     - `ERROR_EMAIL`: `faseenm@gmail.com`.
+     - `GM_EMAIL`: `gm@example.com`.
+     - `PYTHON`: `python`.
+
+2. **Check Day of Week**:
+   - Skip if Friday (6) or Saturday (7) using `wmic OS Get localdatetime`.
+
+3. **Send Daily Email**:
+   - At 9:00 AM–9:30 AM:
+     - Random delay (0–1800 seconds, `%RANDOM% %% 1800`).
+     - Wait (`timeout /t <delay> /nobreak`).
+     - Calculate previous day’s date and `%d%b` (e.g., `24jul`).
+     - Run `C:/Users/Lenovo/Documents/Automate2/Automata2/email/outlookemail.py --to "gm@example.com" --subject "Daily Report %date:~-4,4%-%date:~-10,2%-%prev_day%" --attachment "%PDF_DIR%/report_%date:~-4,4%%date:~-10,2%%prev_day%.pdf" --body "Daily report for %date:~-4,4%-%date:~-10,2%-%prev_day%."`.
+     - Log to `%LOG_FILE%`.
+     - If error, email `faseenm@gmail.com` via `email_delivery.py`.
+     - If success, email `faseenm@gmail.com` via `email_delivery.py` with “Email Sent Successfully”.
+
+4. **Manual Email Sending**:
+   - Accept optional date parameter (`YYYY-MM-DD`).
+   - If provided, use it for PDF path; else, use previous day.
+   - Run `outlookemail.py` with appropriate PDF.
+   - Log to `%LOG_FILE%`.
+   - Email `faseenm@gmail.com` for success/error via `email_delivery.py`.
+
+### Notes:
+- **Folder Format**: `%d%b` ensures `24jul`, `25jul`, etc., as subfolders.
+- **Wait Times**: 5 minutes after import (`vbs_phase3_upload_fixed.py`), 2 hours for upload popup.
+- **Scripts**:
+  - `daily_folder_creator.py`
+  - `csv_downloader_resilient.py`
+  - `excel_generator.py`
+  - `vbs_phase1_login.py`
+  - `vbs_phase2_navigation_fixed.py`
+  - `vbs_phase3_upload_fixed.py`
+  - `vbs_audio_detector.py`
+  - `vbs_phase4_report_fixed.py`
+  - `pc_restart_manager.py`
+  - `email_delivery.py`
+  - `outlookemail.py`
+  - `file_manager.py`
+  - `log_manager.py`
+  - `path_manager.py`
+- **Testing**: Test `outlookemail.py` with `email_delivery.py` to `faseenm@gmail.com` first.
+- **Images**: Update `outlookemail.py` to support image attachments if needed.
+
+This list ensures accuracy and efficiency for creating `automation_workflow.bat` and `send_email.bat`. Let me know if you need the BAT files or further details!

@@ -1,0 +1,297 @@
+EXCEL MERGE PROCESS DOCUMENTATION
+==================================
+
+OVERVIEW
+--------
+The Excel merge process combines multiple CSV files downloaded from different WiFi access points into a single consolidated Excel file for VBS import.
+
+COMPONENTS
+----------
+1. Excel Generator (excel/excel_generator.py)
+2. CSV Data Processor
+3. Data Validation Engine
+4. Format Converter
+5. File Manager Integration
+
+INPUT SOURCES
+--------------
+Location: EHC_Data/{date}/
+Files:
+- clients.csv (EHC TV access point)
+- clients (1).csv (EHC-15 access point)  
+- clients (2).csv (Reception Hall-Mobile)
+- clients (3).csv (Reception Hall-TV)
+- Additional numbered files if multiple downloads
+
+DATA STRUCTURE
+--------------
+CSV Input Columns:
+- MAC Address (Primary Key)
+- Device Name/Hostname
+- Connection Time
+- Duration
+- Signal Strength (RSSI)
+- Data Usage (Upload/Download)
+- IP Address
+- Access Point Name
+
+Excel Output Columns:
+- MAC Address (Formatted)
+- Device Name (Cleaned)
+- First Connection Time
+- Last Connection Time
+- Total Duration
+- Access Points Used
+- Signal Quality Rating
+- Data Usage Summary
+- Device Category
+- Status (Active/Inactive)
+
+MERGE ALGORITHM
+---------------
+
+1. DATA COLLECTION
+   - Scan date folder for CSV files
+   - Validate file format and structure
+   - Load CSV data into memory
+   - Handle encoding issues (UTF-8, ASCII)
+
+2. DATA NORMALIZATION
+   - Standardize MAC address format (XX:XX:XX:XX:XX:XX)
+   - Clean device names (remove special characters)
+   - Normalize time formats to ISO standard
+   - Convert signal strength to consistent units
+
+3. DUPLICATE DETECTION
+   - Group records by MAC address
+   - Identify duplicate connections
+   - Merge overlapping time periods
+   - Resolve conflicting data points
+
+4. DATA AGGREGATION
+   - Calculate total connection duration
+   - Determine primary access point
+   - Aggregate data usage across connections
+   - Compute average signal strength
+
+5. ENRICHMENT
+   - Device categorization (Mobile, Laptop, IoT)
+   - Vendor identification from MAC OUI
+   - Usage pattern analysis
+   - Quality metrics calculation
+
+6. VALIDATION
+   - Data integrity checks
+   - Range validation for numeric fields
+   - Consistency verification
+   - Missing data handling
+
+OUTPUT GENERATION
+-----------------
+
+Excel File Structure:
+- Sheet1: Consolidated user data (for VBS import)
+- Sheet2: Raw data summary
+- Sheet3: Statistics and metrics
+- Sheet4: Access point breakdown
+
+File Naming Convention:
+EHC_DATA_{DD}{MM}{YYYY}.xlsx
+Example: EHC_DATA_19072025.xlsx
+
+Output Location:
+EHC_Data_Merge/{date}/
+
+EXCEL FORMATTING
+----------------
+
+Headers:
+- Bold, blue background
+- Auto-fit column widths
+- Freeze top row
+- Data validation dropdown for categories
+
+Data Formatting:
+- MAC addresses: XX:XX:XX:XX:XX:XX format
+- Times: DD/MM/YYYY HH:MM:SS format
+- Duration: HH:MM:SS format
+- Data usage: MB with 2 decimal places
+- Signal strength: Percentage with color coding
+
+Conditional Formatting:
+- Signal strength color scale (Red < 30%, Yellow 30-70%, Green > 70%)
+- Duration highlighting (Long sessions > 4 hours)
+- Device category color coding
+- Status indicators (Green=Active, Red=Inactive)
+
+DATA QUALITY CHECKS
+--------------------
+
+1. VALIDATION RULES
+   - MAC address format verification
+   - Time range validation (not future dates)
+   - Signal strength within valid range (-100 to 0 dBm)
+   - Data usage reasonableness checks
+
+2. ANOMALY DETECTION
+   - Unusually high data usage
+   - Extended connection durations (> 24 hours)
+   - Invalid or malformed MAC addresses
+   - Duplicate entries within same file
+
+3. COMPLETENESS CHECKS
+   - Required fields presence
+   - Minimum record count validation
+   - File size reasonableness
+   - Data distribution analysis
+
+ERROR HANDLING
+---------------
+
+1. FILE ACCESS ERRORS
+   - Permission denied: Retry with elevated permissions
+   - File locked: Wait and retry mechanism
+   - Corrupted files: Skip and log for manual review
+   - Missing files: Generate empty template
+
+2. DATA PARSING ERRORS
+   - Invalid CSV format: Attempt auto-correction
+   - Encoding issues: Try multiple encodings
+   - Malformed records: Skip with detailed logging
+   - Empty files: Create placeholder entries
+
+3. EXCEL GENERATION ERRORS
+   - Memory limitations: Process in chunks
+   - Disk space issues: Cleanup temporary files
+   - Format compatibility: Use older Excel format
+   - Permission errors: Retry with admin rights
+
+PERFORMANCE OPTIMIZATION
+-------------------------
+
+1. MEMORY MANAGEMENT
+   - Process large files in chunks
+   - Stream data instead of loading all
+   - Clean up temporary objects
+   - Monitor memory usage
+
+2. PROCESSING SPEED
+   - Parallel processing for multiple files
+   - Vectorized operations for data manipulation
+   - Efficient data structures (pandas DataFrame)
+   - Optimized sorting algorithms
+
+3. DISK I/O
+   - Batch file operations
+   - Compress temporary files
+   - Use SSD-optimized file patterns
+   - Minimize file system calls
+
+INTEGRATION POINTS
+------------------
+
+CSV FLOW OUTPUT:
+- Input: Downloaded CSV files
+- Trigger: CSV download completion
+- Validation: File count and integrity
+
+VBS FLOW INPUT:
+- Output: Consolidated Excel file
+- Location: EHC_Data_Merge/{date}/
+- Format: .xlsx compatible with VBS import
+
+EMAIL NOTIFICATIONS:
+- Completion status
+- Record count summary
+- Error reports
+- File location information
+
+MONITORING & LOGGING
+--------------------
+
+Metrics Tracked:
+- Processing time per file
+- Total records processed
+- Duplicate records found
+- Data quality issues
+- Memory usage peaks
+
+Log Information:
+- File processing start/end times
+- Record counts by source file
+- Data validation results
+- Error details and stack traces
+- Performance benchmarks
+
+BACKUP & RECOVERY
+------------------
+
+1. SOURCE DATA BACKUP
+   - Original CSV files preserved
+   - Timestamp-based versioning
+   - Compressed archive storage
+   - 30-day retention policy
+
+2. OUTPUT BACKUP
+   - Multiple copies of Excel files
+   - Cloud storage synchronization
+   - Version control for templates
+   - Disaster recovery procedures
+
+CONFIGURATION
+-------------
+
+Merge Settings File: config/excel_merge_settings.json
+```json
+{
+  "input_folder": "EHC_Data",
+  "output_folder": "EHC_Data_Merge", 
+  "file_patterns": ["clients*.csv"],
+  "columns_mapping": {
+    "mac": "MAC Address",
+    "device": "Device Name",
+    "time": "Connection Time"
+  },
+  "validation_rules": {
+    "max_duration_hours": 24,
+    "min_signal_strength": -100,
+    "required_fields": ["mac", "device", "time"]
+  }
+}
+```
+
+TROUBLESHOOTING
+---------------
+
+1. MERGE FAILURES
+   - Check CSV file format consistency
+   - Verify file permissions
+   - Review memory availability
+   - Validate input data integrity
+
+2. DATA QUALITY ISSUES
+   - Review source system configuration
+   - Check download process completion
+   - Validate time synchronization
+   - Verify network connectivity during downloads
+
+3. PERFORMANCE PROBLEMS
+   - Monitor system resources
+   - Check disk space availability
+   - Review file sizes and complexity
+   - Optimize processing parameters
+
+MAINTENANCE TASKS
+-----------------
+- Weekly: Review merge quality metrics
+- Monthly: Update device vendor database
+- Quarterly: Optimize processing algorithms
+- Annually: Review and update data schemas
+
+FUTURE ENHANCEMENTS
+-------------------
+- Real-time streaming merge capability
+- Machine learning for device categorization
+- Advanced analytics and reporting
+- API integration for external systems
+- Cloud-based processing options

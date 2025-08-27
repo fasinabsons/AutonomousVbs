@@ -1,0 +1,163 @@
+Looking at your batch file, it has a solid structure but several issues that could prevent proper execution:
+Main Problems:
+
+Infinite Loop Issue - The main loop runs every 30 seconds but only executes tasks at exact minute matches. If the system is busy during that exact minute, tasks will be skipped.
+Python Process Management - Aggressive taskkill commands could interfere with running processes.
+Email Configuration - Hardcoded placeholder password won't work.
+Missing Error Handling - Several functions lack proper error checking.
+
+Key Fixes Needed:
+
+REM ============================================================================
+REM CRITICAL FIXES FOR MOONFLOWER AUTOMATION
+REM ============================================================================
+
+REM 1. FIX: Time checking with tolerance window
+:CheckScheduledTasks
+REM Instead of exact time matching, use time windows
+for /f %%i in ('powershell -command "Get-Date -Format 'HHmm'"') do set "CURRENT_TIME=%%i"
+
+REM 09:30 AM window (09:30-09:32)
+if !CURRENT_TIME! geq 0930 if !CURRENT_TIME! leq 0932 (
+    call :ExecuteTask "csv_morning" "Morning CSV Download (09:30)" "RunMorningCSV"
+)
+
+REM 12:30 PM window (12:30-12:32)
+if !CURRENT_TIME! geq 1230 if !CURRENT_TIME! leq 1232 (
+    call :ExecuteTask "csv_afternoon" "Afternoon CSV Download (12:30)" "RunAfternoonCSV"
+)
+
+REM Continue for other tasks...
+
+REM ============================================================================
+
+REM 2. FIX: Safer process cleanup
+:CleanVBSEnvironment
+call :LogMessage "CLEAN: Cleaning VBS environment"
+REM Check if processes exist before killing
+tasklist /fi "IMAGENAME eq absons*.exe" 2>nul | find /i "absons" >nul
+if !errorlevel! equ 0 (
+    taskkill /f /im "absons*.exe" >nul 2>&1
+    timeout /t 5 /nobreak >nul 2>&1
+)
+goto :eof
+
+REM ============================================================================
+
+REM 3. FIX: Email configuration with error handling
+:SendMilestoneEmail
+set "milestone=%~1"
+set "status=%~2"
+
+call :LogMessage "EMAIL: Sending milestone - %milestone% - %status%"
+
+REM Check if email credentials file exists
+if not exist "email_config.txt" (
+    call :LogMessage "EMAIL: No email config found, skipping"
+    goto :eof
+)
+
+!PYTHON_CMD! -c "
+import smtplib, sys, os
+from email.mime.text import MimeText
+from datetime import datetime
+
+try:
+    # Read config from file
+    if not os.path.exists('email_config.txt'):
+        print('No email config file')
+        sys.exit(1)
+    
+    with open('email_config.txt', 'r') as f:
+        lines = f.readlines()
+        sender_email = lines[0].strip()
+        sender_password = lines[1].strip()
+        recipient = lines[2].strip()
+    
+    # Rest of email code...
+    print('Milestone email sent successfully')
+except Exception as e:
+    print(f'Milestone email failed: {e}')
+    sys.exit(1)
+" > "!LOG_DIR!\milestone_email.log" 2>&1
+
+goto :eof
+
+REM ============================================================================
+
+REM 4. FIX: Better task execution with retry logic
+:ExecuteTask
+set "task_id=%~1"
+set "task_name=%~2"
+set "task_function=%~3"
+
+call :CheckTaskStatus "%task_id%" task_status
+if "!task_status!"=="completed" (
+    echo [SKIP] %task_name% - already completed
+    goto :eof
+)
+
+echo [START] %task_name%
+call :LogMessage "START: %task_name%"
+
+REM Try task execution with retry
+set /a retry_count=0
+:TASK_RETRY
+call :%task_function%
+set "task_result=!errorlevel!"
+
+if !task_result! equ 0 (
+    call :SetTaskStatus "%task_id%" "completed"
+    echo [SUCCESS] %task_name% completed
+    call :LogMessage "SUCCESS: %task_name% completed"
+    call :SendMilestoneEmail "%task_name%" "DONE"
+) else (
+    set /a retry_count+=1
+    if !retry_count! lss 3 (
+        echo [RETRY] %task_name% failed, attempt !retry_count!/3
+        call :LogMessage "RETRY: %task_name% attempt !retry_count!"
+        timeout /t 60 /nobreak >nul 2>&1
+        goto :TASK_RETRY
+    ) else (
+        echo [FAILED] %task_name% failed after 3 attempts
+        call :LogMessage "FAILED: %task_name% failed after retries"
+        call :SendMilestoneEmail "%task_name%" "FAILED"
+    )
+)
+
+goto :eof
+
+REM ============================================================================
+
+REM 5. FIX: Better CSV validation
+:ValidateCSVFiles
+set "slot=%~1"
+set "CSV_VALID=false"
+
+echo [VALIDATE] Checking CSV files for %slot% slot...
+
+REM Check if CSV directory exists
+if not exist "!CSV_DIR!" (
+    echo [VALIDATE] CSV directory not found
+    call :LogMessage "VALIDATE: CSV directory missing"
+    goto :eof
+)
+
+REM Count valid CSV files (size > 1KB)
+set /a CSV_COUNT=0
+for %%f in ("!CSV_DIR!\*.csv") do (
+    if %%~zf gtr 1024 (
+        set /a CSV_COUNT+=1
+    )
+)
+
+if !CSV_COUNT! geq 4 (
+    set "CSV_VALID=true"
+    echo [VALIDATE] CSV files OK: !CSV_COUNT! valid files found
+    call :LogMessage "VALIDATE: CSV %slot% - !CSV_COUNT! files (PASS)"
+) else (
+    echo [VALIDATE] CSV files INSUFFICIENT: !CSV_COUNT! valid files
+    call :LogMessage "VALIDATE: CSV %slot% - !CSV_COUNT! files (FAIL)"
+)
+
+goto :eof

@@ -1,0 +1,135 @@
+CSV FLOW DOCUMENTATION
+=====================
+
+OVERVIEW
+--------
+The CSV flow handles automated downloading of client data from the WiFi management system through browser automation.
+
+COMPONENTS
+----------
+1. Enhanced CSV Downloader (wifi/enhanced_csv_downloader.py)
+2. Element Detector (wifi/element_detector.py)  
+3. Debug Capture System (wifi/debug_capture.py)
+4. Timing Manager (wifi/timing_manager.py)
+5. Error Recovery (wifi/error_recovery.py)
+
+FLOW SEQUENCE
+-------------
+1. INITIALIZATION
+   - Start enhanced CSV downloader
+   - Initialize browser automation
+   - Set up debug capture system
+   - Configure selectors and timing
+
+2. LOGIN PROCESS
+   - Navigate to controller IP
+   - Detect login form elements
+   - Input credentials with validation
+   - Handle 2FA if present
+   - Verify successful login
+
+3. NAVIGATION TO DATA
+   - Navigate to Wireless LANs section
+   - Handle dynamic menu loading
+   - Use intelligent element detection
+   - Navigate through multiple access points
+
+4. DATA EXTRACTION
+   - Iterate through all access points (EHC TV, EHC-15, Reception Hall-Mobile, Reception Hall-TV)
+   - For each access point:
+     * Click access point link
+     * Navigate to Clients tab
+     * Download CSV file
+     * Validate download success
+   - Handle pagination if present
+
+5. FILE MANAGEMENT
+   - Organize downloaded CSV files by date
+   - Store in EHC_Data/{date}/ folder structure
+   - Rename files with proper naming convention
+   - Validate file integrity and content
+
+6. ERROR HANDLING
+   - Capture screenshots on failures
+   - Log detailed error information
+   - Implement retry mechanisms
+   - Generate debug reports
+
+SELECTORS (from clickshtml.txt and fullpaths.txt)
+-------------------------------------------------
+Login Elements:
+- Username field: input[name="username"]
+- Password field: input[name="password"] 
+- Login button: button[type="submit"]
+
+Navigation Elements:
+- Wireless LANs: a[href*="wireless"]
+- Clients tab: a[href*="clients"]
+- Download button: button[title="Download"], .download-btn
+
+Access Points:
+- EHC TV: a[contains(text(), "EHC TV")]
+- EHC-15: a[contains(text(), "EHC-15")]
+- Reception Hall-Mobile: a[contains(text(), "Reception Hall-Mobile")]
+- Reception Hall-TV: a[contains(text(), "Reception Hall-TV")]
+
+TIMING CONFIGURATION
+--------------------
+- Page load timeout: 30 seconds
+- Element detection timeout: 10 seconds
+- Download wait time: 5 seconds
+- Navigation delay: 2 seconds
+- Retry interval: 3 seconds
+- Maximum retries: 3 attempts
+
+ERROR SCENARIOS & RECOVERY
+---------------------------
+1. Login Failures
+   - Invalid credentials: Retry with backup credentials
+   - 2FA timeout: Extend wait time and retry
+   - Captcha present: Manual intervention required
+
+2. Navigation Failures
+   - Element not found: Use alternative selectors
+   - Page load timeout: Refresh and retry
+   - Menu not expanding: Use keyboard navigation
+
+3. Download Failures
+   - File not downloaded: Retry download action
+   - Partial download: Re-download complete file
+   - Permission denied: Check folder permissions
+
+4. Network Issues
+   - Connection timeout: Retry with increased timeout
+   - Network unreachable: Wait and retry
+   - SSL errors: Use alternative connection method
+
+OUTPUT FILES
+------------
+Location: EHC_Data/{date}/
+Format: clients.csv, clients (1).csv, clients (2).csv...
+Content: MAC addresses, device names, connection times, signal strength
+
+MONITORING & LOGGING
+--------------------
+- Real-time execution logs in EHC_Logs/{date}/
+- Debug screenshots in debug_images/
+- Error reports with stack traces
+- Performance metrics and timing data
+- Session summaries with success/failure counts
+
+INTEGRATION POINTS
+------------------
+- Input: Controller credentials and access point list
+- Output: CSV files ready for Excel merger
+- Triggers: Scheduled automation or manual execution
+- Dependencies: Chrome browser, network connectivity
+- Notifications: Email alerts on completion/failure
+
+MAINTENANCE NOTES
+-----------------
+- Update selectors if website changes
+- Monitor download folder space usage
+- Review error logs for pattern detection
+- Update credentials as needed
+- Test automation monthly for reliability

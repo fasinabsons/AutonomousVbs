@@ -1,0 +1,52 @@
+[
+  {
+    "id": "TC001",
+    "title": "download_csv_files_from_ruckus_controller",
+    "description": "Test the /download_csv API endpoint to verify that CSV files are downloaded successfully from the Ruckus Controller using provided URL and credentials, with retry attempts and browser recovery."
+  },
+  {
+    "id": "TC002",
+    "title": "vbs_phase1_enhanced_login_with_tab_cycling",
+    "description": "Test the /vbs/phase1/login API endpoint to ensure the VBS ERP software login phase completes successfully with tab cycling and window focusing using given credentials."
+  },
+  {
+    "id": "TC003",
+    "title": "vbs_phase3_excel_import_and_update_with_button_detection",
+    "description": "Test the /vbs/phase3/upload API endpoint to verify Excel file import and update in VBS ERP software with multi-variant button detection, confirming upload completion and button variant used."
+  },
+  {
+    "id": "TC004",
+    "title": "convert_csv_files_to_vbs_compatible_excel_format",
+    "description": "Test the /excel/generate API endpoint to validate conversion of multiple CSV files into a single deduplicated Excel (.xls) file with correct header mapping for VBS compatibility."
+  },
+  {
+    "id": "TC005",
+    "title": "send_personal_notification_email_via_gmail",
+    "description": "Test the /email/personal_notification API endpoint to ensure personal milestone notifications are sent successfully via Gmail to specified recipients with correct notification types."
+  },
+  {
+    "id": "TC006",
+    "title": "send_professional_gm_report_with_pdf_attachment_via_outlook",
+    "description": "Test the /email/gm_report API endpoint to verify sending of professional GM report emails with PDF attachments via Outlook, ensuring the PDF file exists and email is sent to intended recipients."
+  },
+  {
+    "id": "TC007",
+    "title": "execute_complete_automation_workflow_via_bat_files",
+    "description": "Test the /bat/execute_workflow API endpoint to confirm execution of modular BAT files for complete or partial automation workflows with administrator privileges and proper exit codes."
+  },
+  {
+    "id": "TC008",
+    "title": "pc_lock_and_unlock_management_for_vbs_automation",
+    "description": "Test the /bat/pc_management API endpoint to validate PC lock, unlock, and test actions for VBS automation with correct password handling and action completion."
+  },
+  {
+    "id": "TC009",
+    "title": "install_and_verify_windows_service_for_automation",
+    "description": "Test the /service/install API endpoint to ensure the MoonFlower automation system is installed successfully as a Windows service with proper startup integration."
+  },
+  {
+    "id": "TC010",
+    "title": "get_windows_service_status_and_health_check",
+    "description": "Test the /service/status API endpoint to retrieve and verify the current status, uptime, last execution time, and next scheduled run of the Windows service managing the automation."
+  }
+]

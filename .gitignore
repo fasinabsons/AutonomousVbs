@@ -1,0 +1,102 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs
+*.log
+logs/
+EHC_Logs/
+
+# Data folders (large files)
+EHC_Data/
+EHC_Data_Merge/
+EHC_Data_Pdf/
+downloads/
+mydocs/
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+upload_completed.txt
+
+# Windows specific
+desktop.ini
+$RECYCLE.BIN/
+
+# Images might be large, but we need some for automation
+# Only ignore screenshots and temporary images
+*_screenshot.png
+vbs_current_view_*.png
+VBS_Debug_Current_State.png
+test_*.png
+
+# Build files
+*.exe
+*.pkg
+*.spec
+build/
+dist/
+# Large compiled executables
+MoonFlower_Complete_365.exe
+MoonFlowerBot_Perfect_365.pkg
+MoonFlower_Complete_365.pkg
+
+# Sensitive data
+*.key
+*.pem
+config/credentials.json
+config/secrets.json
+
+# Email backups (can be large)
+Email_Sent_Backup/
+
+# WiFi data
+wifi/
+
+# Large installer files
+installer/

@@ -1,0 +1,846 @@
+#Requires -Version 5.1
+<#
+.SYNOPSIS
+    Automated Task Scheduler & Runner - 365 Day Operation System
+.DESCRIPTION
+    Comprehensive automation system for web scraping, file processing, VBS automation, and email reporting
+    Runs continuously with self-healing capabilities and automatic recovery
+.AUTHOR
+    Generated for 365-day automation requirements
+.VERSION
+    1.0.0
+#>
+
+# ================================================================================================
+# CONFIGURATION SECTION - Modify these settings as needed
+# ================================================================================================
+
+$Global:Config = @{
+    # File Paths and Directories
+    Paths = @{
+        PythonScripts = "C:\Automation\Scripts"  # Base path for Python scripts
+        DataFolder = "C:\Automation\Data"        # Base data folder
+        LogFolder = "C:\Automation\Logs"         # Log files location
+        StateFile = "C:\Automation\state.json"   # State persistence file
+        LockFile = "C:\Automation\automation.lock" # Lock file for single instance
+        BackupFolder = "C:\Automation\Backups"   # Backup location
+    }
+    
+    # Python Script Names
+    Scripts = @{
+        CSVDownloader = "csv_downloader_resilient.py"
+        ExcelGenerator = "excel_generator.py"
+        VBSPhase1 = "vbs_phase1_login.py"
+        VBSPhase2 = "vbs_phase2_navigation_fixed.py"
+        VBSPhase3 = "vbs_phase3_upload_complete.py"
+        VBSPhase4 = "vbs_phase4_report_fixed.py"
+        OutlookAutomation = "outlook_automation.py"
+        FileChecker = "file_checker.py"
+    }
+    
+    # Execution Schedule (24-hour format)
+    Schedule = @{
+        MorningSlot = "09:00"      # First CSV download
+        MiddaySlot = "12:30"       # Second CSV download + Excel generation
+        VBSStart = "12:40"         # VBS automation start
+        AfternoonSlot = "16:00"    # VBS report generation
+        EmailTime = "08:00"        # Next day email delivery
+    }
+    
+    # Timeout Settings (in minutes)
+    Timeouts = @{
+        CSVDownload = 15
+        ExcelGeneration = 10
+        VBSLogin = 5
+        VBSNavigation = 10
+        VBSUpload = 180           # 3 hours for upload
+        VBSReport = 30
+        EmailSend = 10
+    }
+    
+    # Retry Settings
+    Retries = @{
+        MaxRetries = 3
+        RetryDelay = 60           # seconds
+        BackoffMultiplier = 2
+    }
+    
+    # Email Configuration
+    Email = @{
+        Recipients = @("recipient1@company.com", "recipient2@company.com")
+        Subject = "Daily EHC Report - {DATE}"
+        SendOnWeekends = $false
+        SendMondayReportOnTuesday = $true
+    }
+    
+    # Folder Structure
+    FolderStructure = @{
+        EHCDataSubfolder = "EHC_Data"
+        EHCPdfSubfolder = "EHC_Data_Pdf" 
+        DateFormat = "yyyy-MM-dd"
+    }
+}
+
+# ================================================================================================
+# GLOBAL VARIABLES AND INITIALIZATION
+# ================================================================================================
+
+$Global:LogLevel = "INFO"
+$Global:CurrentState = @{}
+$Global:StartTime = Get-Date
+$Global:ExecutionId = [System.Guid]::NewGuid().ToString().Substring(0,8)
+$Global:IsDebugMode = $false
+
+# ================================================================================================
+# UTILITY FUNCTIONS
+# ================================================================================================
+
+function Write-CustomLog {
+    param(
+        [Parameter(Mandatory)]
+        [string]$Message,
+        [ValidateSet("DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL")]
+        [string]$Level = "INFO",
+        [switch]$WriteToConsole = $true
+    )
+    
+    $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss.fff"
+    $logEntry = "[$timestamp] [$Global:ExecutionId] [$Level] $Message"
+    
+    # Create log folder if it doesn't exist
+    $logDir = $Global:Config.Paths.LogFolder
+    if (-not (Test-Path $logDir)) {
+        New-Item -ItemType Directory -Path $logDir -Force | Out-Null
+    }
+    
+    # Write to daily log file
+    $logFile = Join-Path $logDir "AutomationMaster_$(Get-Date -Format 'yyyy-MM-dd').log"
+    Add-Content -Path $logFile -Value $logEntry -Encoding UTF8
+    
+    # Write to console if requested
+    if ($WriteToConsole) {
+        switch ($Level) {
+            "ERROR" { Write-Host $logEntry -ForegroundColor Red }
+            "WARNING" { Write-Host $logEntry -ForegroundColor Yellow }
+            "CRITICAL" { Write-Host $logEntry -ForegroundColor Magenta }
+            "DEBUG" { if ($Global:IsDebugMode) { Write-Host $logEntry -ForegroundColor Gray } }
+            default { Write-Host $logEntry -ForegroundColor White }
+        }
+    }
+}
+
+function Test-SingleInstance {
+    $lockFile = $Global:Config.Paths.LockFile
+    
+    if (Test-Path $lockFile) {
+        $lockData = Get-Content $lockFile -Raw -ErrorAction SilentlyContinue | ConvertFrom-Json -ErrorAction SilentlyContinue
+        if ($lockData -and $lockData.ProcessId) {
+            $process = Get-Process -Id $lockData.ProcessId -ErrorAction SilentlyContinue
+            if ($process) {
+                Write-CustomLog "Another instance is already running (PID: $($lockData.ProcessId))" -Level "ERROR"
+                return $false
+            }
+        }
+    }
+    
+    # Create lock file
+    $lockData = @{
+        ProcessId = $PID
+        StartTime = $Global:StartTime.ToString("yyyy-MM-dd HH:mm:ss")
+        ExecutionId = $Global:ExecutionId
+    }
+    
+    $lockData | ConvertTo-Json | Set-Content $lockFile -Encoding UTF8
+    Write-CustomLog "Lock file created successfully" -Level "DEBUG"
+    return $true
+}
+
+function Remove-LockFile {
+    $lockFile = $Global:Config.Paths.LockFile
+    if (Test-Path $lockFile) {
+        Remove-Item $lockFile -Force -ErrorAction SilentlyContinue
+        Write-CustomLog "Lock file removed" -Level "DEBUG"
+    }
+}
+
+function Initialize-Environment {
+    Write-CustomLog "Initializing environment..." -Level "INFO"
+    
+    # Create all required directories
+    $directories = @(
+        $Global:Config.Paths.DataFolder,
+        $Global:Config.Paths.LogFolder,
+        $Global:Config.Paths.BackupFolder,
+        (Split-Path $Global:Config.Paths.StateFile -Parent)
+    )
+    
+    foreach ($dir in $directories) {
+        if (-not (Test-Path $dir)) {
+            try {
+                New-Item -ItemType Directory -Path $dir -Force | Out-Null
+                Write-CustomLog "Created directory: $dir" -Level "DEBUG"
+            }
+            catch {
+                Write-CustomLog "Failed to create directory $dir`: $_" -Level "ERROR"
+                return $false
+            }
+        }
+    }
+    
+    # Verify Python installation
+    try {
+        $pythonVersion = & python --version 2>&1
+        Write-CustomLog "Python detected: $pythonVersion" -Level "INFO"
+    }
+    catch {
+        Write-CustomLog "Python not found in PATH. Please ensure Python is installed and accessible." -Level "CRITICAL"
+        return $false
+    }
+    
+    # Verify Python scripts exist
+    $scriptsPath = $Global:Config.Paths.PythonScripts
+    foreach ($script in $Global:Config.Scripts.Values) {
+        $scriptPath = Join-Path $scriptsPath $script
+        if (-not (Test-Path $scriptPath)) {
+            Write-CustomLog "Python script not found: $scriptPath" -Level "ERROR"
+            return $false
+        }
+    }
+    
+    Write-CustomLog "Environment initialization completed successfully" -Level "INFO"
+    return $true
+}
+
+function Get-TodayDataFolder {
+    $dateStr = Get-Date -Format $Global:Config.FolderStructure.DateFormat
+    $ehcFolder = Join-Path $Global:Config.Paths.DataFolder $Global:Config.FolderStructure.EHCDataSubfolder
+    return Join-Path $ehcFolder $dateStr
+}
+
+function Get-TodayPdfFolder {
+    $dateStr = Get-Date -Format $Global:Config.FolderStructure.DateFormat
+    $pdfFolder = Join-Path $Global:Config.Paths.DataFolder $Global:Config.FolderStructure.EHCPdfSubfolder
+    return Join-Path $pdfFolder $dateStr
+}
+
+function Save-State {
+    param([hashtable]$State)
+    
+    try {
+        $State.LastUpdated = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+        $State | ConvertTo-Json -Depth 10 | Set-Content $Global:Config.Paths.StateFile -Encoding UTF8
+        Write-CustomLog "State saved successfully" -Level "DEBUG"
+    }
+    catch {
+        Write-CustomLog "Failed to save state: $_" -Level "ERROR"
+    }
+}
+
+function Load-State {
+    try {
+        if (Test-Path $Global:Config.Paths.StateFile) {
+            $state = Get-Content $Global:Config.Paths.StateFile -Raw | ConvertFrom-Json
+            # Convert PSCustomObject to hashtable
+            $hashtable = @{}
+            $state.PSObject.Properties | ForEach-Object { $hashtable[$_.Name] = $_.Value }
+            Write-CustomLog "State loaded successfully" -Level "DEBUG"
+            return $hashtable
+        }
+    }
+    catch {
+        Write-CustomLog "Failed to load state: $_" -Level "WARNING"
+    }
+    
+    # Return default state
+    return @{
+        LastRun = ""
+        MorningCompleted = $false
+        MiddayCompleted = $false
+        VBSCompleted = $false
+        AfternoonCompleted = $false
+        EmailSent = $false
+        CurrentDate = Get-Date -Format "yyyy-MM-dd"
+    }
+}
+
+function Reset-DailyState {
+    $currentDate = Get-Date -Format "yyyy-MM-dd"
+    if ($Global:CurrentState.CurrentDate -ne $currentDate) {
+        Write-CustomLog "New day detected, resetting state" -Level "INFO"
+        $Global:CurrentState = @{
+            LastRun = ""
+            MorningCompleted = $false
+            MiddayCompleted = $false
+            VBSCompleted = $false
+            AfternoonCompleted = $false
+            EmailSent = $false
+            CurrentDate = $currentDate
+        }
+        Save-State $Global:CurrentState
+    }
+}
+
+function Invoke-PythonScript {
+    param(
+        [Parameter(Mandatory)]
+        [string]$ScriptName,
+        [string[]]$Arguments = @(),
+        [int]$TimeoutMinutes = 10,
+        [int]$MaxRetries = 3
+    )
+    
+    $scriptPath = Join-Path $Global:Config.Paths.PythonScripts $ScriptName
+    $attempt = 1
+    
+    while ($attempt -le $MaxRetries) {
+        try {
+            Write-CustomLog "Executing $ScriptName (attempt $attempt/$MaxRetries)" -Level "INFO"
+            
+            $processArgs = @("python", $scriptPath) + $Arguments
+            $process = Start-Process -FilePath "python" -ArgumentList ($scriptPath, $Arguments) -NoNewWindow -PassThru -RedirectStandardOutput "output.txt" -RedirectStandardError "error.txt"
+            
+            $timeoutMs = $TimeoutMinutes * 60 * 1000
+            if ($process.WaitForExit($timeoutMs)) {
+                $exitCode = $process.ExitCode
+                
+                if ($exitCode -eq 0) {
+                    Write-CustomLog "$ScriptName completed successfully" -Level "INFO"
+                    return @{ Success = $true; ExitCode = $exitCode }
+                }
+                else {
+                    $errorOutput = ""
+                    if (Test-Path "error.txt") {
+                        $errorOutput = Get-Content "error.txt" -Raw
+                    }
+                    Write-CustomLog "$ScriptName failed with exit code $exitCode`: $errorOutput" -Level "ERROR"
+                }
+            }
+            else {
+                Write-CustomLog "$ScriptName timed out after $TimeoutMinutes minutes" -Level "ERROR"
+                $process.Kill()
+            }
+        }
+        catch {
+            Write-CustomLog "Exception executing $ScriptName`: $_" -Level "ERROR"
+        }
+        finally {
+            # Cleanup temporary files
+            @("output.txt", "error.txt") | ForEach-Object {
+                if (Test-Path $_) { Remove-Item $_ -Force -ErrorAction SilentlyContinue }
+            }
+        }
+        
+        if ($attempt -lt $MaxRetries) {
+            $delay = $Global:Config.Retries.RetryDelay * [Math]::Pow($Global:Config.Retries.BackoffMultiplier, $attempt - 1)
+            Write-CustomLog "Retrying in $delay seconds..." -Level "WARNING"
+            Start-Sleep -Seconds $delay
+        }
+        
+        $attempt++
+    }
+    
+    return @{ Success = $false; ExitCode = -1 }
+}
+
+function Test-NetworkConnectivity {
+    try {
+        $result = Test-NetConnection -ComputerName "8.8.8.8" -Port 53 -WarningAction SilentlyContinue
+        return $result.TcpTestSucceeded
+    }
+    catch {
+        return $false
+    }
+}
+
+function Wait-ForTimeSlot {
+    param([string]$TargetTime)
+    
+    $target = [DateTime]::ParseExact($TargetTime, "HH:mm", $null)
+    $target = Get-Date -Hour $target.Hour -Minute $target.Minute -Second 0
+    
+    # If target time has passed today, set for tomorrow
+    if ($target -lt (Get-Date)) {
+        $target = $target.AddDays(1)
+    }
+    
+    $waitTime = $target - (Get-Date)
+    if ($waitTime.TotalSeconds -gt 0) {
+        Write-CustomLog "Waiting until $TargetTime ($('{0:hh\:mm\:ss}' -f $waitTime) remaining)" -Level "INFO"
+        Start-Sleep -Seconds $waitTime.TotalSeconds
+    }
+}
+
+function Test-IsWeekday {
+    $dayOfWeek = (Get-Date).DayOfWeek
+    return $dayOfWeek -ne [DayOfWeek]::Saturday -and $dayOfWeek -ne [DayOfWeek]::Sunday
+}
+
+function Get-PreviousBusinessDay {
+    $date = (Get-Date).AddDays(-1)
+    while ($date.DayOfWeek -eq [DayOfWeek]::Saturday -or $date.DayOfWeek -eq [DayOfWeek]::Sunday) {
+        $date = $date.AddDays(-1)
+    }
+    return $date
+}
+
+# ================================================================================================
+# MAIN WORKFLOW FUNCTIONS
+# ================================================================================================
+
+function Start-MorningSlot {
+    Write-CustomLog "=== Starting Morning Slot (CSV Download) ===" -Level "INFO"
+    
+    if ($Global:CurrentState.MorningCompleted) {
+        Write-CustomLog "Morning slot already completed today" -Level "INFO"
+        return $true
+    }
+    
+    # Ensure network connectivity
+    if (-not (Test-NetworkConnectivity)) {
+        Write-CustomLog "No network connectivity detected" -Level "ERROR"
+        return $false
+    }
+    
+    # Create today's data folder
+    $todayFolder = Get-TodayDataFolder
+    if (-not (Test-Path $todayFolder)) {
+        New-Item -ItemType Directory -Path $todayFolder -Force | Out-Null
+        Write-CustomLog "Created data folder: $todayFolder" -Level "INFO"
+    }
+    
+    # Execute CSV downloader
+    $result = Invoke-PythonScript -ScriptName $Global:Config.Scripts.CSVDownloader -TimeoutMinutes $Global:Config.Timeouts.CSVDownload
+    
+    if ($result.Success) {
+        # Verify 4 CSV files were downloaded
+        $csvFiles = Get-ChildItem -Path $todayFolder -Filter "*.csv" -ErrorAction SilentlyContinue
+        if ($csvFiles.Count -ge 4) {
+            Write-CustomLog "Morning CSV download completed successfully ($($csvFiles.Count) files)" -Level "INFO"
+            $Global:CurrentState.MorningCompleted = $true
+            $Global:CurrentState.LastRun = "MorningSlot"
+            Save-State $Global:CurrentState
+            return $true
+        }
+        else {
+            Write-CustomLog "Expected 4 CSV files, found $($csvFiles.Count)" -Level "ERROR"
+        }
+    }
+    
+    return $false
+}
+
+function Start-MiddaySlot {
+    Write-CustomLog "=== Starting Midday Slot (CSV + Excel Generation) ===" -Level "INFO"
+    
+    if ($Global:CurrentState.MiddayCompleted) {
+        Write-CustomLog "Midday slot already completed today" -Level "INFO"
+        return $true
+    }
+    
+    # Ensure network connectivity
+    if (-not (Test-NetworkConnectivity)) {
+        Write-CustomLog "No network connectivity detected" -Level "ERROR"
+        return $false
+    }
+    
+    $todayFolder = Get-TodayDataFolder
+    
+    # Execute second CSV download
+    $result = Invoke-PythonScript -ScriptName $Global:Config.Scripts.CSVDownloader -TimeoutMinutes $Global:Config.Timeouts.CSVDownload
+    
+    if (-not $result.Success) {
+        Write-CustomLog "Second CSV download failed" -Level "ERROR"
+        return $false
+    }
+    
+    # Verify total CSV files (should be 8 now)
+    $csvFiles = Get-ChildItem -Path $todayFolder -Filter "*.csv" -ErrorAction SilentlyContinue
+    Write-CustomLog "Total CSV files after second download: $($csvFiles.Count)" -Level "INFO"
+    
+    # Execute Excel generator immediately
+    $result = Invoke-PythonScript -ScriptName $Global:Config.Scripts.ExcelGenerator -TimeoutMinutes $Global:Config.Timeouts.ExcelGeneration
+    
+    if ($result.Success) {
+        # Verify Excel file was created
+        $excelFiles = Get-ChildItem -Path $todayFolder -Filter "*.xlsx" -ErrorAction SilentlyContinue
+        if ($excelFiles.Count -gt 0) {
+            Write-CustomLog "Excel file generation completed successfully" -Level "INFO"
+            $Global:CurrentState.MiddayCompleted = $true
+            $Global:CurrentState.LastRun = "MiddaySlot"
+            Save-State $Global:CurrentState
+            return $true
+        }
+        else {
+            Write-CustomLog "Excel file was not created" -Level "ERROR"
+        }
+    }
+    
+    return $false
+}
+
+function Start-VBSAutomation {
+    Write-CustomLog "=== Starting VBS Automation Phase ===" -Level "INFO"
+    
+    if ($Global:CurrentState.VBSCompleted) {
+        Write-CustomLog "VBS automation already completed today" -Level "INFO"
+        return $true
+    }
+    
+    # Phase 1: Login
+    Write-CustomLog "VBS Phase 1: Login" -Level "INFO"
+    $result = Invoke-PythonScript -ScriptName $Global:Config.Scripts.VBSPhase1 -TimeoutMinutes $Global:Config.Timeouts.VBSLogin
+    if (-not $result.Success) {
+        Write-CustomLog "VBS Phase 1 (Login) failed" -Level "ERROR"
+        return $false
+    }
+    
+    # Short delay between phases
+    Start-Sleep -Seconds 10
+    
+    # Phase 2: Navigation
+    Write-CustomLog "VBS Phase 2: Navigation" -Level "INFO"
+    $result = Invoke-PythonScript -ScriptName $Global:Config.Scripts.VBSPhase2 -TimeoutMinutes $Global:Config.Timeouts.VBSNavigation
+    if (-not $result.Success) {
+        Write-CustomLog "VBS Phase 2 (Navigation) failed" -Level "ERROR"
+        return $false
+    }
+    
+    # Short delay before upload
+    Start-Sleep -Seconds 5
+    
+    # Phase 3: Upload (Long running - 3 hours timeout)
+    Write-CustomLog "VBS Phase 3: Upload (This may take up to 3 hours)" -Level "INFO"
+    $result = Invoke-PythonScript -ScriptName $Global:Config.Scripts.VBSPhase3 -TimeoutMinutes $Global:Config.Timeouts.VBSUpload
+    
+    if ($result.Success) {
+        Write-CustomLog "VBS automation completed successfully" -Level "INFO"
+        $Global:CurrentState.VBSCompleted = $true
+        $Global:CurrentState.LastRun = "VBSAutomation"
+        Save-State $Global:CurrentState
+        return $true
+    }
+    else {
+        Write-CustomLog "VBS Phase 3 (Upload) failed or timed out" -Level "ERROR"
+        return $false
+    }
+}
+
+function Start-AfternoonSlot {
+    Write-CustomLog "=== Starting Afternoon Slot (VBS Report Generation) ===" -Level "INFO"
+    
+    if ($Global:CurrentState.AfternoonCompleted) {
+        Write-CustomLog "Afternoon slot already completed today" -Level "INFO"
+        return $true
+    }
+    
+    # Force close any VBS software that might still be running
+    Write-CustomLog "Ensuring VBS software is closed" -Level "INFO"
+    Get-Process | Where-Object { $_.ProcessName -like "*vbs*" -or $_.ProcessName -like "*visual*" } | Stop-Process -Force -ErrorAction SilentlyContinue
+    
+    # Wait a moment for cleanup
+    Start-Sleep -Seconds 5
+    
+    # Fresh login for report generation
+    Write-CustomLog "Starting fresh VBS session for report generation" -Level "INFO"
+    $result = Invoke-PythonScript -ScriptName $Global:Config.Scripts.VBSPhase1 -TimeoutMinutes $Global:Config.Timeouts.VBSLogin
+    if (-not $result.Success) {
+        Write-CustomLog "VBS login for report generation failed" -Level "ERROR"
+        return $false
+    }
+    
+    # Short delay
+    Start-Sleep -Seconds 10
+    
+    # Generate report
+    Write-CustomLog "Generating PDF report" -Level "INFO"
+    $result = Invoke-PythonScript -ScriptName $Global:Config.Scripts.VBSPhase4 -TimeoutMinutes $Global:Config.Timeouts.VBSReport
+    
+    if ($result.Success) {
+        # Verify PDF was created
+        $pdfFolder = Get-TodayPdfFolder
+        if (-not (Test-Path $pdfFolder)) {
+            New-Item -ItemType Directory -Path $pdfFolder -Force | Out-Null
+        }
+        
+        $pdfFiles = Get-ChildItem -Path $pdfFolder -Filter "*.pdf" -ErrorAction SilentlyContinue
+        if ($pdfFiles.Count -gt 0) {
+            Write-CustomLog "PDF report generated successfully" -Level "INFO"
+            $Global:CurrentState.AfternoonCompleted = $true
+            $Global:CurrentState.LastRun = "AfternoonSlot"
+            Save-State $Global:CurrentState
+            return $true
+        }
+        else {
+            Write-CustomLog "PDF report was not found in expected location" -Level "ERROR"
+        }
+    }
+    
+    return $false
+}
+
+function Send-DailyEmail {
+    Write-CustomLog "=== Starting Email Delivery ===" -Level "INFO"
+    
+    if ($Global:CurrentState.EmailSent) {
+        Write-CustomLog "Email already sent today" -Level "INFO"
+        return $true
+    }
+    
+    # Check if we should send email today
+    $today = Get-Date
+    $isWeekday = Test-IsWeekday
+    
+    if (-not $isWeekday -and -not $Global:Config.Email.SendOnWeekends) {
+        Write-CustomLog "Skipping email delivery on weekend" -Level "INFO"
+        $Global:CurrentState.EmailSent = $true
+        Save-State $Global:CurrentState
+        return $true
+    }
+    
+    # Handle Monday reports sent on Tuesday
+    $reportDate = Get-PreviousBusinessDay
+    if ($today.DayOfWeek -eq [DayOfWeek]::Tuesday -and $Global:Config.Email.SendMondayReportOnTuesday) {
+        # Use Friday's report for Tuesday delivery
+        while ($reportDate.DayOfWeek -ne [DayOfWeek]::Friday) {
+            $reportDate = $reportDate.AddDays(-1)
+        }
+    }
+    
+    # Find PDF file for the report date
+    $reportDateStr = $reportDate.ToString($Global:Config.FolderStructure.DateFormat)
+    $pdfFolder = Join-Path (Join-Path $Global:Config.Paths.DataFolder $Global:Config.FolderStructure.EHCPdfSubfolder) $reportDateStr
+    
+    if (-not (Test-Path $pdfFolder)) {
+        Write-CustomLog "PDF folder not found for date $reportDateStr" -Level "ERROR"
+        return $false
+    }
+    
+    $pdfFiles = Get-ChildItem -Path $pdfFolder -Filter "*.pdf" -ErrorAction SilentlyContinue
+    if ($pdfFiles.Count -eq 0) {
+        Write-CustomLog "No PDF files found for date $reportDateStr" -Level "ERROR"
+        return $false
+    }
+    
+    # Execute email automation
+    $pdfPath = $pdfFiles[0].FullName
+    $result = Invoke-PythonScript -ScriptName $Global:Config.Scripts.OutlookAutomation -Arguments @($pdfPath) -TimeoutMinutes $Global:Config.Timeouts.EmailSend
+    
+    if ($result.Success) {
+        Write-CustomLog "Email sent successfully with report for $reportDateStr" -Level "INFO"
+        $Global:CurrentState.EmailSent = $true
+        $Global:CurrentState.LastRun = "EmailDelivery"
+        Save-State $Global:CurrentState
+        return $true
+    }
+    else {
+        Write-CustomLog "Email delivery failed" -Level "ERROR"
+        return $false
+    }
+}
+
+# ================================================================================================
+# MAIN EXECUTION LOGIC
+# ================================================================================================
+
+function Start-DailyWorkflow {
+    Write-CustomLog "=== Starting Daily Workflow ===" -Level "INFO"
+    
+    $currentTime = Get-Date
+    $currentTimeStr = $currentTime.ToString("HH:mm")
+    
+    Write-CustomLog "Current time: $currentTimeStr" -Level "INFO"
+    Write-CustomLog "Morning completed: $($Global:CurrentState.MorningCompleted)" -Level "DEBUG"
+    Write-CustomLog "Midday completed: $($Global:CurrentState.MiddayCompleted)" -Level "DEBUG"
+    Write-CustomLog "VBS completed: $($Global:CurrentState.VBSCompleted)" -Level "DEBUG"
+    Write-CustomLog "Afternoon completed: $($Global:CurrentState.AfternoonCompleted)" -Level "DEBUG"
+    Write-CustomLog "Email sent: $($Global:CurrentState.EmailSent)" -Level "DEBUG"
+    
+    # Parse schedule times
+    $morningTime = [DateTime]::ParseExact($Global:Config.Schedule.MorningSlot, "HH:mm", $null)
+    $middayTime = [DateTime]::ParseExact($Global:Config.Schedule.MiddaySlot, "HH:mm", $null)
+    $vbsTime = [DateTime]::ParseExact($Global:Config.Schedule.VBSStart, "HH:mm", $null)
+    $afternoonTime = [DateTime]::ParseExact($Global:Config.Schedule.AfternoonSlot, "HH:mm", $null)
+    $emailTime = [DateTime]::ParseExact($Global:Config.Schedule.EmailTime, "HH:mm", $null)
+    
+    # Determine what should be executed now
+    if ($currentTime.TimeOfDay -ge $emailTime.TimeOfDay -and -not $Global:CurrentState.EmailSent) {
+        Send-DailyEmail
+    }
+    
+    if ($currentTime.TimeOfDay -ge $morningTime.TimeOfDay -and -not $Global:CurrentState.MorningCompleted) {
+        Start-MorningSlot
+    }
+    
+    if ($currentTime.TimeOfDay -ge $middayTime.TimeOfDay -and -not $Global:CurrentState.MiddayCompleted) {
+        Start-MiddaySlot
+    }
+    
+    if ($currentTime.TimeOfDay -ge $vbsTime.TimeOfDay -and $Global:CurrentState.MiddayCompleted -and -not $Global:CurrentState.VBSCompleted) {
+        Start-VBSAutomation
+    }
+    
+    if ($currentTime.TimeOfDay -ge $afternoonTime.TimeOfDay -and -not $Global:CurrentState.AfternoonCompleted) {
+        Start-AfternoonSlot
+    }
+}
+
+function Start-ContinuousExecution {
+    Write-CustomLog "=== Starting Continuous Execution Mode ===" -Level "INFO"
+    
+    try {
+        while ($true) {
+            # Reset state for new day
+            Reset-DailyState
+            
+            # Run daily workflow
+            Start-DailyWorkflow
+            
+            # Check if all tasks are completed
+            if ($Global:CurrentState.MorningCompleted -and 
+                $Global:CurrentState.MiddayCompleted -and 
+                $Global:CurrentState.VBSCompleted -and 
+                $Global:CurrentState.AfternoonCompleted -and 
+                $Global:CurrentState.EmailSent) {
+                
+                Write-CustomLog "All daily tasks completed. Waiting for next day..." -Level "INFO"
+                
+                # Wait until next day starts (00:01)
+                $tomorrow = (Get-Date).Date.AddDays(1).AddMinutes(1)
+                $waitTime = $tomorrow - (Get-Date)
+                Write-CustomLog "Sleeping until tomorrow at 00:01 ($('{0:hh\:mm\:ss}' -f $waitTime) remaining)" -Level "INFO"
+                Start-Sleep -Seconds $waitTime.TotalSeconds
+            }
+            else {
+                # Check again in 30 minutes
+                Write-CustomLog "Workflow check complete. Next check in 30 minutes..." -Level "INFO"
+                Start-Sleep -Seconds 1800  # 30 minutes
+            }
+        }
+    }
+    catch {
+        Write-CustomLog "Critical error in continuous execution: $_" -Level "CRITICAL"
+        Write-CustomLog "Attempting to restart in 5 minutes..." -Level "WARNING"
+        Start-Sleep -Seconds 300  # 5 minutes
+        # The script will restart automatically due to the outer restart loop
+        throw $_
+    }
+}
+
+# ================================================================================================
+# INSTALLATION AND TASK SCHEDULER SETUP
+# ================================================================================================
+
+function Install-TaskSchedulerEntry {
+    Write-CustomLog "=== Installing Task Scheduler Entry ===" -Level "INFO"
+    
+    $scriptPath = $MyInvocation.ScriptName
+    if (-not $scriptPath) {
+        $scriptPath = $PSCommandPath
+    }
+    
+    $taskName = "AutomationMaster365"
+    $taskDescription = "365-day automation system for web scraping, file processing, and email reporting"
+    
+    try {
+        # Check if task already exists
+        $existingTask = Get-ScheduledTask -TaskName $taskName -ErrorAction SilentlyContinue
+        if ($existingTask) {
+            Write-CustomLog "Task '$taskName' already exists. Updating..." -Level "INFO"
+            Unregister-ScheduledTask -TaskName $taskName -Confirm:$false
+        }
+        
+        # Create task action
+        $action = New-ScheduledTaskAction -Execute "PowerShell.exe" -Argument "-ExecutionPolicy Bypass -File `"$scriptPath`" -RunMode Continuous"
+        
+        # Create task trigger (at startup)
+        $trigger = New-ScheduledTaskTrigger -AtStartup
+        
+        # Create task settings
+        $settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -StartWhenAvailable -RestartCount 999 -RestartInterval (New-TimeSpan -Minutes 5)
+        
+        # Create task principal (run as SYSTEM or current user with highest privileges)
+        $principal = New-ScheduledTaskPrincipal -UserId "SYSTEM" -LogonType ServiceAccount -RunLevel Highest
+        
+        # Register the task
+        Register-ScheduledTask -TaskName $taskName -Action $action -Trigger $trigger -Settings $settings -Principal $principal -Description $taskDescription
+        
+        Write-CustomLog "Task Scheduler entry created successfully: $taskName" -Level "INFO"
+        Write-CustomLog "Script will automatically start on system boot" -Level "INFO"
+        return $true
+    }
+    catch {
+        Write-CustomLog "Failed to create Task Scheduler entry: $_" -Level "ERROR"
+        return $false
+    }
+}
+
+function Uninstall-TaskSchedulerEntry {
+    $taskName = "AutomationMaster365"
+    
+    try {
+        $existingTask = Get-ScheduledTask -TaskName $taskName -ErrorAction SilentlyContinue
+        if ($existingTask) {
+            Unregister-ScheduledTask -TaskName $taskName -Confirm:$false
+            Write-CustomLog "Task Scheduler entry removed: $taskName" -Level "INFO"
+        }
+        else {
+            Write-CustomLog "Task Scheduler entry not found: $taskName" -Level "WARNING"
+        }
+    }
+    catch {
+        Write-CustomLog "Failed to remove Task Scheduler entry: $_" -Level "ERROR"
+    }
+}
+
+function Show-SystemStatus {
+    Write-CustomLog "=== System Status Report ===" -Level "INFO"
+    
+    # Show current state
+    Write-CustomLog "Current Date: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')" -Level "INFO"
+    Write-CustomLog "Execution ID: $Global:ExecutionId" -Level "INFO"
+    Write-CustomLog "Process ID: $PID" -Level "INFO"
+    
+    # Show state information
+    Write-CustomLog "--- Daily Progress ---" -Level "INFO"
+    Write-CustomLog "Morning CSV: $(if ($Global:CurrentState.MorningCompleted) { 'COMPLETED' } else { 'PENDING' })" -Level "INFO"
+    Write-CustomLog "Midday Process: $(if ($Global:CurrentState.MiddayCompleted) { 'COMPLETED' } else { 'PENDING' })" -Level "INFO"
+    Write-CustomLog "VBS Automation: $(if ($Global:CurrentState.VBSCompleted) { 'COMPLETED' } else { 'PENDING' })" -Level "INFO"
+    Write-CustomLog "Afternoon Report: $(if ($Global:CurrentState.AfternoonCompleted) { 'COMPLETED' } else { 'PENDING' })" -Level "INFO"
+    Write-CustomLog "Email Delivery: $(if ($Global:CurrentState.EmailSent) { 'COMPLETED' } else { 'PENDING' })" -Level "INFO"
+    
+    # Show folder information
+    $todayFolder = Get-TodayDataFolder
+    $pdfFolder = Get-TodayPdfFolder
+    Write-CustomLog "Data Folder: $todayFolder" -Level "INFO"
+    Write-CustomLog "PDF Folder: $pdfFolder" -Level "INFO"
+    
+    # Show file counts
+    if (Test-Path $todayFolder) {
+        $csvCount = (Get-ChildItem -Path $todayFolder -Filter "*.csv" -ErrorAction SilentlyContinue).Count
+        $excelCount = (Get-ChildItem -Path $todayFolder -Filter "*.xlsx" -ErrorAction SilentlyContinue).Count
+        Write-CustomLog "CSV Files: $csvCount" -Level "INFO"
+        Write-CustomLog "Excel Files: $excelCount" -Level "INFO"
+    }
+    
+    if (Test-Path $pdfFolder) {
+        $pdfCount = (Get-ChildItem -Path $pdfFolder -Filter "*.pdf" -ErrorAction SilentlyContinue).Count
+        Write-CustomLog "PDF Files: $pdfCount" -Level "INFO"
+    }
+    
+    # Show system resources
+    $memory = Get-Process -Id $PID | Select-Object -ExpandProperty WorkingSet64
+    Write-CustomLog "Memory Usage: $([math]::Round($memory / 1MB, 2)) MB" -Level "INFO"
+    
+    Write-CustomLog "=== End Status Report ===" -Level "INFO"
+}
+
+function Test-FileIntegrity {
+    Write-CustomLog "=== Running File Integrity Check ===" -Level "INFO"
+    
+    $result = Invoke-PythonScript -ScriptName $Global:Config.Scripts.FileChecker -Arguments @("--check", "all") -TimeoutMinutes 5
+    
+    if ($result.Success) {
+        Write-CustomLog "File integrity check completed successfully" -Level "INFO"
+    }
+    else {
+        Write-CustomLog "File integrity check failed" -Level "WARNING"
